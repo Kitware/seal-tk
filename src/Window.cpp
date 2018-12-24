@@ -6,8 +6,11 @@
 
 #include "About.hpp"
 #include "Config.h"
+#include "Player.hpp"
 
 #include "ui_Window.h"
+
+#include <QDockWidget>
 
 #include <memory>
 
@@ -24,6 +27,8 @@ public:
 
 public slots:
   void showAbout();
+  template<typename T>
+  void newPanel();
 };
 
 QTE_IMPLEMENT_D_FUNC(Window)
@@ -39,6 +44,8 @@ Window::Window(QWidget* parent)
 
   connect(d->ui.actionAbout, &QAction::triggered,
           d, &WindowPrivate::showAbout);
+  connect(d->ui.actionNewPlayer, &QAction::triggered,
+          d, &WindowPrivate::newPanel<Player>);
 }
 
 Window::~Window()
@@ -55,6 +62,18 @@ void WindowPrivate::showAbout()
 {
   sealtk::About about(this->parent);
   about.exec();
+}
+
+template<typename T>
+void WindowPrivate::newPanel()
+{
+  auto* dock = new QDockWidget(this->parent);
+  auto* widget = new T(dock);
+  auto flags = widget->windowFlags();
+  flags &= ~Qt::Window;
+  widget->setWindowFlags(flags);
+  dock->setWidget(widget);
+  dock->show();
 }
 
 }
