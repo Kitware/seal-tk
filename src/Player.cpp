@@ -18,7 +18,7 @@ public:
 QTE_IMPLEMENT_D_FUNC(Player)
 
 Player::Player(QWidget* parent)
-  : QMainWindow(parent),
+  : Panel(parent),
     d_ptr{new PlayerPrivate}
 {
   QTE_D();

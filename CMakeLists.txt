@@ -29,6 +29,7 @@ find_package(qtExtensions REQUIRED)
 add_executable(sealtk
   src/About.cpp
   src/Main.cpp
+  src/Panel.cpp
   src/Player.cpp
   src/Window.cpp
   )

@@ -69,9 +69,6 @@ void WindowPrivate::newPanel()
 {
   auto* dock = new QDockWidget(this->parent);
   auto* widget = new T(dock);
-  auto flags = widget->windowFlags();
-  flags &= ~Qt::Window;
-  widget->setWindowFlags(flags);
   dock->setWidget(widget);
 
   this->parent->addDockWidget(Qt::LeftDockWidgetArea, dock);

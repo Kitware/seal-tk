@@ -2,31 +2,30 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_Player_hpp
-#define SEALTK_Player_hpp
+#ifndef SEALTK_Panel_hpp
+#define SEALTK_Panel_hpp
 
-#include "Panel.hpp"
-
+#include <QMainWindow>
 #include <qtGlobal.h>
 
 namespace sealtk
 {
 
-class PlayerPrivate;
+class PanelPrivate;
 
-class Player : public Panel
+class Panel : public QMainWindow
 {
   Q_OBJECT
 
 public:
-  explicit Player(QWidget* parent = nullptr);
-  ~Player() override;
+  explicit Panel(QWidget* parent = nullptr);
+  ~Panel() override;
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(Player)
+  QTE_DECLARE_PRIVATE_RPTR(Panel)
 
 private:
-  QTE_DECLARE_PRIVATE(Player)
+  QTE_DECLARE_PRIVATE(Panel)
 };
 
 }
