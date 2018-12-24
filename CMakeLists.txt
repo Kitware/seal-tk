@@ -48,9 +48,11 @@ endif()
 find_program(GIT_EXECUTABLE git)
 if(GIT_EXECUTABLE)
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --dirty
+    COMMAND ${GIT_EXECUTABLE} describe --dirty --always
     OUTPUT_VARIABLE SEALTK_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
 endif()
 
