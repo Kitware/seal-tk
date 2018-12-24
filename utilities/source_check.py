@@ -20,7 +20,7 @@ copyright_notice_cpp_re = "^/\* " + copyright_notice.replace("\n", "\n \* ") \
     + " \*/\n\n"
 copyright_notice_cmake_re = "^# " + copyright_notice.replace("\n", "\n# ") \
     + "\n\n"
-copyright_notice_py_re = "^#!/usr/bin/env python3\n\n# " \
+copyright_notice_py_re = "^(#!/usr/bin/env python3\n\n)?# " \
     + copyright_notice.replace("\n", "\n# ") + "\n\n"
 
 
@@ -59,10 +59,8 @@ class SourceFile:
             raise e
 
     def test_copyright(self):
-        if filename_components(self.filename)[0] == "src" and (
-                matches(self.filename, r"\.cpp$") or
-                matches(self.filename, r"\.hpp$") or
-                matches(self.filename, r"\.h\.in$")):
+        if filename_components(self.filename)[0] == "src" and \
+                matches(self.filename, r"\.(cpp|hpp|h\.in)$"):
             assert matches(self.contents(), copyright_notice_cpp_re)
         elif matches(self.filename, r"\.cmake$") or \
                 filename_components(self.filename)[-1] == "CMakeLists.txt":
@@ -72,9 +70,11 @@ class SourceFile:
 
     def test_include_guards(self):
         if filename_components(self.filename)[0] == "src" and \
-                matches(self.filename, r"\.hpp$"):
+                matches(self.filename, r"\.(hpp|h\.in)$"):
             identifier = "_".join(filename_components(self.filename)[1:]) \
                 .replace(".", "_")
+            if matches(self.filename, r"\.h\.in$"):
+                identifier = identifier[:-3]
             pattern = r"^([^\n]*\n){3}\n#ifndef SEALTK_" + identifier + \
                 r"\n#define SEALTK_" + identifier + r"\n.*\n#endif\n$"
             assert matches(self.contents(), pattern)

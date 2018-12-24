@@ -13,4 +13,4 @@
 #define SEALTK_Q_DESCRIPTION QStringLiteral(SEALTK_DESCRIPTION)
 #define SEALTK_Q_VERSION QStringLiteral(SEALTK_VERSION)
 
-#endif // SEALTK_Config_h
+#endif
