@@ -73,6 +73,8 @@ void WindowPrivate::newPanel()
   flags &= ~Qt::Window;
   widget->setWindowFlags(flags);
   dock->setWidget(widget);
+
+  this->parent->addDockWidget(Qt::LeftDockWidgetArea, dock);
   dock->show();
 }
 
