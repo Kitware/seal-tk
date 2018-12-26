@@ -60,7 +60,10 @@ if(NOT SEALTK_VERSION)
   set(SEALTK_VERSION "v${PROJECT_VERSION}")
 endif()
 
-configure_file("${CMAKE_SOURCE_DIR}/src/Config.h.in" "${CMAKE_BINARY_DIR}/src/Config.h")
+configure_file(
+  "${CMAKE_SOURCE_DIR}/src/Config.h.in"
+  "${CMAKE_BINARY_DIR}/src/Config.h"
+  )
 include_directories("${CMAKE_BINARY_DIR}/src")
 
 enable_testing()
@@ -73,6 +76,7 @@ if(TARGET Python3::Interpreter)
   endif()
   add_test(
     NAME SourceCheck
-    COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/utilities/source_check.py" ${git_args}
+    COMMAND Python3::Interpreter
+    "${CMAKE_SOURCE_DIR}/utilities/source_check.py" ${git_args}
     )
 endif()
