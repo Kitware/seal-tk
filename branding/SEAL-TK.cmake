@@ -4,4 +4,6 @@
 
 set(SEALTK_EXECUTABLE_NAME sealtk)
 set(SEALTK_TITLE "SEAL-TK")
-set(SEALTK_DESCRIPTION "SEAL-TK, the Stereoscopic Examination of Aquatic Life Toolkit")
+set(SEALTK_DESCRIPTION
+  "SEAL-TK, the Stereoscopic Examination of Aquatic Life Toolkit"
+  )

@@ -54,6 +54,7 @@ class SourceFile:
         try:
             self.test_copyright()
             self.test_include_guards()
+            self.test_line_length()
         except AssertionError as e:
             e.args = e.args + (self.filename,)
             raise e
@@ -78,6 +79,11 @@ class SourceFile:
             pattern = r"^([^\n]*\n){3}\n#ifndef SEALTK_" + identifier + \
                 r"\n#define SEALTK_" + identifier + r"\n.*\n#endif\n$"
             assert matches(self.contents(), pattern)
+
+    def test_line_length(self):
+        if matches(self.filename, r"\.(cpp|hpp|h\.in|cmake|py)$") or \
+                filename_components(self.filename)[-1] == "CMakeLists.txt":
+            assert not matches(self.contents(), "[^\n]{80,}")
 
 
 def main():
