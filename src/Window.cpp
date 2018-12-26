@@ -125,7 +125,7 @@ void Window::newLeftPanel(const QMetaObject& type)
 
   auto* panel = d->createPanel(type);
 
-  d->ui.centralwidgetLayout->insertWidget(0, panel);
+  d->ui.centralwidget->insertWidget(0, panel);
   panel->show();
 }
 
@@ -137,7 +137,7 @@ void Window::newRightPanel(const QMetaObject& type)
 
   auto* panel = d->createPanel(type);
 
-  d->ui.centralwidgetLayout->addWidget(panel);
+  d->ui.centralwidget->addWidget(panel);
   panel->show();
 }
 

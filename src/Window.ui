@@ -13,9 +13,7 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QSplitter" name="centralwidgetLayout"/>
-  </widget>
+  <widget class="QSplitter" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
