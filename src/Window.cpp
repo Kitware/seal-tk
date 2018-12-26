@@ -81,7 +81,7 @@ void Window::setPanelCounter(int counter)
 
 void Window::showAbout()
 {
-  sealtk::About about(this);
+  About about(this);
   about.exec();
 }
 
