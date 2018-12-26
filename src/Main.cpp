@@ -5,6 +5,7 @@
 #include <QApplication>
 
 #include "Player.hpp"
+#include "PlayerTree.hpp"
 #include "Window.hpp"
 
 int main(int argc, char** argv)
@@ -13,6 +14,7 @@ int main(int argc, char** argv)
 
   auto* window = new sealtk::Window;
   window->registerPanelType<sealtk::Player>("Player");
+  window->registerPanelType<sealtk::PlayerTree>("Players");
   window->show();
 
   return app.exec();

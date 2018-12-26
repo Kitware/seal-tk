@@ -31,6 +31,7 @@ add_executable(sealtk
   src/Main.cpp
   src/Panel.cpp
   src/Player.cpp
+  src/PlayerTree.cpp
   src/Window.cpp
   )
 
