@@ -6,6 +6,8 @@
 #define SEALTK_Window_hpp
 
 #include <QMainWindow>
+#include <QMetaObject>
+#include <QString>
 #include <qtGlobal.h>
 
 namespace sealtk
@@ -20,6 +22,20 @@ class Window : public QMainWindow
 public:
   explicit Window(QWidget* parent = nullptr);
   ~Window() override;
+
+  template<typename T>
+  void registerPanelType(const QString& name)
+  {
+    this->registerPanelType(name, T::staticMetaObject);
+  }
+
+  void registerPanelType(const QString& name, const QMetaObject& type);
+
+public slots:
+  void showAbout();
+  void newDockablePanel(const QMetaObject& type);
+  void newLeftPanel(const QMetaObject& type);
+  void newRightPanel(const QMetaObject& type);
 
 protected:
   QTE_DECLARE_PRIVATE_RPTR(Window)

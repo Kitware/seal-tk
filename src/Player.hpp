@@ -19,7 +19,7 @@ class Player : public Panel
   Q_OBJECT
 
 public:
-  explicit Player(QWidget* parent = nullptr);
+  Q_INVOKABLE explicit Player(QWidget* parent = nullptr);
   ~Player() override;
 
 protected:

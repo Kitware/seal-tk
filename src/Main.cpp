@@ -4,6 +4,7 @@
 
 #include <QApplication>
 
+#include "Player.hpp"
 #include "Window.hpp"
 
 int main(int argc, char** argv)
@@ -11,6 +12,7 @@ int main(int argc, char** argv)
   QApplication app{argc, argv};
 
   auto* window = new sealtk::Window;
+  window->registerPanelType<sealtk::Player>("Player");
   window->show();
 
   return app.exec();

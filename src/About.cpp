@@ -3,10 +3,9 @@
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
 #include "About.hpp"
+#include "ui_About.h"
 
 #include "Config.h"
-
-#include "ui_About.h"
 
 namespace sealtk
 {

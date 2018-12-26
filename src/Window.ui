@@ -13,7 +13,9 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QSplitter" name="centralwidgetLayout"/>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -33,13 +35,24 @@
     <property name="title">
      <string>View</string>
     </property>
-    <widget class="QMenu" name="menuNewPanel">
+    <widget class="QMenu" name="menuNewDockablePanel">
      <property name="title">
-      <string>New Panel</string>
+      <string>New Dockable Panel</string>
      </property>
-     <addaction name="actionNewPlayer"/>
     </widget>
-    <addaction name="menuNewPanel"/>
+    <widget class="QMenu" name="menuNewLeftPanel">
+     <property name="title">
+      <string>New Left Panel</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="menuNewRightPanel">
+     <property name="title">
+      <string>New Right Panel</string>
+     </property>
+    </widget>
+    <addaction name="menuNewDockablePanel"/>
+    <addaction name="menuNewLeftPanel"/>
+    <addaction name="menuNewRightPanel"/>
    </widget>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
@@ -48,11 +61,6 @@
   <action name="actionAbout">
    <property name="text">
     <string>About...</string>
-   </property>
-  </action>
-  <action name="actionNewPlayer">
-   <property name="text">
-    <string>Player...</string>
    </property>
   </action>
  </widget>

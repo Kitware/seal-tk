@@ -3,7 +3,6 @@
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
 #include "Player.hpp"
-
 #include "ui_Player.h"
 
 namespace sealtk
