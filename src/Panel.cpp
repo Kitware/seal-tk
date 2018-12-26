@@ -7,7 +7,7 @@
 namespace sealtk
 {
 
-class PanelPrivate : public QObject
+class PanelPrivate
 {
 };
 
@@ -23,6 +23,10 @@ Panel::Panel(QWidget* parent)
 }
 
 Panel::~Panel()
+{
+}
+
+void Panel::init(Window* window)
 {
 }
 

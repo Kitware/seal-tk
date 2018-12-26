@@ -14,6 +14,8 @@ namespace sealtk
 
 class PlayerPrivate;
 
+class Window;
+
 class Player : public Panel
 {
   Q_OBJECT
@@ -21,6 +23,8 @@ class Player : public Panel
 public:
   Q_INVOKABLE explicit Player(QWidget* parent = nullptr);
   ~Player() override;
+
+  void init(Window* window) override;
 
 protected:
   QTE_DECLARE_PRIVATE_RPTR(Player)

@@ -31,6 +31,9 @@ public:
 
   void registerPanelType(const QString& name, const QMetaObject& type);
 
+  int panelCounter();
+  void setPanelCounter(int counter);
+
 public slots:
   void showAbout();
   void newDockablePanel(const QMetaObject& type);

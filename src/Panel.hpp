@@ -13,6 +13,8 @@ namespace sealtk
 
 class PanelPrivate;
 
+class Window;
+
 class Panel : public QMainWindow
 {
   Q_OBJECT
@@ -20,6 +22,8 @@ class Panel : public QMainWindow
 public:
   explicit Panel(QWidget* parent = nullptr);
   ~Panel() override;
+
+  virtual void init(Window* window);
 
 protected:
   QTE_DECLARE_PRIVATE_RPTR(Panel)

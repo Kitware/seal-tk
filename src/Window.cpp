@@ -7,6 +7,7 @@
 
 #include "About.hpp"
 #include "Config.h"
+#include "Panel.hpp"
 
 #include <QDockWidget>
 
@@ -18,8 +19,11 @@ class WindowPrivate
 public:
   WindowPrivate(Window* parent);
 
+  Panel* createPanel(const QMetaObject& type);
+
   Window* parent;
   Ui::Window ui;
+  int panelCounter;
 };
 
 QTE_IMPLEMENT_D_FUNC(Window)
@@ -61,6 +65,20 @@ void Window::registerPanelType(const QString& name, const QMetaObject& type)
           this, [&type, this]() { this->newRightPanel(type); });
 }
 
+int Window::panelCounter()
+{
+  QTE_D();
+
+  return d->panelCounter;
+}
+
+void Window::setPanelCounter(int counter)
+{
+  QTE_D();
+
+  d->panelCounter = counter;
+}
+
 void Window::showAbout()
 {
   sealtk::About about(this);
@@ -69,10 +87,15 @@ void Window::showAbout()
 
 void Window::newDockablePanel(const QMetaObject& type)
 {
+  QTE_D();
+
+  auto* panel = d->createPanel(type);
+
   auto* dock = new QDockWidget(this);
-  auto* widget = qobject_cast<QWidget*>(
-    type.newInstance(Q_ARG(QWidget*, dock)));
-  dock->setWidget(widget);
+  dock->setWidget(panel);
+  dock->setWindowTitle(panel->windowTitle());
+  connect(panel, &QWidget::windowTitleChanged,
+          dock, &QWidget::setWindowTitle);
 
   this->addDockWidget(Qt::LeftDockWidgetArea, dock);
   dock->show();
@@ -82,27 +105,35 @@ void Window::newLeftPanel(const QMetaObject& type)
 {
   QTE_D();
 
-  auto* widget = qobject_cast<QWidget*>(
-    type.newInstance(Q_ARG(QWidget*, this)));
+  auto* panel = d->createPanel(type);
 
-  d->ui.centralwidgetLayout->insertWidget(0, widget);
-  widget->show();
+  d->ui.centralwidgetLayout->insertWidget(0, panel);
+  panel->show();
 }
 
 void Window::newRightPanel(const QMetaObject& type)
 {
   QTE_D();
 
-  auto* widget = qobject_cast<QWidget*>(
-    type.newInstance(Q_ARG(QWidget*, this)));
+  auto* panel = d->createPanel(type);
 
-  d->ui.centralwidgetLayout->addWidget(widget);
-  widget->show();
+  d->ui.centralwidgetLayout->addWidget(panel);
+  panel->show();
 }
 
 WindowPrivate::WindowPrivate(Window* parent)
-  : parent(parent)
+  : parent(parent),
+    panelCounter(1)
 {
+}
+
+Panel* WindowPrivate::createPanel(const QMetaObject& type)
+{
+  auto* panel = qobject_cast<Panel*>(
+    type.newInstance(Q_ARG(QWidget*, this->parent)));
+  panel->init(this->parent);
+
+  return panel;
 }
 
 }

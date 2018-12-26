@@ -5,6 +5,8 @@
 #include "Player.hpp"
 #include "ui_Player.h"
 
+#include "Window.hpp"
+
 namespace sealtk
 {
 
@@ -27,6 +29,13 @@ Player::Player(QWidget* parent)
 
 Player::~Player()
 {
+}
+
+void Player::init(Window* window)
+{
+  int counter = window->panelCounter();
+  this->setWindowTitle(QStringLiteral("Untitled-%1").arg(counter));
+  window->setPanelCounter(counter + 1);
 }
 
 }
