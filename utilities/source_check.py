@@ -90,7 +90,7 @@ class SourceFile:
             if matches(self.filename, r"\.h\.in$"):
                 identifier = identifier[:-3]
             pattern = r"^([^\n]*\n){3}\n#ifndef SEALTK_" + identifier + \
-                r"\n#define SEALTK_" + identifier + r"\n.*\n#endif\n$"
+                r"\n#define SEALTK_" + identifier + r"\n.*\n#endif\n\Z"
             assert matches(self.contents(), pattern)
 
     def test_line_length(self):
