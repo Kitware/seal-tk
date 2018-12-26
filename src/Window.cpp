@@ -26,7 +26,11 @@ public:
   int panelCounter;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 QTE_IMPLEMENT_D_FUNC(Window)
+
+///////////////////////////////////////////////////////////////////////////////
 
 Window::Window(QWidget* parent)
   : QMainWindow(parent),
@@ -41,9 +45,13 @@ Window::Window(QWidget* parent)
           this, &Window::showAbout);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 Window::~Window()
 {
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void Window::registerPanelType(const QString& name, const QMetaObject& type)
 {
@@ -65,12 +73,16 @@ void Window::registerPanelType(const QString& name, const QMetaObject& type)
           this, [&type, this]() { this->newRightPanel(type); });
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 int Window::panelCounter()
 {
   QTE_D();
 
   return d->panelCounter;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void Window::setPanelCounter(int counter)
 {
@@ -79,11 +91,15 @@ void Window::setPanelCounter(int counter)
   d->panelCounter = counter;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 void Window::showAbout()
 {
   About about(this);
   about.exec();
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void Window::newDockablePanel(const QMetaObject& type)
 {
@@ -101,6 +117,8 @@ void Window::newDockablePanel(const QMetaObject& type)
   dock->show();
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 void Window::newLeftPanel(const QMetaObject& type)
 {
   QTE_D();
@@ -110,6 +128,8 @@ void Window::newLeftPanel(const QMetaObject& type)
   d->ui.centralwidgetLayout->insertWidget(0, panel);
   panel->show();
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void Window::newRightPanel(const QMetaObject& type)
 {
@@ -121,11 +141,15 @@ void Window::newRightPanel(const QMetaObject& type)
   panel->show();
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 WindowPrivate::WindowPrivate(Window* parent)
   : parent(parent),
     panelCounter(1)
 {
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 Panel* WindowPrivate::createPanel(const QMetaObject& type)
 {
