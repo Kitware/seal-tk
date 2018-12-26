@@ -8,6 +8,7 @@
 #include "About.hpp"
 #include "Config.h"
 #include "Panel.hpp"
+#include "SplitterWindow.hpp"
 
 #include <QDockWidget>
 
@@ -125,7 +126,13 @@ void Window::newLeftPanel(const QMetaObject& type)
 
   auto* panel = d->createPanel(type);
 
-  d->ui.centralwidget->insertWidget(0, panel);
+  auto* window = new SplitterWindow(this);
+  window->setCentralWidget(panel);
+  window->setWindowTitle(panel->windowTitle());
+  connect(panel, &QWidget::windowTitleChanged,
+          window, &QWidget::setWindowTitle);
+
+  d->ui.centralwidget->insertWidget(0, window);
   panel->show();
 }
 
@@ -137,7 +144,13 @@ void Window::newRightPanel(const QMetaObject& type)
 
   auto* panel = d->createPanel(type);
 
-  d->ui.centralwidget->addWidget(panel);
+  auto* window = new SplitterWindow(this);
+  window->setCentralWidget(panel);
+  window->setWindowTitle(panel->windowTitle());
+  connect(panel, &QWidget::windowTitleChanged,
+          window, &QWidget::setWindowTitle);
+
+  d->ui.centralwidget->addWidget(window);
   panel->show();
 }
 
