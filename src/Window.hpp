@@ -31,7 +31,7 @@ public:
 
   void registerPanelType(const QString& name, const QMetaObject& type);
 
-  int panelCounter();
+  int panelCounter() const;
   void setPanelCounter(int counter);
 
 public slots:

@@ -75,7 +75,7 @@ void Window::registerPanelType(const QString& name, const QMetaObject& type)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int Window::panelCounter()
+int Window::panelCounter() const
 {
   QTE_D();
 
