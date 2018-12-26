@@ -50,28 +50,41 @@ class SourceFile:
                 self._contents = f.read()
         return self._contents
 
+    def is_cpp_source(self):
+        return filename_components(self.filename)[0] == "src" and \
+            matches(self.filename, r"\.cpp$")
+
+    def is_cpp_header(self):
+        return filename_components(self.filename)[0] == "src" and \
+            matches(self.filename, r"\.(hpp|h\.in)$")
+
+    def is_python(self):
+        return matches(self.filename, r"\.py$")
+
+    def is_cmake(self):
+        return matches(self.filename, r"\.cmake$") or \
+            filename_components(self.filename)[-1] == "CMakeLists.txt"
+
     def test(self):
         try:
             self.test_copyright()
             self.test_include_guards()
             self.test_line_length()
+            self.test_trailing_whitespace()
         except AssertionError as e:
             e.args = e.args + (self.filename,)
             raise e
 
     def test_copyright(self):
-        if filename_components(self.filename)[0] == "src" and \
-                matches(self.filename, r"\.(cpp|hpp|h\.in)$"):
+        if self.is_cpp_source() or self.is_cpp_header():
             assert matches(self.contents(), copyright_notice_cpp_re)
-        elif matches(self.filename, r"\.cmake$") or \
-                filename_components(self.filename)[-1] == "CMakeLists.txt":
+        elif self.is_cmake():
             assert matches(self.contents(), copyright_notice_cmake_re)
-        elif matches(self.filename, r"\.py$"):
+        elif self.is_python():
             assert matches(self.contents(), copyright_notice_py_re)
 
     def test_include_guards(self):
-        if filename_components(self.filename)[0] == "src" and \
-                matches(self.filename, r"\.(hpp|h\.in)$"):
+        if self.is_cpp_header():
             identifier = "_".join(filename_components(self.filename)[1:]) \
                 .replace(".", "_")
             if matches(self.filename, r"\.h\.in$"):
@@ -81,9 +94,15 @@ class SourceFile:
             assert matches(self.contents(), pattern)
 
     def test_line_length(self):
-        if matches(self.filename, r"\.(cpp|hpp|h\.in|cmake|py)$") or \
-                filename_components(self.filename)[-1] == "CMakeLists.txt":
-            assert not matches(self.contents(), "[^\n]{80,}")
+        if self.is_cpp_source() or self.is_cpp_header() or self.is_python() \
+                or self.is_cmake():
+            assert not matches(self.contents(), r"[^\n]{80,}")
+
+    def test_trailing_whitespace(self):
+        if self.is_cpp_source() or self.is_cpp_header() or self.is_python() \
+                or self.is_cmake():
+            assert not matches(self.contents(), r"[ \t]\n")
+            assert matches(self.contents(), r"[^\n]\n\Z")
 
 
 def main():
