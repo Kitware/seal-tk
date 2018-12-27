@@ -32,6 +32,8 @@ SplitterWindow::SplitterWindow(QWidget* parent)
 
   connect(this, &QWidget::windowTitleChanged,
           d->ui.titleLabel, &QLabel::setText);
+  connect(d->ui.closeButton, &QToolButton::clicked,
+          this, &QWidget::hide);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
