@@ -29,6 +29,8 @@ Player::Player(QWidget* parent)
   QTE_D();
 
   d->ui.setupUi(this);
+
+  d->ui.graphicsView->addAction(d->ui.actionOpen);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

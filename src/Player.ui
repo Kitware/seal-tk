@@ -13,7 +13,11 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <widget class="QGraphicsView" name="graphicsView"/>
+  <widget class="QGraphicsView" name="graphicsView">
+   <property name="contextMenuPolicy">
+    <enum>Qt::ActionsContextMenu</enum>
+   </property>
+  </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
     <string>toolBar</string>
@@ -46,6 +50,11 @@
    </property>
    <property name="visible">
     <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open...</string>
    </property>
   </action>
  </widget>
