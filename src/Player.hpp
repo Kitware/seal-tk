@@ -9,6 +9,8 @@
 
 #include <qtGlobal.h>
 
+class QImage;
+
 namespace sealtk
 {
 
@@ -25,6 +27,12 @@ public:
   ~Player() override;
 
   void init(Window* window) override;
+
+signals:
+  void imageOpened(const QImage& image);
+
+public slots:
+  void openFile();
 
 protected:
   QTE_DECLARE_PRIVATE_RPTR(Player)

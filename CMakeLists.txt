@@ -32,6 +32,7 @@ add_executable(sealtk
   src/Panel.cpp
   src/Player.cpp
   src/PlayerTree.cpp
+  src/PlayerViewer.cpp
   src/SplitterWindow.cpp
   src/Window.cpp
   )
@@ -40,6 +41,7 @@ target_link_libraries(sealtk
   qtExtensions
   Qt5::Widgets
   )
+target_include_directories(sealtk PRIVATE src)
 
 set_property(TARGET sealtk PROPERTY RUNTIME_OUTPUT_DIRECTORY bin)
 

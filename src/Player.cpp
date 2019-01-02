@@ -5,7 +5,12 @@
 #include "Player.hpp"
 #include "ui_Player.h"
 
+#include "PlayerViewer.hpp"
 #include "Window.hpp"
+
+#include <QFileDialog>
+#include <QImage>
+#include <QString>
 
 namespace sealtk
 {
@@ -30,7 +35,12 @@ Player::Player(QWidget* parent)
 
   d->ui.setupUi(this);
 
-  d->ui.graphicsView->addAction(d->ui.actionOpen);
+  d->ui.video->addAction(d->ui.actionOpen);
+
+  connect(d->ui.actionOpen, &QAction::triggered,
+          this, &Player::openFile);
+  connect(this, &Player::imageOpened,
+          d->ui.video, &PlayerViewer::displayImage);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,6 +56,21 @@ void Player::init(Window* window)
   int counter = window->panelCounter();
   this->setWindowTitle(QStringLiteral("Untitled-%1").arg(counter));
   window->setPanelCounter(counter + 1);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void Player::openFile()
+{
+  QString filename = QFileDialog::getOpenFileName(this);
+  if (!filename.isNull())
+  {
+    QImage image(filename);
+    if (!image.isNull())
+    {
+      emit this->imageOpened(image);
+    }
+  }
 }
 
 }
