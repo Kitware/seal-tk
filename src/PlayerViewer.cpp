@@ -4,8 +4,6 @@
 
 #include "PlayerViewer.hpp"
 
-#include <QDebug>
-
 namespace sealtk
 {
 
@@ -33,7 +31,6 @@ PlayerViewer::~PlayerViewer()
 //-----------------------------------------------------------------------------
 void PlayerViewer::displayImage(const QImage& image)
 {
-  qDebug() << "displayImage() called";
 }
 
 }
