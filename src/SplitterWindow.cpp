@@ -8,6 +8,7 @@
 namespace sealtk
 {
 
+//=============================================================================
 class SplitterWindowPrivate
 {
 public:
@@ -17,12 +18,10 @@ public:
   Ui::SplitterWindow ui;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
+//-----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(SplitterWindow)
 
-///////////////////////////////////////////////////////////////////////////////
-
+//-----------------------------------------------------------------------------
 SplitterWindow::SplitterWindow(QWidget* parent)
   : QWidget(parent),
     d_ptr{new SplitterWindowPrivate(this)}
@@ -36,14 +35,12 @@ SplitterWindow::SplitterWindow(QWidget* parent)
           this, &QWidget::hide);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
+//-----------------------------------------------------------------------------
 SplitterWindow::~SplitterWindow()
 {
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
+//-----------------------------------------------------------------------------
 QWidget* SplitterWindow::centralWidget() const
 {
   QTE_D();
@@ -51,8 +48,7 @@ QWidget* SplitterWindow::centralWidget() const
   return d->ui.centralWidget;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
+//-----------------------------------------------------------------------------
 void SplitterWindow::setCentralWidget(QWidget* widget)
 {
   QTE_D();
@@ -61,8 +57,7 @@ void SplitterWindow::setCentralWidget(QWidget* widget)
   d->ui.centralWidget = widget;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
+//-----------------------------------------------------------------------------
 SplitterWindowPrivate::SplitterWindowPrivate(SplitterWindow* parent)
   : parent(parent)
 {
