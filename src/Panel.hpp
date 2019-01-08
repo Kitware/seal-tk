@@ -26,10 +26,10 @@ public:
   virtual void init(Window* window);
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(Panel)
+  QTE_DECLARE_PRIVATE(Panel)
 
 private:
-  QTE_DECLARE_PRIVATE(Panel)
+  QTE_DECLARE_PRIVATE_RPTR(Panel)
 };
 
 }

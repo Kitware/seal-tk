@@ -35,10 +35,10 @@ public slots:
   void openFile();
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(Player)
+  QTE_DECLARE_PRIVATE(Player)
 
 private:
-  QTE_DECLARE_PRIVATE(Player)
+  QTE_DECLARE_PRIVATE_RPTR(Player)
 };
 
 }

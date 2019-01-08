@@ -27,10 +27,10 @@ public:
   void init(Window* window) override;
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(PlayerTree)
+  QTE_DECLARE_PRIVATE(PlayerTree)
 
 private:
-  QTE_DECLARE_PRIVATE(PlayerTree)
+  QTE_DECLARE_PRIVATE_RPTR(PlayerTree)
 };
 
 }

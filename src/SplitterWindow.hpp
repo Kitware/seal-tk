@@ -27,10 +27,10 @@ public:
   void setCentralWidget(QWidget* widget);
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(SplitterWindow)
+  QTE_DECLARE_PRIVATE(SplitterWindow)
 
 private:
-  QTE_DECLARE_PRIVATE(SplitterWindow)
+  QTE_DECLARE_PRIVATE_RPTR(SplitterWindow)
 };
 
 }

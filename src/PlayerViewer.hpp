@@ -27,13 +27,13 @@ public slots:
   void displayImage(const QImage& image);
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(PlayerViewer)
+  QTE_DECLARE_PRIVATE(PlayerViewer)
 
   void initializeGL() override;
   void paintGL() override;
 
 private:
-  QTE_DECLARE_PRIVATE(PlayerViewer)
+  QTE_DECLARE_PRIVATE_RPTR(PlayerViewer)
 };
 
 }

@@ -22,10 +22,10 @@ public:
   ~About() override;
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(About)
+  QTE_DECLARE_PRIVATE(About)
 
 private:
-  QTE_DECLARE_PRIVATE(About)
+  QTE_DECLARE_PRIVATE_RPTR(About)
 };
 
 }

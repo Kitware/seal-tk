@@ -41,10 +41,10 @@ public slots:
   void newRightPanel(const QMetaObject& type);
 
 protected:
-  QTE_DECLARE_PRIVATE_RPTR(Window)
+  QTE_DECLARE_PRIVATE(Window)
 
 private:
-  QTE_DECLARE_PRIVATE(Window)
+  QTE_DECLARE_PRIVATE_RPTR(Window)
 };
 
 }
