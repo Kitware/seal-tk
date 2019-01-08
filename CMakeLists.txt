@@ -10,6 +10,7 @@ project(seal-tk
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_AUTOMOC 1)
+set(CMAKE_AUTORCC 1)
 set(CMAKE_AUTOUIC 1)
 
 set(SEALTK_BRANDING SEAL-TK CACHE LIST "Branding to use")
@@ -35,6 +36,8 @@ add_executable(sealtk
   src/PlayerViewer.cpp
   src/SplitterWindow.cpp
   src/Window.cpp
+
+  src/glsl/PlayerViewer.qrc
   )
 
 target_link_libraries(sealtk

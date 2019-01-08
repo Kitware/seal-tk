@@ -29,6 +29,9 @@ public slots:
 protected:
   QTE_DECLARE_PRIVATE_RPTR(PlayerViewer)
 
+  void initializeGL() override;
+  void paintGL() override;
+
 private:
   QTE_DECLARE_PRIVATE(PlayerViewer)
 };

@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+  <file>PlayerViewerVertex.glsl</file>
+  <file>PlayerViewerFragment.glsl</file>
+</qresource>
+</RCC>
