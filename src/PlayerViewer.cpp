@@ -5,6 +5,8 @@
 #include "PlayerViewer.hpp"
 
 #include <QApplication>
+#include <QMatrix3x3>
+#include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -17,6 +19,12 @@
 namespace sealtk
 {
 
+struct VertexData
+{
+  QVector2D vertexCoords;
+  QVector2D textureCoords;
+};
+
 //=============================================================================
 class PlayerViewerPrivate
 {
@@ -28,6 +36,9 @@ public:
 
   PlayerViewer* q;
   QImage image;
+  QMatrix3x3 homography;
+  QMatrix4x4 homographyGl;
+  int homographyLocation;
   std::unique_ptr<QOpenGLTexture> imageTexture;
   std::unique_ptr<QOpenGLBuffer> vertexBuffer;
   std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
@@ -49,7 +60,7 @@ PlayerViewer::~PlayerViewer()
 }
 
 //-----------------------------------------------------------------------------
-void PlayerViewer::displayImage(const QImage& image)
+void PlayerViewer::setImage(QImage const& image)
 {
   QTE_D();
 
@@ -61,15 +72,35 @@ void PlayerViewer::displayImage(const QImage& image)
 }
 
 //-----------------------------------------------------------------------------
-void PlayerViewer::initializeGL()
+void PlayerViewer::setHomography(QMatrix3x3 const& homography)
 {
   QTE_D();
 
-  struct VertexData
+  d->homography = homography;
+  for (int row = 0; row < 3; row++)
   {
-    QVector2D vertexCoords;
-    QVector2D textureCoords;
-  };
+    for (int column = 0; column < 3; column++)
+    {
+      int glRow = row;
+      if (glRow >= 2)
+      {
+        glRow++;
+      }
+      int glColumn = column;
+      if (glColumn >= 2)
+      {
+        glColumn++;
+      }
+      d->homographyGl(glRow, glColumn) = d->homography(row, column);
+    }
+  }
+  this->update();
+}
+
+//-----------------------------------------------------------------------------
+void PlayerViewer::initializeGL()
+{
+  QTE_D();
 
   static QVector<VertexData> const vertexData{
     {{1.0f, 1.0f}, {1.0f, 0.0f}},
@@ -99,11 +130,7 @@ void PlayerViewer::initializeGL()
   d->shaderProgram->bindAttributeLocation("a_textureCoords", 1);
   d->shaderProgram->link();
 
-  d->shaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2, sizeof(VertexData));
-  d->shaderProgram->enableAttributeArray(0);
-  d->shaderProgram->setAttributeBuffer(1, GL_FLOAT, 2 * sizeof(GLfloat), 2,
-                                      sizeof(VertexData));
-  d->shaderProgram->enableAttributeArray(1);
+  d->homographyLocation = d->shaderProgram->uniformLocation("homography");
 }
 
 //-----------------------------------------------------------------------------
@@ -113,19 +140,36 @@ void PlayerViewer::paintGL()
   auto* functions = this->context()->functions();
 
   functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  d->shaderProgram->bind();
   if (d->imageTexture)
   {
+    d->shaderProgram->bind();
     d->imageTexture->bind();
+
+    d->vertexBuffer->bind();
+    d->shaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2,
+                                         sizeof(VertexData));
+    d->shaderProgram->enableAttributeArray(0);
+    d->shaderProgram->setAttributeBuffer(1, GL_FLOAT, 2 * sizeof(GLfloat), 2,
+                                        sizeof(VertexData));
+    d->shaderProgram->enableAttributeArray(1);
+
+    d->shaderProgram->setUniformValueArray(d->homographyLocation,
+                                           &d->homographyGl, 1);
+
+    functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    d->vertexBuffer->release();
+    d->imageTexture->release();
+    d->shaderProgram->release();
   }
-  functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-  d->shaderProgram->release();
 }
 
 //-----------------------------------------------------------------------------
 PlayerViewerPrivate::PlayerViewerPrivate(PlayerViewer* q)
   : q{q}
 {
+  this->homography.setToIdentity();
+  this->homographyGl.setToIdentity();
 }
 
 //-----------------------------------------------------------------------------

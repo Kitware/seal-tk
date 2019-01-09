@@ -5,6 +5,7 @@
 #ifndef SEALTK_PlayerViewer_hpp
 #define SEALTK_PlayerViewer_hpp
 
+#include <QMatrix3x3>
 #include <QOpenGLWidget>
 #include <qtGlobal.h>
 
@@ -24,7 +25,8 @@ public:
   ~PlayerViewer() override;
 
 public slots:
-  void displayImage(const QImage& image);
+  void setImage(QImage const& image);
+  void setHomography(QMatrix3x3 const& homography);
 
 protected:
   QTE_DECLARE_PRIVATE(PlayerViewer)
