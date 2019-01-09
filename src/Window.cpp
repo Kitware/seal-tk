@@ -40,6 +40,7 @@ Window::Window(QWidget* parent)
   d->ui.setupUi(this);
 
   this->setWindowTitle(SEALTK_Q_TITLE);
+  this->setWindowIcon(QIcon(":/logo256.png"));
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);

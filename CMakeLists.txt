@@ -38,6 +38,7 @@ add_executable(sealtk
   src/Window.cpp
 
   src/glsl/PlayerViewer.qrc
+  ${SEALTK_RESOURCE_FILE}
   )
 
 target_link_libraries(sealtk

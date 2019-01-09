@@ -7,3 +7,6 @@ set(SEALTK_TITLE "SEAL-TK")
 set(SEALTK_DESCRIPTION
   "SEAL-TK, the Stereoscopic Examination of Aquatic Life Toolkit"
   )
+set(SEALTK_RESOURCE_FILE
+  "${CMAKE_CURRENT_LIST_DIR}/SEAL-TK/resources.qrc"
+  )
