@@ -6,6 +6,7 @@
 #include "ui_About.h"
 
 #include "Config.h"
+#include "Version.h"
 
 namespace sealtk
 {

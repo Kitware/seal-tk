@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_About_hpp
-#define SEALTK_About_hpp
+#ifndef SEALTK_app_About_hpp
+#define SEALTK_app_About_hpp
 
 #include <QDialog>
 #include <qtGlobal.h>

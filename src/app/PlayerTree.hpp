@@ -2,43 +2,35 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_Player_hpp
-#define SEALTK_Player_hpp
+#ifndef SEALTK_app_PlayerTree_hpp
+#define SEALTK_app_PlayerTree_hpp
 
 #include "Panel.hpp"
 
 #include <qtGlobal.h>
 
-class QImage;
-
 namespace sealtk
 {
 
-class PlayerPrivate;
+class PlayerTreePrivate;
 
 class Window;
 
-class Player : public Panel
+class PlayerTree : public Panel
 {
   Q_OBJECT
 
 public:
-  Q_INVOKABLE explicit Player(QWidget* parent = nullptr);
-  ~Player() override;
+  Q_INVOKABLE explicit PlayerTree(QWidget* parent = nullptr);
+  ~PlayerTree() override;
 
   void init(Window* window) override;
 
-signals:
-  void imageOpened(const QImage& image);
-
-public slots:
-  void openFile();
-
 protected:
-  QTE_DECLARE_PRIVATE(Player)
+  QTE_DECLARE_PRIVATE(PlayerTree)
 
 private:
-  QTE_DECLARE_PRIVATE_RPTR(Player)
+  QTE_DECLARE_PRIVATE_RPTR(PlayerTree)
 };
 
 }

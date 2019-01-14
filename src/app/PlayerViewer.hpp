@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_PlayerViewer_hpp
-#define SEALTK_PlayerViewer_hpp
+#ifndef SEALTK_app_PlayerViewer_hpp
+#define SEALTK_app_PlayerViewer_hpp
 
 #include <QMatrix3x3>
 #include <QOpenGLWidget>

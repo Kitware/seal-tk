@@ -65,15 +65,21 @@ class SourceFile:
         return matches(self.filename, r"\.cmake$") or \
             filename_components(self.filename)[-1] == "CMakeLists.txt"
 
+    def is_thirdparty(self):
+        if filename_components(self.filename)[:2] == ["cmake", "thirdparty"]:
+            return True
+        return False
+
     def test(self):
-        try:
-            self.test_copyright()
-            self.test_include_guards()
-            self.test_line_length()
-            self.test_trailing_whitespace()
-        except AssertionError as e:
-            e.args = e.args + (self.filename,)
-            raise e
+        if not self.is_thirdparty():
+            try:
+                self.test_copyright()
+                self.test_include_guards()
+                self.test_line_length()
+                self.test_trailing_whitespace()
+            except AssertionError as e:
+                e.args = e.args + (self.filename,)
+                raise e
 
     def test_copyright(self):
         if self.is_cpp_source() or self.is_cpp_header():
