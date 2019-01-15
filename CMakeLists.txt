@@ -14,6 +14,7 @@ list(APPEND CMAKE_MODULE_PATH
   )
 
 find_package(Qt5 REQUIRED COMPONENTS
+  Test
   Widgets
   Xml
   )

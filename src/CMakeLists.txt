@@ -3,4 +3,5 @@
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
 add_subdirectory(lib)
+add_subdirectory(test)
 add_subdirectory(app)
