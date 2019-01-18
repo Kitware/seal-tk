@@ -2,41 +2,47 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "About.hpp"
-#include "ui_About.h"
+#include <sealtk/gui/PlayerTree.hpp>
+#include "ui_PlayerTree.h"
 
-#include "Config.h"
-#include "Version.h"
+#include <sealtk/gui/Window.hpp>
 
 namespace sealtk
 {
 
+namespace gui
+{
+
 //=============================================================================
-class AboutPrivate
+class PlayerTreePrivate
 {
 public:
-  Ui::About ui;
+  Ui::PlayerTree ui;
 };
 
 //-----------------------------------------------------------------------------
-QTE_IMPLEMENT_D_FUNC(About)
+QTE_IMPLEMENT_D_FUNC(PlayerTree)
 
 //-----------------------------------------------------------------------------
-About::About(QWidget* parent)
-  : QDialog(parent),
-    d_ptr{new AboutPrivate}
+PlayerTree::PlayerTree(QWidget* parent)
+  : Panel(parent),
+    d_ptr{new PlayerTreePrivate}
 {
   QTE_D();
-  d->ui.setupUi(this);
 
-  d->ui.labelCopyright->setText(QStringLiteral(
-    SEALTK_TITLE " " SEALTK_VERSION "\n\n"
-    SEALTK_DESCRIPTION "\n\nCopyright \u00A9 2018 Kitware, Inc."));
+  d->ui.setupUi(this);
 }
 
 //-----------------------------------------------------------------------------
-About::~About()
+PlayerTree::~PlayerTree()
 {
+}
+
+//-----------------------------------------------------------------------------
+void PlayerTree::init(Window* window)
+{
+}
+
 }
 
 }

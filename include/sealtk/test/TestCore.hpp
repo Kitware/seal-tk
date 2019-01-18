@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_test_SEALTKTest_hpp
-#define SEALTK_test_SEALTKTest_hpp
+#ifndef sealtk_test_TestCore_hpp
+#define sealtk_test_TestCore_hpp
 
 #include <QString>
 

@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_lib_VideoSource_hpp
-#define SEALTK_lib_VideoSource_hpp
+#ifndef sealtk_core_VideoSource_hpp
+#define sealtk_core_VideoSource_hpp
 
 #include <QImage>
 #include <QObject>
@@ -15,6 +15,9 @@
 #include <set>
 
 namespace sealtk
+{
+
+namespace core
 {
 
 class VideoSourcePrivate;
@@ -45,6 +48,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(VideoSource)
 };
+
+}
 
 }
 

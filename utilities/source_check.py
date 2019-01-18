@@ -59,7 +59,7 @@ class SourceFile:
             matches(self.filename, r"\.cpp$")
 
     def is_cpp_header(self):
-        return filename_components(self.filename)[0] == "src" and \
+        return filename_components(self.filename)[0] == "include" and \
             matches(self.filename, r"\.(hpp|h\.in)$")
 
     def is_python(self):
@@ -105,12 +105,12 @@ class SourceFile:
 
     def test_include_guards(self):
         if self.is_cpp_header():
-            identifier = "_".join(filename_components(self.filename)[1:]) \
+            identifier = "_".join(filename_components(self.filename)[2:]) \
                 .replace(".", "_")
             if matches(self.filename, r"\.h\.in$"):
                 identifier = identifier[:-3]
-            pattern = r"^([^\n]*\n){3}\n#ifndef SEALTK_" + identifier + \
-                r"\n#define SEALTK_" + identifier + r"\n.*\n#endif\n\Z"
+            pattern = r"^([^\n]*\n){3}\n#ifndef sealtk_" + identifier + \
+                r"\n#define sealtk_" + identifier + r"\n.*\n#endif\n\Z"
             assert matches(self.contents(), pattern)
 
     def test_line_length(self):

@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <widget class="sealtk::PlayerViewer" name="video">
+  <widget class="sealtk::gui::PlayerViewer" name="video">
    <property name="contextMenuPolicy">
     <enum>Qt::ActionsContextMenu</enum>
    </property>
@@ -60,9 +60,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>sealtk::PlayerViewer</class>
+   <class>sealtk::gui::PlayerViewer</class>
    <extends>QOpenGLWidget</extends>
-   <header>PlayerViewer.hpp</header>
+   <header location="global">sealtk/gui/PlayerViewer.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -2,11 +2,9 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_lib_Version_h
-#define SEALTK_lib_Version_h
+#ifndef sealtk_test_Config_h
+#define sealtk_test_Config_h
 
-#define SEALTK_VERSION "@SEALTK_VERSION@"
-
-#define SEALTK_Q_VERSION QStringLiteral(SEALTK_VERSION)
+#define SEALTK_TEST_DATA_DIR "@SEALTK_TEST_DATA_DIR@"
 
 #endif

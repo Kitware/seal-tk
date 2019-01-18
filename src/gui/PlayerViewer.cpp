@@ -2,7 +2,7 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "PlayerViewer.hpp"
+#include <sealtk/gui/PlayerViewer.hpp>
 
 #include <QApplication>
 #include <QMatrix3x3>
@@ -17,6 +17,9 @@
 #include <memory>
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 struct VertexData
@@ -189,6 +192,8 @@ void PlayerViewerPrivate::destroyResources()
   this->vertexBuffer = nullptr;
   this->shaderProgram = nullptr;
   this->q->doneCurrent();
+}
+
 }
 
 }

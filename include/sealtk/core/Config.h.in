@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_lib_Config_h
-#define SEALTK_lib_Config_h
+#ifndef sealtk_core_Config_h
+#define sealtk_core_Config_h
 
 #define SEALTK_TITLE "@SEALTK_TITLE@"
 #define SEALTK_DESCRIPTION "@SEALTK_DESCRIPTION@"

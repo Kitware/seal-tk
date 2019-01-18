@@ -2,16 +2,19 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_app_Player_hpp
-#define SEALTK_app_Player_hpp
+#ifndef sealtk_gui_Player_hpp
+#define sealtk_gui_Player_hpp
 
-#include "Panel.hpp"
+#include <sealtk/gui/Panel.hpp>
 
 #include <qtGlobal.h>
 
 class QImage;
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 class PlayerPrivate;
@@ -40,6 +43,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(Player)
 };
+
+}
 
 }
 

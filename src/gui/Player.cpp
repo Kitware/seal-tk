@@ -2,17 +2,20 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "Player.hpp"
+#include <sealtk/gui/Player.hpp>
 #include "ui_Player.h"
 
-#include "PlayerViewer.hpp"
-#include "Window.hpp"
+#include <sealtk/gui/PlayerViewer.hpp>
+#include <sealtk/gui/Window.hpp>
 
 #include <QFileDialog>
 #include <QImage>
 #include <QString>
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 //=============================================================================
@@ -67,6 +70,8 @@ void Player::openFile()
       emit this->imageOpened(image);
     }
   }
+}
+
 }
 
 }

@@ -2,13 +2,16 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_app_Panel_hpp
-#define SEALTK_app_Panel_hpp
+#ifndef sealtk_gui_Panel_hpp
+#define sealtk_gui_Panel_hpp
 
 #include <QMainWindow>
 #include <qtGlobal.h>
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 class PanelPrivate;
@@ -31,6 +34,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(Panel)
 };
+
+}
 
 }
 

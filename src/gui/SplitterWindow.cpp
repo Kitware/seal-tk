@@ -2,10 +2,13 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "SplitterWindow.hpp"
+#include <sealtk/gui/SplitterWindow.hpp>
 #include "ui_SplitterWindow.h"
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 //=============================================================================
@@ -61,6 +64,8 @@ void SplitterWindow::setCentralWidget(QWidget* widget)
 SplitterWindowPrivate::SplitterWindowPrivate(SplitterWindow* parent)
   : parent(parent)
 {
+}
+
 }
 
 }

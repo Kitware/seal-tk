@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_app_PlayerViewer_hpp
-#define SEALTK_app_PlayerViewer_hpp
+#ifndef sealtk_gui_PlayerViewer_hpp
+#define sealtk_gui_PlayerViewer_hpp
 
 #include <QMatrix3x3>
 #include <QOpenGLWidget>
@@ -12,6 +12,9 @@
 class QImage;
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 class PlayerViewerPrivate;
@@ -37,6 +40,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(PlayerViewer)
 };
+
+}
 
 }
 

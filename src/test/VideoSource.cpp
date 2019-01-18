@@ -2,9 +2,9 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "SEALTKTest.hpp"
+#include <sealtk/test/TestCore.hpp>
 
-#include "VideoSource.hpp"
+#include <sealtk/core/VideoSource.hpp>
 
 #include <vital/algo/algorithm_factory.h>
 #include <vital/algo/image_io.h>
@@ -195,11 +195,11 @@ void TestVideoSource::seek()
     videoReader);
   videoReader->open(testDataPath("images/list1.txt").toStdString());
 
-  VideoSource videoSource;
+  core::VideoSource videoSource;
   videoSource.setVideoInput(videoReader);
 
   QVector<QImage> seekImages;
-  connect(&videoSource, &VideoSource::imageDisplayed,
+  connect(&videoSource, &core::VideoSource::imageDisplayed,
     [&seekImages](QImage const& image)
   {
     seekImages.append(image);

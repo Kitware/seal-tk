@@ -2,10 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "SEALTKTest.hpp"
-#include "TestConfig.h"
-
-#include <cstdlib>
+#include <sealtk/test/TestCore.hpp>
+#include <sealtk/test/Config.h>
 
 namespace sealtk
 {

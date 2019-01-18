@@ -8,9 +8,14 @@ project(seal-tk
   LANGUAGES CXX
   )
 
+include_directories(
+  "${PROJECT_SOURCE_DIR}/include"
+  "${PROJECT_BINARY_DIR}/include"
+  )
+
 list(APPEND CMAKE_MODULE_PATH
-  "${CMAKE_SOURCE_DIR}/cmake"
-  "${CMAKE_SOURCE_DIR}/cmake/thirdparty"
+  "${PROJECT_SOURCE_DIR}/cmake"
+  "${PROJECT_SOURCE_DIR}/cmake/thirdparty"
   )
 
 find_package(Qt5 REQUIRED COMPONENTS
@@ -34,7 +39,7 @@ set_property(CACHE SEALTK_BRANDING PROPERTY STRINGS
   Custom
   )
 
-include("${CMAKE_SOURCE_DIR}/branding/${SEALTK_BRANDING}.cmake")
+include("${PROJECT_SOURCE_DIR}/branding/${SEALTK_BRANDING}.cmake")
 
 enable_testing()
 
@@ -45,8 +50,26 @@ if(TARGET Python3::Interpreter)
   add_test(
     NAME SourceCheck
     COMMAND Python3::Interpreter
-    "${CMAKE_SOURCE_DIR}/utilities/source_check.py" ${git_args}
+    "${PROJECT_SOURCE_DIR}/utilities/source_check.py" ${git_args}
     )
 endif()
+
+function(sealtk_add_library name)
+  cmake_parse_arguments(sal "" "" "SOURCES;HEADERS" ${ARGN})
+
+  set(sal_headers)
+  foreach(h ${sal_HEADERS})
+    list(APPEND sal_headers
+      "${PROJECT_SOURCE_DIR}/include/sealtk/${name}/${h}")
+  endforeach()
+
+  add_library(sealtk_${name} ${sal_SOURCES} ${sal_headers})
+
+  set_target_properties(sealtk_${name} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
+    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
+    )
+endfunction()
 
 add_subdirectory(src)

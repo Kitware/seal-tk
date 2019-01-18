@@ -5,20 +5,16 @@
 set(SEALTK_TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/TestConfig.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/TestConfig.h"
+  "${PROJECT_SOURCE_DIR}/include/sealtk/test/Config.h.in"
+  "${PROJECT_BINARY_DIR}/include/sealtk/test/Config.h"
   )
 
-add_library(SEALTKTest STATIC SEALTKTest.cpp)
-target_link_libraries(SEALTKTest PUBLIC SEALTKLib Qt5::Core Qt5::Test)
-target_include_directories(SEALTKTest PUBLIC
-  "${CMAKE_CURRENT_SOURCE_DIR}"
-  "${CMAKE_CURRENT_BINARY_DIR}"
-  )
+add_library(sealtk_test TestCore.cpp)
+target_link_libraries(sealtk_test PUBLIC Qt5::Core Qt5::Test)
 
 function(sealtk_add_test name)
   add_executable(${name} ${name}.cpp)
-  target_link_libraries(${name} SEALTKTest)
+  target_link_libraries(${name} sealtk_test)
   set(test_output_file "${CMAKE_CURRENT_BINARY_DIR}/test_${name}.cmake")
   add_custom_command(TARGET ${name}
     POST_BUILD
@@ -26,7 +22,7 @@ function(sealtk_add_test name)
       "-DTEST_NAME:STRING=${name}"
       "-DTEST_EXECUTABLE:FILEPATH=$<TARGET_FILE:${name}>"
       "-DTEST_OUTPUT_FILE:FILEPATH=${test_output_file}"
-      -P "${CMAKE_SOURCE_DIR}/cmake/QtTestDiscoverTests.cmake"
+      -P "${PROJECT_SOURCE_DIR}/cmake/QtTestDiscoverTests.cmake"
     BYPRODUCTS "${test_output_file}"
     )
   set_property(DIRECTORY APPEND PROPERTY TEST_INCLUDE_FILES
@@ -35,5 +31,6 @@ endfunction()
 
 sealtk_add_test(VideoSource)
 target_link_libraries(VideoSource
+  sealtk_core
   kwiver::vital_algo
   )

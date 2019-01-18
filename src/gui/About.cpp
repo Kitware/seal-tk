@@ -2,37 +2,46 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "Panel.hpp"
+#include <sealtk/gui/About.hpp>
+#include "ui_About.h"
+
+#include <sealtk/core/Config.h>
+#include <sealtk/core/Version.h>
 
 namespace sealtk
 {
 
-//=============================================================================
-class PanelPrivate
+namespace gui
 {
+
+//=============================================================================
+class AboutPrivate
+{
+public:
+  Ui::About ui;
 };
 
 //-----------------------------------------------------------------------------
-QTE_IMPLEMENT_D_FUNC(Panel)
+QTE_IMPLEMENT_D_FUNC(About)
 
 //-----------------------------------------------------------------------------
-Panel::Panel(QWidget* parent)
-  : QMainWindow(parent),
-    d_ptr{new PanelPrivate}
+About::About(QWidget* parent)
+  : QDialog(parent),
+    d_ptr{new AboutPrivate}
 {
-  auto flags = this->windowFlags();
-  flags &= ~Qt::Window;
-  this->setWindowFlags(flags);
+  QTE_D();
+  d->ui.setupUi(this);
+
+  d->ui.labelCopyright->setText(QStringLiteral(
+    SEALTK_TITLE " " SEALTK_VERSION "\n\n"
+    SEALTK_DESCRIPTION "\n\nCopyright \u00A9 2018 Kitware, Inc."));
 }
 
 //-----------------------------------------------------------------------------
-Panel::~Panel()
+About::~About()
 {
 }
 
-//-----------------------------------------------------------------------------
-void Panel::init(Window* window)
-{
 }
 
 }

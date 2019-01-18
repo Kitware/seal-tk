@@ -2,13 +2,16 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "VideoSource.hpp"
+#include <sealtk/core/VideoSource.hpp>
 
 #include <arrows/qt/image_container.h>
 
 #include <map>
 
 namespace sealtk
+{
+
+namespace core
 {
 
 // ============================================================================
@@ -109,6 +112,8 @@ void VideoSourcePrivate::rebuildTimestampMap()
       }
     }
   }
+}
+
 }
 
 }

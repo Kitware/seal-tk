@@ -2,14 +2,17 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_app_PlayerTree_hpp
-#define SEALTK_app_PlayerTree_hpp
+#ifndef sealtk_gui_PlayerTree_hpp
+#define sealtk_gui_PlayerTree_hpp
 
-#include "Panel.hpp"
+#include <sealtk/gui/Panel.hpp>
 
 #include <qtGlobal.h>
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 class PlayerTreePrivate;
@@ -32,6 +35,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(PlayerTree)
 };
+
+}
 
 }
 

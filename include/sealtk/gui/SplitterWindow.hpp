@@ -2,13 +2,16 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef SEALTK_app_SplitterWindow_hpp
-#define SEALTK_app_SplitterWindow_hpp
+#ifndef sealtk_gui_SplitterWindow_hpp
+#define sealtk_gui_SplitterWindow_hpp
 
 #include <QWidget>
 #include <qtGlobal.h>
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 class SplitterWindowPrivate;
@@ -32,6 +35,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(SplitterWindow)
 };
+
+}
 
 }
 

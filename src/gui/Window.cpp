@@ -2,17 +2,21 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "Window.hpp"
+#include <sealtk/gui/Window.hpp>
 #include "ui_Window.h"
 
-#include "About.hpp"
-#include "Config.h"
-#include "Panel.hpp"
-#include "SplitterWindow.hpp"
+#include <sealtk/gui/About.hpp>
+#include <sealtk/gui/Panel.hpp>
+#include <sealtk/gui/SplitterWindow.hpp>
+
+#include <sealtk/core/Config.h>
 
 #include <QDockWidget>
 
 namespace sealtk
+{
+
+namespace gui
 {
 
 //=============================================================================
@@ -161,6 +165,8 @@ Panel* WindowPrivate::createPanel(const QMetaObject& type)
   panel->init(this->parent);
 
   return panel;
+}
+
 }
 
 }

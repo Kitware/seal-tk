@@ -2,6 +2,7 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
-add_subdirectory(lib)
-add_subdirectory(test)
+add_subdirectory(core)
+add_subdirectory(gui)
 add_subdirectory(app)
+add_subdirectory(test)
