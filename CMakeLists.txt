@@ -19,6 +19,7 @@ find_package(Qt5 REQUIRED COMPONENTS
   Xml
   )
 find_package(qtExtensions REQUIRED)
+find_package(kwiver REQUIRED)
 find_package(Git)
 find_package(Python3)
 

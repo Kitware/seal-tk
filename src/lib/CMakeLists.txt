@@ -2,8 +2,16 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
-add_library(SEALTKLib INTERFACE)
-target_include_directories(SEALTKLib INTERFACE
+add_library(SEALTKLib STATIC
+  VideoSource.cpp
+  )
+target_link_libraries(SEALTKLib
+  Qt5::Core
+  qtExtensions
+  kwiver::vital
+  kwiver::kwiver_algo_qt
+  )
+target_include_directories(SEALTKLib PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${CMAKE_CURRENT_BINARY_DIR}"
   )
