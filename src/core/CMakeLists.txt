@@ -34,8 +34,7 @@ configure_file(
 
 set(SEALTK_VERSION "v${PROJECT_VERSION}")
 if(TARGET Git::Git)
-  add_custom_command(
-    OUTPUT "${SEALTK_CORE_VERSION_OUT}"
+  add_custom_target(sealtk_core_version
     COMMAND "${CMAKE_COMMAND}"
       "-DGIT_EXECUTABLE:FILEPATH=$<TARGET_FILE:Git::Git>"
       "-DSEALTK_SOURCE_DIR:PATH=${PROJECT_SOURCE_DIR}"
@@ -43,6 +42,7 @@ if(TARGET Git::Git)
       "-DSEALTK_VERSION_IN:FILEPATH=${SEALTK_CORE_VERSION_IN}"
       "-DSEALTK_VERSION_OUT:FILEPATH=${SEALTK_CORE_VERSION_OUT}"
       -P "${PROJECT_SOURCE_DIR}/cmake/GenerateVersion.cmake"
+    BYPRODUCTS "${SEALTK_CORE_VERSION_OUT}"
     )
 else()
   configure_file(
