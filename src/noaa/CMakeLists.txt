@@ -9,11 +9,13 @@ sealtk_add_library(sealtk::noaa
 
   SOURCES
     About.cpp
+    ImageListVideoSourceFactory.cpp
     Window.cpp
     SEALTKBranding.qrc
 
   HEADERS
     About.hpp
+    ImageListVideoSourceFactory.hpp
     Window.hpp
 
   PUBLIC_LINK_LIBRARIES
