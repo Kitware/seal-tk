@@ -4,5 +4,5 @@
 
 add_subdirectory(core)
 add_subdirectory(gui)
-add_subdirectory(app)
+add_subdirectory(noaa)
 add_subdirectory(test)

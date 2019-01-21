@@ -58,3 +58,28 @@ function(sealtk_add_library name)
     INTERFACE ${sal_INTERFACE_LINK_LIBRARIES}
     )
 endfunction()
+
+function(sealtk_add_executable name)
+  sealtk_parse_name(${name} suffix)
+
+  set(sae_multi
+    SOURCES
+    PRIVATE_LINK_LIBRARIES
+    PUBLIC_LINK_LIBRARIES
+    INTERFACE_LINK_LIBRARIES
+    )
+  cmake_parse_arguments(sae "" "" "${sae_multi}" ${ARGN})
+
+  add_executable(sealtk_${suffix} ${sae_SOURCES})
+  add_executable(sealtk::${suffix} ALIAS sealtk_${suffix})
+
+  set_target_properties(sealtk_${suffix} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
+    )
+
+  target_link_libraries(sealtk_${suffix}
+    PRIVATE ${sae_PRIVATE_LINK_LIBRARIES}
+    PUBLIC ${sae_PUBLIC_LINK_LIBRARIES}
+    INTERFACE ${sae_INTERFACE_LINK_LIBRARIES}
+    )
+endfunction()
