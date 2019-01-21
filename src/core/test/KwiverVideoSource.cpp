@@ -193,7 +193,8 @@ void TestVideoSource::init()
   kv::algo::video_input_sptr videoReader;
   kv::algo::video_input::set_nested_algo_configuration(
     "video_reader", this->config, videoReader);
-  videoReader->open(SEALTK_TEST_DATA_PATH("images/list1.txt").toStdString());
+  videoReader->open(
+    SEALTK_TEST_DATA_PATH("KwiverVideoSource/list1.txt").toStdString());
 
   this->videoSource = std::make_unique<core::KwiverVideoSource>();
   this->videoSource->setVideoInput(videoReader);
@@ -235,7 +236,7 @@ void TestVideoSource::seek()
     QImage expected;
     if (!seekFiles[i].isNull())
     {
-      expected = QImage{testDataPath("images/" + seekFiles[i])};
+      expected = QImage{testDataPath("KwiverVideoSource/" + seekFiles[i])};
       QCOMPARE(seekImages[i], expected);
     }
     else
