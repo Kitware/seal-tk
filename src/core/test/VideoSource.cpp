@@ -19,6 +19,8 @@
 
 #include <QtTest>
 
+#include <memory>
+
 namespace kv = kwiver::vital;
 
 namespace sealtk
@@ -161,7 +163,14 @@ class TestVideoSource : public QObject
 
 private slots:
   void initTestCase();
+  void init();
   void seek();
+  void times();
+  void cleanup();
+
+private:
+  kv::config_block_sptr config;
+  std::unique_ptr<core::VideoSource> videoSource;
 };
 
 // ----------------------------------------------------------------------------
@@ -170,6 +179,30 @@ void TestVideoSource::initTestCase()
   kv::plugin_manager::instance().load_all_plugins();
   kv::plugin_manager::instance().ADD_ALGORITHM("timestamp_passthrough",
                                                TimestampPassthrough);
+  this->config = kv::config_block::empty_config();
+  this->config->set_value("video_reader:type", "image_list");
+  this->config->set_value("video_reader:image_list:image_reader:type",
+    "timestamp_passthrough");
+  this->config->set_value("video_reader:image_list:image_reader:"
+    "timestamp_passthrough:image_reader:type", "qt");
+}
+
+// ----------------------------------------------------------------------------
+void TestVideoSource::init()
+{
+  kv::algo::video_input_sptr videoReader;
+  kv::algo::video_input::set_nested_algo_configuration(
+    "video_reader", this->config, videoReader);
+  videoReader->open(SEALTK_TEST_DATA_PATH("images/list1.txt").toStdString());
+
+  this->videoSource = std::make_unique<core::VideoSource>();
+  this->videoSource->setVideoInput(videoReader);
+}
+
+// ----------------------------------------------------------------------------
+void TestVideoSource::cleanup()
+{
+  this->videoSource.reset();
 }
 
 // ----------------------------------------------------------------------------
@@ -183,23 +216,8 @@ void TestVideoSource::seek()
     QString{},
   };
 
-  auto config = kv::config_block::empty_config();
-  config->set_value("video_reader:type", "image_list");
-  config->set_value("video_reader:image_list:image_reader:type",
-    "timestamp_passthrough");
-  config->set_value("video_reader:image_list:image_reader:"
-    "timestamp_passthrough:image_reader:type", "qt");
-
-  kv::algo::video_input_sptr videoReader;
-  kv::algo::video_input::set_nested_algo_configuration("video_reader", config,
-    videoReader);
-  videoReader->open(SEALTK_TEST_DATA_PATH("images/list1.txt").toStdString());
-
-  core::VideoSource videoSource;
-  videoSource.setVideoInput(videoReader);
-
   QVector<QImage> seekImages;
-  connect(&videoSource, &core::VideoSource::imageDisplayed,
+  connect(this->videoSource.get(), &core::VideoSource::imageDisplayed,
     [&seekImages](QImage const& image)
   {
     seekImages.append(image);
@@ -207,7 +225,7 @@ void TestVideoSource::seek()
 
   for (auto t : seekTimes)
   {
-    videoSource.seek(t);
+    this->videoSource->seek(t);
   }
 
   QCOMPARE(seekImages.size(), seekFiles.size());
@@ -225,6 +243,16 @@ void TestVideoSource::seek()
       QCOMPARE(seekImages[i], QImage{});
     }
   }
+}
+
+// ----------------------------------------------------------------------------
+void TestVideoSource::times()
+{
+  static std::set<kv::timestamp::time_t> const times{
+    1000, 2000, 3000, 4000, 5000,
+  };
+
+  QCOMPARE(this->videoSource->times(), times);
 }
 
 }
