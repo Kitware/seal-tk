@@ -42,6 +42,7 @@ private slots:
   void init();
   void seek();
   void removeVideoSource();
+  void times();
   void cleanup();
 
 private:
@@ -228,6 +229,16 @@ void TestVideoController::removeVideoSource()
       }
     }
   }
+}
+
+// ----------------------------------------------------------------------------
+void TestVideoController::times()
+{
+  static QSet<kwiver::vital::timestamp::time_t> const times{
+    100, 200, 300, 400, 500, 600,
+  };
+
+  QCOMPARE(this->videoController->times(), times);
 }
 
 }

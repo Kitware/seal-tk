@@ -9,12 +9,11 @@
 
 #include <QImage>
 #include <QObject>
+#include <QSet>
 #include <qtGlobal.h>
 
 #include <vital/types/timestamp.h>
 #include <vital/algo/video_input.h>
-
-#include <set>
 
 namespace sealtk
 {
@@ -35,7 +34,7 @@ public:
   kwiver::vital::algo::video_input_sptr videoInput() const;
   void setVideoInput(kwiver::vital::algo::video_input_sptr const& videoInput);
 
-  std::set<kwiver::vital::timestamp::time_t> times() const override;
+  QSet<kwiver::vital::timestamp::time_t> times() const override;
 
 public slots:
   void seek(kwiver::vital::timestamp::time_t time) override;

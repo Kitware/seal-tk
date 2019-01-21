@@ -58,10 +58,10 @@ void KwiverVideoSource::setVideoInput(
 }
 
 // ----------------------------------------------------------------------------
-std::set<kwiver::vital::timestamp::time_t> KwiverVideoSource::times() const
+QSet<kwiver::vital::timestamp::time_t> KwiverVideoSource::times() const
 {
   QTE_D();
-  std::set<kwiver::vital::timestamp::time_t> result;
+  QSet<kwiver::vital::timestamp::time_t> result;
   for (auto const& f : d->timestampMap)
   {
     result.insert(f.first);

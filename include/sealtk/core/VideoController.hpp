@@ -29,9 +29,11 @@ public:
   explicit VideoController(QObject* parent = nullptr);
   ~VideoController() override;
 
-  QSet<VideoSource*> const& videoSources() const;
+  QSet<VideoSource*> videoSources() const;
   void addVideoSource(VideoSource* videoSource);
   void removeVideoSource(VideoSource* videoSource);
+
+  QSet<kwiver::vital::timestamp::time_t> times() const;
 
 signals:
   void videoSourcesChanged();

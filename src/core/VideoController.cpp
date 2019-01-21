@@ -19,6 +19,9 @@ class VideoControllerPrivate
 {
 public:
   QSet<VideoSource*> videoSources;
+  QSet<kwiver::vital::timestamp::time_t> times;
+
+  void rebuildTimes();
 };
 
 // ----------------------------------------------------------------------------
@@ -37,7 +40,7 @@ VideoController::~VideoController()
 }
 
 // ----------------------------------------------------------------------------
-QSet<VideoSource*> const& VideoController::videoSources() const
+QSet<VideoSource*> VideoController::videoSources() const
 {
   QTE_D();
   return d->videoSources;
@@ -68,9 +71,28 @@ void VideoController::removeVideoSource(VideoSource* videoSource)
 }
 
 // ----------------------------------------------------------------------------
+QSet<kwiver::vital::timestamp::time_t> VideoController::times() const
+{
+  QTE_D();
+  QSet<kwiver::vital::timestamp::time_t> result;
+
+  for (auto* vs : d->videoSources)
+  {
+    result.unite(vs->times());
+  }
+
+  return result;
+}
+
+// ----------------------------------------------------------------------------
 void VideoController::seek(kwiver::vital::timestamp::time_t time)
 {
   emit this->timestampSelected(time);
+}
+
+// ----------------------------------------------------------------------------
+void VideoControllerPrivate::rebuildTimes()
+{
 }
 
 }

@@ -7,11 +7,10 @@
 
 #include <QImage>
 #include <QObject>
+#include <QSet>
 #include <qtGlobal.h>
 
 #include <vital/types/timestamp.h>
-
-#include <set>
 
 namespace sealtk
 {
@@ -29,7 +28,7 @@ public:
   explicit VideoSource(QObject* parent = nullptr);
   ~VideoSource() override;
 
-  virtual std::set<kwiver::vital::timestamp::time_t> times() const = 0;
+  virtual QSet<kwiver::vital::timestamp::time_t> times() const = 0;
 
 signals:
   void imageDisplayed(QImage const& image);

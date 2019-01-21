@@ -13,6 +13,7 @@
 #include <vital/types/timestamp.h>
 
 #include <QImage>
+#include <QSet>
 #include <QVector>
 
 #include <QtTest>
@@ -121,7 +122,7 @@ void TestKwiverVideoSource::seek()
 // ----------------------------------------------------------------------------
 void TestKwiverVideoSource::times()
 {
-  static std::set<kv::timestamp::time_t> const times{
+  static QSet<kv::timestamp::time_t> const times{
     1000, 2000, 3000, 4000, 5000,
   };
 
