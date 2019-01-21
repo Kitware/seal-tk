@@ -31,7 +31,7 @@ namespace test
 {
 
 // ============================================================================
-class TestVideoSource : public QObject
+class TestKwiverVideoSource : public QObject
 {
   Q_OBJECT
 
@@ -48,7 +48,7 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-void TestVideoSource::initTestCase()
+void TestKwiverVideoSource::initTestCase()
 {
   loadKwiverPlugins();
   this->config = kv::config_block::empty_config();
@@ -60,7 +60,7 @@ void TestVideoSource::initTestCase()
 }
 
 // ----------------------------------------------------------------------------
-void TestVideoSource::init()
+void TestKwiverVideoSource::init()
 {
   kv::algo::video_input_sptr videoReader;
   kv::algo::video_input::set_nested_algo_configuration(
@@ -73,13 +73,13 @@ void TestVideoSource::init()
 }
 
 // ----------------------------------------------------------------------------
-void TestVideoSource::cleanup()
+void TestKwiverVideoSource::cleanup()
 {
   this->videoSource.reset();
 }
 
 // ----------------------------------------------------------------------------
-void TestVideoSource::seek()
+void TestKwiverVideoSource::seek()
 {
   static QVector<kwiver::vital::timestamp::time_t> const seekTimes{
     1000, 2000, 3000, 4000, 5000, 3000, 1500,
@@ -120,7 +120,7 @@ void TestVideoSource::seek()
 }
 
 // ----------------------------------------------------------------------------
-void TestVideoSource::times()
+void TestKwiverVideoSource::times()
 {
   static std::set<kv::timestamp::time_t> const times{
     1000, 2000, 3000, 4000, 5000,
@@ -136,5 +136,5 @@ void TestVideoSource::times()
 }
 
 // ----------------------------------------------------------------------------
-QTEST_MAIN(sealtk::core::test::TestVideoSource)
+QTEST_MAIN(sealtk::core::test::TestKwiverVideoSource)
 #include "KwiverVideoSource.moc"
