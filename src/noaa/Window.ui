@@ -11,9 +11,17 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string/>
+   <string>SEAL-TK</string>
   </property>
-  <widget class="QSplitter" name="centralwidget"/>
+  <property name="windowIcon">
+   <iconset resource="SEALTKBranding.qrc">
+    <normaloff>:/logo256.png</normaloff>:/logo256.png</iconset>
+  </property>
+  <widget class="QSplitter" name="centralwidget">
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -62,6 +70,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="SEALTKBranding.qrc"/>
+ </resources>
  <connections/>
 </ui>

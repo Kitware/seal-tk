@@ -6,7 +6,6 @@ include(SEALTKUtils)
 
 sealtk_add_library(sealtk::gui
   SOURCES
-    About.cpp
     Panel.cpp
     Player.cpp
     PlayerTree.cpp
@@ -16,10 +15,8 @@ sealtk_add_library(sealtk::gui
     Window.cpp
 
     glsl/PlayerViewer.qrc
-    ${SEALTK_RESOURCE_FILE}
 
   HEADERS
-    About.hpp
     Panel.hpp
     Player.hpp
     PlayerTree.hpp

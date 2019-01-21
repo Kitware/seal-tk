@@ -3,19 +3,23 @@
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
 #include <QApplication>
+#include <QDir>
+
+#include <sealtk/noaa/Window.hpp>
 
 #include <sealtk/gui/Player.hpp>
 #include <sealtk/gui/PlayerTree.hpp>
 #include <sealtk/gui/Resources.hpp>
-#include <sealtk/gui/Window.hpp>
 
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
   sealtk::gui::Resources r;
+  Q_INIT_RESOURCE(SEALTKBranding);
+
   QApplication app{argc, argv};
 
-  auto* window = new sealtk::gui::Window;
+  auto* window = new sealtk::noaa::Window;
   window->registerPanelType<sealtk::gui::Player>("Player");
   window->registerPanelType<sealtk::gui::PlayerTree>("Players");
   window->show();

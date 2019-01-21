@@ -2,9 +2,15 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
-sealtk_add_executable(sealtk::noaa_app
+sealtk_add_library(sealtk::noaa
   SOURCES
-    Main.cpp
+    About.cpp
+    Window.cpp
+    SEALTKBranding.qrc
+
+  HEADERS
+    About.hpp
+    Window.hpp
 
   PUBLIC_LINK_LIBRARIES
     sealtk::gui
@@ -12,7 +18,12 @@ sealtk_add_executable(sealtk::noaa_app
     Qt5::Widgets
   )
 
-if(DEFINED SEALTK_EXECUTABLE_NAME)
-  set_property(TARGET sealtk_noaa_app PROPERTY OUTPUT_NAME
-    "${SEALTK_EXECUTABLE_NAME}")
-endif()
+sealtk_add_executable(sealtk::noaa_app
+  SOURCES
+    Main.cpp
+
+  PUBLIC_LINK_LIBRARIES
+    sealtk::noaa
+  )
+
+set_property(TARGET sealtk_noaa_app PROPERTY OUTPUT_NAME sealtk)

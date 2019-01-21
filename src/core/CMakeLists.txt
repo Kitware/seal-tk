@@ -4,10 +4,6 @@
 
 include(SEALTKUtils)
 
-set(SEALTK_CORE_CONFIG_IN
-  "${PROJECT_SOURCE_DIR}/include/sealtk/core/Config.h.in")
-set(SEALTK_CORE_CONFIG_OUT
-  "${PROJECT_BINARY_DIR}/include/sealtk/core/Config.h")
 set(SEALTK_CORE_VERSION_IN
   "${PROJECT_SOURCE_DIR}/include/sealtk/core/Version.h.in")
 set(SEALTK_CORE_VERSION_OUT
@@ -16,7 +12,6 @@ set(SEALTK_CORE_VERSION_OUT
 sealtk_add_library(sealtk::core
   SOURCES
     VideoSource.cpp
-    "${SEALTK_CORE_CONFIG_OUT}"
     "${SEALTK_CORE_VERSION_OUT}"
 
   HEADERS
@@ -27,11 +22,6 @@ sealtk_add_library(sealtk::core
     qtExtensions
     kwiver::vital
     kwiver::kwiver_algo_qt
-  )
-
-configure_file(
-  "${SEALTK_CORE_CONFIG_IN}"
-  "${SEALTK_CORE_CONFIG_OUT}"
   )
 
 set(SEALTK_VERSION "v${PROJECT_VERSION}")

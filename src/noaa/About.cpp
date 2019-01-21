@@ -2,16 +2,15 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/gui/About.hpp>
+#include <sealtk/noaa/About.hpp>
 #include "ui_About.h"
 
-#include <sealtk/core/Config.h>
 #include <sealtk/core/Version.h>
 
 namespace sealtk
 {
 
-namespace gui
+namespace noaa
 {
 
 //=============================================================================
@@ -26,15 +25,16 @@ QTE_IMPLEMENT_D_FUNC(About)
 
 //-----------------------------------------------------------------------------
 About::About(QWidget* parent)
-  : QDialog(parent),
+  : QDialog{parent},
     d_ptr{new AboutPrivate}
 {
   QTE_D();
   d->ui.setupUi(this);
 
   d->ui.labelCopyright->setText(QStringLiteral(
-    SEALTK_TITLE " " SEALTK_VERSION "\n\n"
-    SEALTK_DESCRIPTION "\n\nCopyright \u00A9 2018 Kitware, Inc."));
+    "SEAL-TK " SEALTK_VERSION "\n\n"
+    "SEAL-TK, the Stereoscopic Examination of Aquatic Life Toolkit\n\n"
+    "Copyright \u00A9 2018-2019 Kitware, Inc."));
 }
 
 //-----------------------------------------------------------------------------

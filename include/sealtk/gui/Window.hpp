@@ -18,6 +18,8 @@ namespace gui
 
 class WindowPrivate;
 
+class Panel;
+
 class Window : public QMainWindow
 {
   Q_OBJECT
@@ -27,24 +29,23 @@ public:
   ~Window() override;
 
   template<typename T>
-  void registerPanelType(const QString& name)
+  void registerPanelType(QString const& name)
   {
     this->registerPanelType(name, T::staticMetaObject);
   }
 
-  void registerPanelType(const QString& name, const QMetaObject& type);
+  void registerPanelType(QString const& name, QMetaObject const& type);
 
   int panelCounter() const;
   void setPanelCounter(int counter);
 
-public slots:
-  void showAbout();
-  void newDockablePanel(const QMetaObject& type);
-  void newLeftPanel(const QMetaObject& type);
-  void newRightPanel(const QMetaObject& type);
+signals:
+  void panelTypeRegistered(QString const& name, QMetaObject const& type);
 
 protected:
   QTE_DECLARE_PRIVATE(Window)
+
+  Panel* createPanel(const QMetaObject& type);
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(Window)

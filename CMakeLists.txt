@@ -33,14 +33,6 @@ set(CMAKE_AUTOMOC 1)
 set(CMAKE_AUTORCC 1)
 set(CMAKE_AUTOUIC 1)
 
-set(SEALTK_BRANDING SEAL-TK CACHE LIST "Branding to use")
-set_property(CACHE SEALTK_BRANDING PROPERTY STRINGS
-  SEAL-TK
-  Custom
-  )
-
-include("${PROJECT_SOURCE_DIR}/branding/${SEALTK_BRANDING}.cmake")
-
 enable_testing()
 
 if(TARGET Python3::Interpreter)
