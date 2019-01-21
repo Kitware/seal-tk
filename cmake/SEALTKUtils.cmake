@@ -35,7 +35,7 @@ function(sealtk_add_library name)
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
     )
-  cmake_parse_arguments(sal "" "" "${sal_multi}" ${ARGN})
+  cmake_parse_arguments(sal "" "TARGET_NAME_VAR" "${sal_multi}" ${ARGN})
 
   set(sal_headers)
   foreach(h ${sal_HEADERS})
@@ -43,20 +43,25 @@ function(sealtk_add_library name)
       "${PROJECT_SOURCE_DIR}/include/sealtk/${suffix}/${h}")
   endforeach()
 
-  add_library(sealtk_${suffix} ${sal_SOURCES} ${sal_headers})
-  add_library(sealtk::${suffix} ALIAS sealtk_${suffix})
+  add_library(${suffix} ${sal_SOURCES} ${sal_headers})
+  add_library(sealtk::${suffix} ALIAS ${suffix})
 
-  set_target_properties(sealtk_${suffix} PROPERTIES
+  set_target_properties(${suffix} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
+    OUTPUT_NAME "sealtk_${suffix}"
     )
 
-  target_link_libraries(sealtk_${suffix}
+  target_link_libraries(${suffix}
     PRIVATE ${sal_PRIVATE_LINK_LIBRARIES}
     PUBLIC ${sal_PUBLIC_LINK_LIBRARIES}
     INTERFACE ${sal_INTERFACE_LINK_LIBRARIES}
     )
+
+  if(DEFINED sal_TARGET_NAME_VAR)
+    set(${sal_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(sealtk_add_executable name)
@@ -68,18 +73,44 @@ function(sealtk_add_executable name)
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
     )
-  cmake_parse_arguments(sae "" "" "${sae_multi}" ${ARGN})
+  cmake_parse_arguments(sae "" "TARGET_NAME_VAR" "${sae_multi}" ${ARGN})
 
-  add_executable(sealtk_${suffix} ${sae_SOURCES})
-  add_executable(sealtk::${suffix} ALIAS sealtk_${suffix})
+  add_executable(${suffix} ${sae_SOURCES})
+  add_executable(sealtk::${suffix} ALIAS ${suffix})
 
-  set_target_properties(sealtk_${suffix} PROPERTIES
+  set_target_properties(${suffix} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
     )
 
-  target_link_libraries(sealtk_${suffix}
+  target_link_libraries(${suffix}
     PRIVATE ${sae_PRIVATE_LINK_LIBRARIES}
     PUBLIC ${sae_PUBLIC_LINK_LIBRARIES}
     INTERFACE ${sae_INTERFACE_LINK_LIBRARIES}
     )
+
+  if(DEFINED sal_TARGET_NAME_VAR)
+    set(${sal_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)
+  endif()
+endfunction()
+
+function(sealtk_add_test name)
+  set(sat_multi
+    SOURCES
+    PRIVATE_LINK_LIBRARIES
+    PUBLIC_LINK_LIBRARIES
+    INTERFACE_LINK_LIBRARIES
+    )
+  cmake_parse_arguments(sat "" "" "${sat_multi}" ${ARGN})
+
+  add_executable(test_${name} ${sat_SOURCES})
+
+  target_link_libraries(test_${name}
+    PRIVATE ${sat_PRIVATE_LINK_LIBRARIES} Qt5::Test
+    PUBLIC ${saj_PUBLIC_LINK_LIBRARIES}
+    INTERFACE ${sat_INTERFACE_LINK_LIBRARIES}
+    )
+  target_compile_definitions(test_${name}
+    PRIVATE "SEALTK_TEST_DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/data\""
+    )
+  qt5_discover_tests(${name} test_${name})
 endfunction()

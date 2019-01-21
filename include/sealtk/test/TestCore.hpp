@@ -7,15 +7,18 @@
 
 #include <QString>
 
+#define SEALTK_TEST_DATA_PATH(f) QStringLiteral(SEALTK_TEST_DATA_DIR "/" f)
+
 namespace sealtk
 {
 
 namespace test
 {
 
-QString testDataDir();
-
-QString testDataPath(QString const& path);
+static inline QString testDataPath(QString const& path)
+{
+  return QStringLiteral(SEALTK_TEST_DATA_DIR "/") + path;
+}
 
 }
 

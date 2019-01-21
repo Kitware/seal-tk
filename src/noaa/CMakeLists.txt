@@ -24,6 +24,8 @@ sealtk_add_executable(sealtk::noaa_app
 
   PUBLIC_LINK_LIBRARIES
     sealtk::noaa
+
+  TARGET_NAME_VAR name
   )
 
-set_property(TARGET sealtk_noaa_app PROPERTY OUTPUT_NAME sealtk)
+set_property(TARGET ${name} PROPERTY OUTPUT_NAME sealtk)

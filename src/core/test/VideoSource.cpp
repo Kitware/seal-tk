@@ -193,7 +193,7 @@ void TestVideoSource::seek()
   kv::algo::video_input_sptr videoReader;
   kv::algo::video_input::set_nested_algo_configuration("video_reader", config,
     videoReader);
-  videoReader->open(testDataPath("images/list1.txt").toStdString());
+  videoReader->open(SEALTK_TEST_DATA_PATH("images/list1.txt").toStdString());
 
   core::VideoSource videoSource;
   videoSource.setVideoInput(videoReader);

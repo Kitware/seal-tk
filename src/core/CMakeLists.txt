@@ -42,3 +42,5 @@ else()
     "${SEALTK_CORE_VERSION_OUT}"
     )
 endif()
+
+add_subdirectory(test)
