@@ -17,12 +17,16 @@ function(qt5_discover_tests test_name target)
     "${test_output_file}")
 endfunction()
 
-function(sealtk_add_library name)
+function(sealtk_parse_name name suffix_var)
   if(NOT name MATCHES "^sealtk::([a-zA-Z0-9_]+)$")
     message(FATAL_ERROR "sealtk_add_library() name must be of the form "
       "sealtk::<name>")
   endif()
-  set(suffix "${CMAKE_MATCH_1}")
+  set(${suffix_var} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+endfunction()
+
+function(sealtk_add_library name)
+  sealtk_parse_name(${name} suffix)
 
   set(sal_multi
     SOURCES
