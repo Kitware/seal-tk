@@ -19,7 +19,7 @@ endfunction()
 
 function(sealtk_parse_name name suffix_var)
   if(NOT name MATCHES "^sealtk::([a-zA-Z0-9_]+)$")
-    message(FATAL_ERROR "sealtk_add_library() name must be of the form "
+    message(FATAL_ERROR "Target name must be of the form "
       "sealtk::<name>")
   endif()
   set(${suffix_var} "${CMAKE_MATCH_1}" PARENT_SCOPE)
@@ -35,7 +35,22 @@ function(sealtk_add_library name)
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
     )
-  cmake_parse_arguments(sal "" "TARGET_NAME_VAR" "${sal_multi}" ${ARGN})
+  cmake_parse_arguments(sal
+    "STATIC;SHARED"
+    "TARGET_NAME_VAR"
+    "${sal_multi}"
+    ${ARGN}
+    )
+
+  if(sal_STATIC AND sal_SHARED)
+    message(FATAL_ERROR "Cannot have a library that is both STATIC and SHARED")
+  elseif(sal_STATIC)
+    set(type STATIC)
+  elseif(sal_SHARED)
+    set(type SHARED)
+  else()
+    set(type)
+  endif()
 
   set(sal_headers)
   foreach(h ${sal_HEADERS})
@@ -43,7 +58,7 @@ function(sealtk_add_library name)
       "${PROJECT_SOURCE_DIR}/include/sealtk/${suffix}/${h}")
   endforeach()
 
-  add_library(${suffix} ${sal_SOURCES} ${sal_headers})
+  add_library(${suffix} ${type} ${sal_SOURCES} ${sal_headers})
   add_library(sealtk::${suffix} ALIAS ${suffix})
 
   set_target_properties(${suffix} PROPERTIES

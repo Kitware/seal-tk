@@ -4,10 +4,23 @@
 
 include(SEALTKUtils)
 
+sealtk_add_library(sealtk::core_test_common
+  STATIC
+
+  SOURCES
+    TestCommon.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    Qt5::Core
+    kwiver::vital
+    kwiver::vital_algo
+  )
+
 sealtk_add_test(KwiverVideoSource
   SOURCES
     KwiverVideoSource.cpp
 
   PRIVATE_LINK_LIBRARIES
     sealtk::core
+    sealtk::core_test_common
   )
