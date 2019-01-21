@@ -54,22 +54,4 @@ if(TARGET Python3::Interpreter)
     )
 endif()
 
-function(sealtk_add_library name)
-  cmake_parse_arguments(sal "" "" "SOURCES;HEADERS" ${ARGN})
-
-  set(sal_headers)
-  foreach(h ${sal_HEADERS})
-    list(APPEND sal_headers
-      "${PROJECT_SOURCE_DIR}/include/sealtk/${name}/${h}")
-  endforeach()
-
-  add_library(sealtk_${name} ${sal_SOURCES} ${sal_headers})
-
-  set_target_properties(sealtk_${name} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
-    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
-    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
-    )
-endfunction()
-
 add_subdirectory(src)

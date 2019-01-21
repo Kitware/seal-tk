@@ -2,6 +2,8 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
+include(SEALTKUtils)
+
 set(SEALTK_CORE_CONFIG_IN
   "${PROJECT_SOURCE_DIR}/include/sealtk/core/Config.h.in")
 set(SEALTK_CORE_CONFIG_OUT
@@ -11,7 +13,7 @@ set(SEALTK_CORE_VERSION_IN
 set(SEALTK_CORE_VERSION_OUT
   "${PROJECT_BINARY_DIR}/include/sealtk/core/Version.h")
 
-sealtk_add_library(core
+sealtk_add_library(sealtk::core
   SOURCES
     VideoSource.cpp
     "${SEALTK_CORE_CONFIG_OUT}"
@@ -19,12 +21,12 @@ sealtk_add_library(core
 
   HEADERS
     VideoSource.hpp
-  )
-target_link_libraries(sealtk_core
-  Qt5::Core
-  qtExtensions
-  kwiver::vital
-  kwiver::kwiver_algo_qt
+
+  PUBLIC_LINK_LIBRARIES
+    Qt5::Core
+    qtExtensions
+    kwiver::vital
+    kwiver::kwiver_algo_qt
   )
 
 configure_file(

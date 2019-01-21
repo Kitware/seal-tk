@@ -2,7 +2,9 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
-sealtk_add_library(gui
+include(SEALTKUtils)
+
+sealtk_add_library(sealtk::gui
   SOURCES
     About.cpp
     Panel.cpp
@@ -25,7 +27,7 @@ sealtk_add_library(gui
     Resources.hpp
     SplitterWindow.hpp
     Window.hpp
-  )
-target_link_libraries(sealtk_gui
-  sealtk_core
+
+  PUBLIC_LINK_LIBRARIES
+    sealtk::core
   )
