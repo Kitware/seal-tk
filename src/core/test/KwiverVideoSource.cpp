@@ -4,7 +4,7 @@
 
 #include <sealtk/test/TestCore.hpp>
 
-#include <sealtk/core/VideoSource.hpp>
+#include <sealtk/core/KwiverVideoSource.hpp>
 
 #include <vital/algo/algorithm_factory.h>
 #include <vital/algo/image_io.h>
@@ -170,7 +170,7 @@ private slots:
 
 private:
   kv::config_block_sptr config;
-  std::unique_ptr<core::VideoSource> videoSource;
+  std::unique_ptr<core::KwiverVideoSource> videoSource;
 };
 
 // ----------------------------------------------------------------------------
@@ -195,7 +195,7 @@ void TestVideoSource::init()
     "video_reader", this->config, videoReader);
   videoReader->open(SEALTK_TEST_DATA_PATH("images/list1.txt").toStdString());
 
-  this->videoSource = std::make_unique<core::VideoSource>();
+  this->videoSource = std::make_unique<core::KwiverVideoSource>();
   this->videoSource->setVideoInput(videoReader);
 }
 
@@ -261,4 +261,4 @@ void TestVideoSource::times()
 
 // ----------------------------------------------------------------------------
 QTEST_MAIN(sealtk::test::TestVideoSource)
-#include "VideoSource.moc"
+#include "KwiverVideoSource.moc"

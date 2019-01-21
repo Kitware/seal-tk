@@ -4,9 +4,9 @@
 
 include(SEALTKUtils)
 
-sealtk_add_test(VideoSource
+sealtk_add_test(KwiverVideoSource
   SOURCES
-    VideoSource.cpp
+    KwiverVideoSource.cpp
 
   PRIVATE_LINK_LIBRARIES
     sealtk::core

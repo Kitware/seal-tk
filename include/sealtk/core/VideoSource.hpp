@@ -10,7 +10,6 @@
 #include <qtGlobal.h>
 
 #include <vital/types/timestamp.h>
-#include <vital/algo/video_input.h>
 
 #include <set>
 
@@ -30,17 +29,14 @@ public:
   explicit VideoSource(QObject* parent = nullptr);
   ~VideoSource() override;
 
-  kwiver::vital::algo::video_input_sptr videoInput() const;
-  void setVideoInput(kwiver::vital::algo::video_input_sptr const& videoInput);
-
-  std::set<kwiver::vital::timestamp::time_t> times() const;
+  virtual std::set<kwiver::vital::timestamp::time_t> times() const = 0;
 
 signals:
   void imageDisplayed(QImage const& image);
   void videoInputChanged();
 
 public slots:
-  void seek(kwiver::vital::timestamp::time_t time);
+  virtual void seek(kwiver::vital::timestamp::time_t time) = 0;
 
 protected:
   QTE_DECLARE_PRIVATE(VideoSource)
