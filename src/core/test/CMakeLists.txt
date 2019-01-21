@@ -24,3 +24,12 @@ sealtk_add_test(KwiverVideoSource
     sealtk::core
     sealtk::core_test_common
   )
+
+sealtk_add_test(VideoController
+  SOURCES
+    VideoController.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+    sealtk::core_test_common
+  )

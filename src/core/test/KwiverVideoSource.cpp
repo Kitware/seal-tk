@@ -66,7 +66,7 @@ void TestKwiverVideoSource::init()
   kv::algo::video_input::set_nested_algo_configuration(
     "video_reader", this->config, videoReader);
   videoReader->open(
-    SEALTK_TEST_DATA_PATH("KwiverVideoSource/list1.txt").toStdString());
+    SEALTK_TEST_DATA_PATH("KwiverVideoSource/list.txt").toStdString());
 
   this->videoSource = std::make_unique<core::KwiverVideoSource>();
   this->videoSource->setVideoInput(videoReader);
@@ -81,7 +81,7 @@ void TestKwiverVideoSource::cleanup()
 // ----------------------------------------------------------------------------
 void TestKwiverVideoSource::seek()
 {
-  static QVector<kwiver::vital::timestamp::time_t> const seekTimes{
+  static QVector<kv::timestamp::time_t> const seekTimes{
     1000, 2000, 3000, 4000, 5000, 3000, 1500,
   };
   static QVector<QString> const seekFiles{
@@ -90,8 +90,8 @@ void TestKwiverVideoSource::seek()
   };
 
   QVector<QImage> seekImages;
-  connect(this->videoSource.get(), &core::VideoSource::imageDisplayed,
-    [&seekImages](QImage const& image)
+  connect(this->videoSource.get(), &VideoSource::imageDisplayed,
+          [&seekImages](QImage const& image)
   {
     seekImages.append(image);
   });
@@ -105,10 +105,9 @@ void TestKwiverVideoSource::seek()
 
   for (int i = 0; i < seekFiles.size(); i++)
   {
-    QImage expected;
     if (!seekFiles[i].isNull())
     {
-      expected = QImage{sealtk::test::testDataPath(
+      QImage expected = QImage{sealtk::test::testDataPath(
         "KwiverVideoSource/" + seekFiles[i])};
       QCOMPARE(seekImages[i], expected);
     }

@@ -12,11 +12,13 @@ set(SEALTK_CORE_VERSION_OUT
 sealtk_add_library(sealtk::core
   SOURCES
     KwiverVideoSource.cpp
+    VideoController.cpp
     VideoSource.cpp
     "${SEALTK_CORE_VERSION_OUT}"
 
   HEADERS
     KwiverVideoSource.hpp
+    VideoController.hpp
     VideoSource.hpp
 
   PUBLIC_LINK_LIBRARIES
