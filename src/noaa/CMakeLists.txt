@@ -2,7 +2,11 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
+include(SEALTKUtils)
+
 sealtk_add_library(sealtk::noaa
+  STATIC
+
   SOURCES
     About.cpp
     Window.cpp
