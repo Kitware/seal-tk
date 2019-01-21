@@ -88,8 +88,8 @@ function(sealtk_add_executable name)
     INTERFACE ${sae_INTERFACE_LINK_LIBRARIES}
     )
 
-  if(DEFINED sal_TARGET_NAME_VAR)
-    set(${sal_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)
+  if(DEFINED sae_TARGET_NAME_VAR)
+    set(${sae_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)
   endif()
 endfunction()
 
