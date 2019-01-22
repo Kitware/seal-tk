@@ -9,12 +9,14 @@ sealtk_add_library(sealtk::noaa
 
   SOURCES
     About.cpp
+    FilenameUtils.cpp
     ImageListVideoSourceFactory.cpp
     Window.cpp
     SEALTKBranding.qrc
 
   HEADERS
     About.hpp
+    FilenameUtils.hpp
     ImageListVideoSourceFactory.hpp
     Window.hpp
 
@@ -35,3 +37,5 @@ sealtk_add_executable(sealtk::noaa_app
   )
 
 set_property(TARGET ${name} PROPERTY OUTPUT_NAME sealtk)
+
+add_subdirectory(test)
