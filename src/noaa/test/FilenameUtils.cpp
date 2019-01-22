@@ -45,23 +45,23 @@ void TestFilenameUtils::imageFilenameToQDateTime_data()
     << "data/CHESS_FL13_C_160423_003233.327_COLOR-8-BIT.JPG"
     << QDateTime{{2016, 4, 23}, {0, 32, 33, 327}, Qt::UTC};
   QTest::newRow("abs_unix")
-    << "/path/to/data/CHESS_FL22_P_160517_024614.880_COLOR-8-BIT.JPG"
+    << "/path/to/data/CHESS_FL22_P_160517_024614.880_THERM-16BIT.JPG"
     << QDateTime{{2016, 5, 17}, {2, 46, 14, 880}, Qt::UTC};
   QTest::newRow("trick_unix")
     << "CHESS_FL23_P_160517_235521.737_COLOR-8-BIT.JPG/"
-       "CHESS_FL22_P_160517_024614.880_COLOR-8-BIT.JPG"
+       "CHESS_FL22_P_160517_024614.880_THERM-16BIT.JPG"
     << QDateTime{{2016, 5, 17}, {2, 46, 14, 880}, Qt::UTC};
   QTest::newRow("null_unix")
     << "/path/to/file.txt"
     << QDateTime{};
   QTest::newRow("rel_windows")
-    << "data\\CHESS_FL22_S_160517_012607.322_COLOR-8-BIT.JPG"
+    << "data\\CHESS_FL22_S_160517_012607.322_THERM-16BIT.JPG"
     << QDateTime{{2016, 5, 17}, {1, 26, 7, 322}, Qt::UTC};
   QTest::newRow("abs_windows")
     << "C:\\path\\to\\data\\CHESS_FL23_C_160517_235725.346_COLOR-8-BIT.JPG"
     << QDateTime{{2016, 5, 17}, {23, 57, 25, 346}, Qt::UTC};
   QTest::newRow("trick_windows")
-    << "CHESS_FL2_C_160409_002737.735_COLOR-8-BIT.JPG\\"
+    << "CHESS_FL2_C_160409_002737.735_THERM-16BIT.JPG\\"
        "CHESS_FL23_C_160517_235725.346_COLOR-8-BIT.JPG"
     << QDateTime{{2016, 5, 17}, {23, 57, 25, 346}, Qt::UTC};
   QTest::newRow("null_windows")
