@@ -34,6 +34,8 @@ sealtk_add_library(sealtk::core
     qtExtensions
     kwiver::vital
     kwiver::kwiver_algo_qt
+
+  TARGET_NAME_VAR name
   )
 
 set(SEALTK_VERSION "v${PROJECT_VERSION}")
@@ -48,6 +50,7 @@ if(TARGET Git::Git)
       -P "${PROJECT_SOURCE_DIR}/cmake/GenerateVersion.cmake"
     BYPRODUCTS "${SEALTK_CORE_VERSION_OUT}"
     )
+  add_dependencies(${name} sealtk_core_version)
 else()
   configure_file(
     "${SEALTK_CORE_VERSION_IN}"
