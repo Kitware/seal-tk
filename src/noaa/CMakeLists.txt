@@ -11,6 +11,7 @@ sealtk_add_library(sealtk::noaa
     About.cpp
     FilenameUtils.cpp
     ImageListVideoSourceFactory.cpp
+    Plugins.cpp
     Window.cpp
     SEALTKBranding.qrc
 
@@ -18,6 +19,7 @@ sealtk_add_library(sealtk::noaa
     About.hpp
     FilenameUtils.hpp
     ImageListVideoSourceFactory.hpp
+    Plugins.hpp
     Window.hpp
 
   PUBLIC_LINK_LIBRARIES

@@ -20,8 +20,6 @@ namespace core
 class VideoController;
 class VideoSource;
 
-class FileVideoSourceFactoryHandle;
-
 class FileVideoSourceFactoryPrivate;
 
 class FileVideoSourceFactory : public VideoSourceFactory
@@ -33,17 +31,16 @@ public:
   ~FileVideoSourceFactory() override;
 
 signals:
-  void fileRequested(FileVideoSourceFactoryHandle* handle);
+  void fileRequested(void* handle);
 
 public slots:
   void loadVideoSource() override;
-  virtual void loadFile(FileVideoSourceFactoryHandle* handle,
-                        QString const& path) = 0;
+  virtual void loadFile(void* handle, QString const& path) = 0;
 
 protected:
   QTE_DECLARE_PRIVATE(FileVideoSourceFactory)
 
-  void freeHandle(FileVideoSourceFactoryHandle* handle);
+  void freeHandle(void* handle);
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(FileVideoSourceFactory)

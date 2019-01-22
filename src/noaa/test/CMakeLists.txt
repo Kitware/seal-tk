@@ -11,3 +11,11 @@ sealtk_add_test(FilenameUtils
   PRIVATE_LINK_LIBRARIES
     sealtk::noaa
   )
+
+sealtk_add_test(ImageListVideoSourceFactory
+  SOURCES
+    ImageListVideoSourceFactory.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::noaa
+  )

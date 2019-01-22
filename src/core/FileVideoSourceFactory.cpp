@@ -40,9 +40,9 @@ void FileVideoSourceFactory::loadVideoSource()
 }
 
 // ----------------------------------------------------------------------------
-void FileVideoSourceFactory::freeHandle(FileVideoSourceFactoryHandle* handle)
+void FileVideoSourceFactory::freeHandle(void* handle)
 {
-  delete handle;
+  delete static_cast<FileVideoSourceFactoryHandle*>(handle);
 }
 
 }

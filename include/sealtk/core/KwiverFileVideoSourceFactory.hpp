@@ -33,8 +33,7 @@ public:
   ~KwiverFileVideoSourceFactory() override;
 
 public slots:
-  void loadFile(FileVideoSourceFactoryHandle* handle,
-                QString const& path) override;
+  void loadFile(void* handle, QString const& path) override;
 
 protected:
   QTE_DECLARE_PRIVATE(KwiverFileVideoSourceFactory)

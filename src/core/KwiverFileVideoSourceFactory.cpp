@@ -38,8 +38,7 @@ KwiverFileVideoSourceFactory::~KwiverFileVideoSourceFactory()
 }
 
 // ----------------------------------------------------------------------------
-void KwiverFileVideoSourceFactory::loadFile(
-  FileVideoSourceFactoryHandle* handle, QString const& path)
+void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
 {
   this->freeHandle(handle);
 
