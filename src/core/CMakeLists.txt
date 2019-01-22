@@ -11,6 +11,7 @@ set(SEALTK_CORE_VERSION_OUT
 
 sealtk_add_library(sealtk::core
   SOURCES
+    DateUtils.cpp
     FileVideoSourceFactory.cpp
     KwiverFileVideoSourceFactory.cpp
     KwiverVideoSource.cpp
@@ -20,6 +21,7 @@ sealtk_add_library(sealtk::core
     "${SEALTK_CORE_VERSION_OUT}"
 
   HEADERS
+    DateUtils.hpp
     FileVideoSourceFactory.hpp
     KwiverFileVideoSourceFactory.hpp
     KwiverVideoSource.hpp
