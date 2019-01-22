@@ -25,6 +25,7 @@ sealtk_add_library(sealtk::core
     FileVideoSourceFactory.hpp
     KwiverFileVideoSourceFactory.hpp
     KwiverVideoSource.hpp
+    TimeMap.hpp
     VideoController.hpp
     VideoSource.hpp
     VideoSourceFactory.hpp

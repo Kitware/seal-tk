@@ -41,3 +41,11 @@ sealtk_add_test(DateUtils
   PRIVATE_LINK_LIBRARIES
     sealtk::core
   )
+
+sealtk_add_test(TimeMap
+  SOURCES
+    TimeMap.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+  )
