@@ -55,11 +55,11 @@ class SourceFile:
         return self._contents
 
     def is_cpp_source(self):
-        return filename_components(self.filename)[0] == "src" and \
+        return filename_components(self.filename)[0] == "sealtk" and \
             matches(self.filename, r"\.cpp$")
 
     def is_cpp_header(self):
-        return filename_components(self.filename)[0] == "include" and \
+        return filename_components(self.filename)[0] == "sealtk" and \
             matches(self.filename, r"\.(hpp|h\.in)$")
 
     def is_python(self):
@@ -105,7 +105,7 @@ class SourceFile:
 
     def test_include_guards(self):
         if self.is_cpp_header():
-            identifier = "_".join(filename_components(self.filename)[2:]) \
+            identifier = "_".join(filename_components(self.filename)[1:]) \
                 .replace(".", "_")
             if matches(self.filename, r"\.h\.in$"):
                 identifier = identifier[:-3]
