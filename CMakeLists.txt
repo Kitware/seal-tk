@@ -3,7 +3,7 @@
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
 cmake_minimum_required(VERSION 3.12)
-project(seal-tk
+project(sealtk
   VERSION 0.1
   LANGUAGES CXX
   )
