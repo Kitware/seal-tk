@@ -2,6 +2,8 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
+include(GNUInstallDirs)
+
 function(qt5_discover_tests test_name target)
   set(test_output_file "${CMAKE_CURRENT_BINARY_DIR}/${test_name}.cmake")
   add_custom_command(TARGET ${target}
@@ -68,6 +70,21 @@ function(sealtk_add_library name)
     INTERFACE ${sal_INTERFACE_LINK_LIBRARIES}
     )
 
+  file(RELATIVE_PATH include_dir
+    "${PROJECT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+
+  install(TARGETS ${suffix}
+    RUNTIME COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    LIBRARY COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE COMPONENT Development DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    )
+  install(FILES ${sal_HEADERS}
+    COMPONENT Development DESTINATION
+      "${CMAKE_INSTALL_INCLUDEDIR}/${include_dir}"
+    )
+
   if(DEFINED sal_TARGET_NAME_VAR)
     set(${sal_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)
   endif()
@@ -95,6 +112,10 @@ function(sealtk_add_executable name)
     PRIVATE ${sae_PRIVATE_LINK_LIBRARIES}
     PUBLIC ${sae_PUBLIC_LINK_LIBRARIES}
     INTERFACE ${sae_INTERFACE_LINK_LIBRARIES}
+    )
+
+  install(TARGETS ${suffix}
+    RUNTIME COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )
 
   if(DEFINED sae_TARGET_NAME_VAR)
