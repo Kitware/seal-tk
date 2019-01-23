@@ -52,13 +52,7 @@ function(sealtk_add_library name)
     set(type)
   endif()
 
-  set(sal_headers)
-  foreach(h ${sal_HEADERS})
-    list(APPEND sal_headers
-      "${PROJECT_SOURCE_DIR}/include/sealtk/${suffix}/${h}")
-  endforeach()
-
-  add_library(${suffix} ${type} ${sal_SOURCES} ${sal_headers})
+  add_library(${suffix} ${type} ${sal_SOURCES} ${sal_HEADERS})
   add_library(sealtk::${suffix} ALIAS ${suffix})
 
   set_target_properties(${suffix} PROPERTIES

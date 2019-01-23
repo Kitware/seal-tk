@@ -9,8 +9,8 @@ project(seal-tk
   )
 
 include_directories(
-  "${PROJECT_SOURCE_DIR}/include"
-  "${PROJECT_BINARY_DIR}/include"
+  "${PROJECT_SOURCE_DIR}"
+  "${PROJECT_BINARY_DIR}"
   )
 
 list(APPEND CMAKE_MODULE_PATH
@@ -46,4 +46,4 @@ if(TARGET Python3::Interpreter)
     )
 endif()
 
-add_subdirectory(src)
+add_subdirectory(sealtk)

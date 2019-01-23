@@ -5,9 +5,9 @@
 include(SEALTKUtils)
 
 set(SEALTK_CORE_VERSION_IN
-  "${PROJECT_SOURCE_DIR}/include/sealtk/core/Version.h.in")
+  "${PROJECT_SOURCE_DIR}/sealtk/core/Version.h.in")
 set(SEALTK_CORE_VERSION_OUT
-  "${PROJECT_BINARY_DIR}/include/sealtk/core/Version.h")
+  "${PROJECT_BINARY_DIR}/sealtk/core/Version.h")
 
 sealtk_add_library(sealtk::core
   SOURCES
@@ -18,7 +18,6 @@ sealtk_add_library(sealtk::core
     VideoController.cpp
     VideoSource.cpp
     VideoSourceFactory.cpp
-    "${SEALTK_CORE_VERSION_OUT}"
 
   HEADERS
     DateUtils.hpp
@@ -29,6 +28,7 @@ sealtk_add_library(sealtk::core
     VideoController.hpp
     VideoSource.hpp
     VideoSourceFactory.hpp
+    "${SEALTK_CORE_VERSION_OUT}"
 
   PUBLIC_LINK_LIBRARIES
     Qt5::Core
