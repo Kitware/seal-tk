@@ -8,10 +8,8 @@ project(sealtk
   LANGUAGES CXX
   )
 
-include_directories(
-  "${PROJECT_SOURCE_DIR}"
-  "${PROJECT_BINARY_DIR}"
-  )
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 list(APPEND CMAKE_MODULE_PATH
   "${PROJECT_SOURCE_DIR}/cmake"
@@ -47,3 +45,34 @@ if(TARGET Python3::Interpreter)
 endif()
 
 add_subdirectory(sealtk)
+
+export(EXPORT sealtk
+  NAMESPACE sealtk::
+  FILE "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-targets.cmake"
+  )
+
+install(EXPORT sealtk
+  NAMESPACE sealtk::
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/sealtk"
+  FILE "sealtk-targets.cmake"
+  COMPONENT Development
+  )
+
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config-version.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion
+  )
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/sealtk-config.cmake.in"
+  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/sealtk"
+  )
+
+install(FILES
+  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config.cmake"
+  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config-version.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/sealtk"
+  COMPONENT Development
+  )

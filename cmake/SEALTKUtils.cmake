@@ -38,7 +38,7 @@ function(sealtk_add_library name)
     INTERFACE_LINK_LIBRARIES
     )
   cmake_parse_arguments(sal
-    "STATIC;SHARED"
+    "STATIC;SHARED;NOINSTALL"
     "TARGET_NAME_VAR"
     "${sal_multi}"
     ${ARGN}
@@ -70,20 +70,26 @@ function(sealtk_add_library name)
     INTERFACE ${sal_INTERFACE_LINK_LIBRARIES}
     )
 
-  file(RELATIVE_PATH include_dir
-    "${PROJECT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}"
+  target_include_directories(${suffix} PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+    "$<INSTALL_INTERFACE:include>"
     )
 
-  install(TARGETS ${suffix}
-    RUNTIME COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    LIBRARY COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    ARCHIVE COMPONENT Development DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    )
-  install(FILES ${sal_HEADERS}
-    COMPONENT Development DESTINATION
-      "${CMAKE_INSTALL_INCLUDEDIR}/${include_dir}"
-    )
+  if(NOT sal_NOINSTALL)
+    file(RELATIVE_PATH include_dir
+      "${PROJECT_SOURCE_DIR}"
+      "${CMAKE_CURRENT_SOURCE_DIR}"
+      )
+    install(TARGETS ${suffix} EXPORT sealtk
+      RUNTIME COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_BINDIR}"
+      LIBRARY COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+      ARCHIVE COMPONENT Development DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+      )
+    install(FILES ${sal_HEADERS}
+      COMPONENT Development DESTINATION
+        "${CMAKE_INSTALL_INCLUDEDIR}/${include_dir}"
+      )
+  endif()
 
   if(DEFINED sal_TARGET_NAME_VAR)
     set(${sal_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)
@@ -99,7 +105,12 @@ function(sealtk_add_executable name)
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
     )
-  cmake_parse_arguments(sae "" "TARGET_NAME_VAR" "${sae_multi}" ${ARGN})
+  cmake_parse_arguments(sae
+    "NOINSTALL"
+    "TARGET_NAME_VAR"
+    "${sae_multi}"
+    ${ARGN}
+    )
 
   add_executable(${suffix} ${sae_SOURCES})
   add_executable(sealtk::${suffix} ALIAS ${suffix})
@@ -114,9 +125,11 @@ function(sealtk_add_executable name)
     INTERFACE ${sae_INTERFACE_LINK_LIBRARIES}
     )
 
-  install(TARGETS ${suffix}
-    RUNTIME COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    )
+  if(NOT sae_NOINSTALL)
+    install(TARGETS ${suffix} EXPORT sealtk
+      RUNTIME COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_BINDIR}"
+      )
+  endif()
 
   if(DEFINED sae_TARGET_NAME_VAR)
     set(${sae_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)

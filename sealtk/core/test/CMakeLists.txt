@@ -5,7 +5,7 @@
 include(SEALTKUtils)
 
 sealtk_add_library(sealtk::core_test_common
-  STATIC
+  STATIC NOINSTALL
 
   SOURCES
     TestCommon.cpp

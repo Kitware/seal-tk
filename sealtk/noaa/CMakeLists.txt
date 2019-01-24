@@ -5,8 +5,6 @@
 include(SEALTKUtils)
 
 sealtk_add_library(sealtk::noaa
-  STATIC
-
   SOURCES
     About.cpp
     FilenameUtils.cpp
