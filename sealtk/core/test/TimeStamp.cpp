@@ -215,6 +215,24 @@ TestTimeStamp::TestTimeStamp()
   d.gt = false;
   d.lt = false;
   this->data.append(d);
+
+  d = TimeStampTestData{};
+  d.name = "10";
+  d.t1.set_time_usec(500);
+  d.t1.set_time_domain(0);
+  d.t1.set_frame(5);
+  d.t1.set_frame_domain(0);
+  d.t2.set_time_usec(500);
+  d.t2.set_time_domain(0);
+  d.t2.set_frame(10);
+  d.t2.set_frame_domain(1);
+  d.eq = true;
+  d.ne = false;
+  d.ge = true;
+  d.le = true;
+  d.gt = false;
+  d.lt = false;
+  this->data.append(d);
 }
 
 // ----------------------------------------------------------------------------

@@ -60,7 +60,7 @@ TimeStamp& TimeStamp::set_frame_domain(int frame_domain)
 }
 
 // ----------------------------------------------------------------------------
-#define COMPARE(OP, TIME_CHECK)                                               \
+#define COMPARE(OP, TIME_CHECK, FALLBACK)                                     \
 bool TimeStamp                                                                \
 ::operator OP(TimeStamp const& rhs) const                                     \
 {                                                                             \
@@ -79,7 +79,12 @@ bool TimeStamp                                                                \
     TIME_CHECK                                                                \
   }                                                                           \
                                                                               \
-  return this->get_frame() OP rhs.get_frame();                                \
+  if (frameValid)                                                             \
+  {                                                                           \
+    return this->get_frame() OP rhs.get_frame();                              \
+  }                                                                           \
+                                                                              \
+  return FALLBACK;                                                            \
 }
 
 COMPARE(==,
@@ -87,15 +92,15 @@ COMPARE(==,
     {
       return false;
     }
-)
+, true)
 
 COMPARE(>=,
     return this->get_time_usec() >= rhs.get_time_usec();
-)
+, true)
 
 COMPARE(<=,
     return this->get_time_usec() <= rhs.get_time_usec();
-)
+, true)
 
 COMPARE(>,
     if (this->get_time_usec() > rhs.get_time_usec())
@@ -106,7 +111,7 @@ COMPARE(>,
     {
       return false;
     }
-)
+, false)
 
 COMPARE(<,
     if (this->get_time_usec() < rhs.get_time_usec())
@@ -117,7 +122,7 @@ COMPARE(<,
     {
       return false;
     }
-)
+, false)
 
 // ----------------------------------------------------------------------------
 bool TimeStamp::operator!=(TimeStamp const& rhs) const
