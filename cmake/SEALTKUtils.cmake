@@ -131,6 +131,7 @@ function(sealtk_add_kwiver_plugin name)
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/kwiver/modules"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/kwiver/modules"
     OUTPUT_NAME "sealtk_${suffix}"
+    PREFIX ""
     )
 
   target_link_libraries(${suffix}
