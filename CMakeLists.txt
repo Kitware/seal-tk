@@ -80,9 +80,11 @@ install(FILES
 configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/setup_KWIVER.sh.in"
   "${PROJECT_BINARY_DIR}/setup_KWIVER.sh"
+  @ONLY
   )
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/setup_KWIVER.bat.in"
   "${PROJECT_BINARY_DIR}/setup_KWIVER.bat"
+  @ONLY
   )

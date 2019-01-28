@@ -129,12 +129,14 @@ class SourceFile:
 
     def test_line_length(self):
         if self.is_cpp_source() or self.is_cpp_header() or self.is_python() \
-                or self.is_cmake():
+                or self.is_cmake() or self.is_qrc() or self.is_glsl() \
+                or self.is_sh() or self.is_bat():
             assert not matches(self.contents(), r"[^\n]{80,}")
 
     def test_trailing_whitespace(self):
         if self.is_cpp_source() or self.is_cpp_header() or self.is_python() \
-                or self.is_cmake():
+                or self.is_cmake() or self.is_qrc() or self.is_glsl() \
+                or self.is_sh() or self.is_bat():
             assert not matches(self.contents(), r"[ \t]\n")
             assert matches(self.contents(), r"[^\n]\n\Z")
 
