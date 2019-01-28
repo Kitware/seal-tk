@@ -5,6 +5,8 @@
 #ifndef sealtk_gui_Window_hpp
 #define sealtk_gui_Window_hpp
 
+#include <sealtk/gui/Export.h>
+
 #include <QMainWindow>
 #include <QMetaObject>
 #include <QString>
@@ -20,7 +22,7 @@ class WindowPrivate;
 
 class Panel;
 
-class Window : public QMainWindow
+class SEALTK_GUI_EXPORT Window : public QMainWindow
 {
   Q_OBJECT
 

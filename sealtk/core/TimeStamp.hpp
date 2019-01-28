@@ -5,6 +5,8 @@
 #ifndef sealtk_core_TimeStamp_hpp
 #define sealtk_core_TimeStamp_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <vital/types/timestamp.h>
 
 namespace sealtk
@@ -13,7 +15,7 @@ namespace sealtk
 namespace core
 {
 
-class TimeStamp : public kwiver::vital::timestamp
+class SEALTK_CORE_EXPORT TimeStamp : public kwiver::vital::timestamp
 {
 public:
   TimeStamp();

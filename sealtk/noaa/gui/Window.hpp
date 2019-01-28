@@ -5,6 +5,8 @@
 #ifndef sealtk_noaa_gui_Window_hpp
 #define sealtk_noaa_gui_Window_hpp
 
+#include <sealtk/noaa/gui/Export.h>
+
 #include <sealtk/gui/Window.hpp>
 
 namespace sealtk
@@ -18,7 +20,7 @@ namespace gui
 
 class WindowPrivate;
 
-class Window : public sealtk::gui::Window
+class SEALTK_NOAA_GUI_EXPORT Window : public sealtk::gui::Window
 {
   Q_OBJECT
 

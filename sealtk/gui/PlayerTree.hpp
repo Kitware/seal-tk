@@ -5,6 +5,8 @@
 #ifndef sealtk_gui_PlayerTree_hpp
 #define sealtk_gui_PlayerTree_hpp
 
+#include <sealtk/gui/Export.h>
+
 #include <sealtk/gui/Panel.hpp>
 
 #include <qtGlobal.h>
@@ -19,7 +21,7 @@ class PlayerTreePrivate;
 
 class Window;
 
-class PlayerTree : public Panel
+class SEALTK_GUI_EXPORT PlayerTree : public Panel
 {
   Q_OBJECT
 

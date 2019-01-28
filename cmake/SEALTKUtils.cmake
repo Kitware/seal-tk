@@ -2,6 +2,7 @@
 # 3-Clause License. See top-level LICENSE file or
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
+include(GenerateExportHeader)
 include(GNUInstallDirs)
 
 function(qt5_discover_tests test_name target)
@@ -39,7 +40,7 @@ function(sealtk_add_library name)
     )
   cmake_parse_arguments(sal
     "STATIC;SHARED;NOINSTALL"
-    "TARGET_NAME_VAR"
+    "TARGET_NAME_VAR;EXPORT_HEADER"
     "${sal_multi}"
     ${ARGN}
     )
@@ -75,6 +76,16 @@ function(sealtk_add_library name)
     "$<INSTALL_INTERFACE:include>"
     )
 
+  if(sal_EXPORT_HEADER)
+    if(NOT IS_ABSOLUTE "${sal_EXPORT_HEADER}")
+      set(sal_EXPORT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/${sal_EXPORT_HEADER}")
+    endif()
+    generate_export_header(${suffix}
+      BASE_NAME sealtk_${suffix}
+      EXPORT_FILE_NAME "${sal_EXPORT_HEADER}"
+      )
+  endif()
+
   if(NOT sal_NOINSTALL)
     file(RELATIVE_PATH include_dir
       "${PROJECT_SOURCE_DIR}"
@@ -85,7 +96,7 @@ function(sealtk_add_library name)
       LIBRARY COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_LIBDIR}"
       ARCHIVE COMPONENT Development DESTINATION "${CMAKE_INSTALL_LIBDIR}"
       )
-    install(FILES ${sal_HEADERS}
+    install(FILES ${sal_HEADERS} ${sal_EXPORT_HEADER}
       COMPONENT Development DESTINATION
         "${CMAKE_INSTALL_INCLUDEDIR}/${include_dir}"
       )
@@ -108,7 +119,7 @@ function(sealtk_add_kwiver_plugin name)
     )
   cmake_parse_arguments(sakp
     "NOINSTALL"
-    "TARGET_NAME_VAR"
+    "TARGET_NAME_VAR;EXPORT_HEADER"
     "${sakp_multi}"
     ${ARGN}
     )
@@ -133,6 +144,18 @@ function(sealtk_add_kwiver_plugin name)
     "$<INSTALL_INTERFACE:include>"
     )
 
+  if(sakp_EXPORT_HEADER)
+    if(NOT IS_ABSOLUTE "${sakp_EXPORT_HEADER}")
+      set(sakp_EXPORT_HEADER
+        "${CMAKE_CURRENT_BINARY_DIR}/${sakp_EXPORT_HEADER}"
+        )
+    endif()
+    generate_export_header(${suffix}
+      BASE_NAME sealtk_${suffix}
+      EXPORT_FILE_NAME "${sakp_EXPORT_HEADER}"
+      )
+  endif()
+
   if(NOT sakp_NOINSTALL)
     file(RELATIVE_PATH include_dir
       "${PROJECT_SOURCE_DIR}"
@@ -144,7 +167,7 @@ function(sealtk_add_kwiver_plugin name)
       LIBRARY COMPONENT Runtime DESTINATION
         "${CMAKE_INSTALL_LIBDIR}/kwiver/modules"
       )
-    install(FILES ${sakp_HEADERS}
+    install(FILES ${sakp_HEADERS} ${sakp_EXPORT_HEADER}
       COMPONENT Development DESTINATION
         "${CMAKE_INSTALL_INCLUDEDIR}/${include_dir}"
       )

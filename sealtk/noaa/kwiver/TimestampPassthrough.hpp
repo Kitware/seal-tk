@@ -5,6 +5,8 @@
 #ifndef sealtk_noaa_kwiver_TimestampPassthrough_hpp
 #define sealtk_noaa_kwiver_TimestampPassthrough_hpp
 
+#include <sealtk/noaa/kwiver/Export.h>
+
 #include <vital/algo/image_io.h>
 
 namespace sealtk
@@ -16,8 +18,9 @@ namespace noaa
 namespace kwiver
 {
 
-class TimestampPassthrough : public ::kwiver::vital::algorithm_impl<
-  TimestampPassthrough, ::kwiver::vital::algo::image_io>
+class SEALTK_NOAA_KWIVER_EXPORT
+  TimestampPassthrough : public ::kwiver::vital::algorithm_impl<
+    TimestampPassthrough, ::kwiver::vital::algo::image_io>
 {
 public:
   TimestampPassthrough();

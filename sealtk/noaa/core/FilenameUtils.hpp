@@ -5,6 +5,8 @@
 #ifndef sealtk_noaa_core_FilenameUtils_hpp
 #define sealtk_noaa_core_FilenameUtils_hpp
 
+#include <sealtk/noaa/core/Export.h>
+
 #include <QDateTime>
 
 namespace sealtk
@@ -16,6 +18,7 @@ namespace noaa
 namespace core
 {
 
+SEALTK_NOAA_CORE_EXPORT
 QDateTime imageFilenameToQDateTime(QString const& path);
 
 }

@@ -5,13 +5,15 @@
 #ifndef sealtk_gui_Resources_hpp
 #define sealtk_gui_Resources_hpp
 
+#include <sealtk/gui/Export.h>
+
 namespace sealtk
 {
 
 namespace gui
 {
 
-class Resources
+class SEALTK_GUI_EXPORT Resources
 {
 public:
   Resources();

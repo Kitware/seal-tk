@@ -2,6 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
+#include <sealtk/noaa/kwiver/Export.h>
+
 #include <sealtk/noaa/kwiver/TimestampPassthrough.hpp>
 
 #include <sealtk/core/Version.h>
@@ -21,7 +23,8 @@ namespace noaa
 namespace kwiver
 {
 
-extern "C" void register_factories(::kwiver::vital::plugin_loader& vpm)
+extern "C" SEALTK_NOAA_KWIVER_EXPORT
+void register_factories(::kwiver::vital::plugin_loader& vpm)
 {
   using kvpf = ::kwiver::vital::plugin_factory;
 

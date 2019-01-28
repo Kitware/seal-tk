@@ -5,6 +5,8 @@
 #ifndef sealtk_core_DateUtils_hpp
 #define sealtk_core_DateUtils_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <vital/types/timestamp.h>
 
 #include <QDateTime>
@@ -15,8 +17,10 @@ namespace sealtk
 namespace core
 {
 
+SEALTK_CORE_EXPORT
 QDateTime vitalTimeToQDateTime(kwiver::vital::timestamp::time_t time);
 
+SEALTK_CORE_EXPORT
 kwiver::vital::timestamp::time_t qDateTimeToVitalTime(
   QDateTime const& dateTime);
 

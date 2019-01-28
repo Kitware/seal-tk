@@ -5,6 +5,8 @@
 #ifndef sealtk_core_KwiverVideoSource_hpp
 #define sealtk_core_KwiverVideoSource_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <sealtk/core/VideoSource.hpp>
 
 #include <QImage>
@@ -23,7 +25,7 @@ namespace core
 
 class KwiverVideoSourcePrivate;
 
-class KwiverVideoSource : public VideoSource
+class SEALTK_CORE_EXPORT KwiverVideoSource : public VideoSource
 {
   Q_OBJECT
 

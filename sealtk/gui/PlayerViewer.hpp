@@ -5,6 +5,8 @@
 #ifndef sealtk_gui_PlayerViewer_hpp
 #define sealtk_gui_PlayerViewer_hpp
 
+#include <sealtk/gui/Export.h>
+
 #include <QMatrix3x3>
 #include <QOpenGLWidget>
 #include <qtGlobal.h>
@@ -19,7 +21,7 @@ namespace gui
 
 class PlayerViewerPrivate;
 
-class PlayerViewer : public QOpenGLWidget
+class SEALTK_GUI_EXPORT PlayerViewer : public QOpenGLWidget
 {
   Q_OBJECT
 

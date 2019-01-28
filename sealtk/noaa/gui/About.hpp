@@ -5,6 +5,8 @@
 #ifndef sealtk_noaa_gui_About_hpp
 #define sealtk_noaa_gui_About_hpp
 
+#include <sealtk/noaa/gui/Export.h>
+
 #include <QDialog>
 #include <qtGlobal.h>
 
@@ -19,7 +21,7 @@ namespace gui
 
 class AboutPrivate;
 
-class About : public QDialog
+class SEALTK_NOAA_GUI_EXPORT About : public QDialog
 {
   Q_OBJECT
 

@@ -27,4 +27,6 @@ sealtk_add_library(sealtk::gui
 
   PUBLIC_LINK_LIBRARIES
     sealtk::core
+
+  EXPORT_HEADER Export.h
   )

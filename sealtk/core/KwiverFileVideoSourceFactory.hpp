@@ -5,6 +5,8 @@
 #ifndef sealtk_core_KwiverFileVideoSourceFactory_hpp
 #define sealtk_core_KwiverFileVideoSourceFactory_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <QObject>
 #include <QString>
 #include <qtGlobal.h>
@@ -24,7 +26,8 @@ class VideoSource;
 
 class KwiverFileVideoSourceFactoryPrivate;
 
-class KwiverFileVideoSourceFactory : public FileVideoSourceFactory
+class SEALTK_CORE_EXPORT KwiverFileVideoSourceFactory :
+  public FileVideoSourceFactory
 {
   Q_OBJECT
 

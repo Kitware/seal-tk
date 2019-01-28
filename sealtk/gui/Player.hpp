@@ -5,6 +5,8 @@
 #ifndef sealtk_gui_Player_hpp
 #define sealtk_gui_Player_hpp
 
+#include <sealtk/gui/Export.h>
+
 #include <sealtk/gui/Panel.hpp>
 
 #include <qtGlobal.h>
@@ -21,7 +23,7 @@ class PlayerPrivate;
 
 class Window;
 
-class Player : public Panel
+class SEALTK_GUI_EXPORT Player : public Panel
 {
   Q_OBJECT
 

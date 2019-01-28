@@ -8,6 +8,8 @@
 #include <QObject>
 #include <qtGlobal.h>
 
+#include <sealtk/noaa/core/Export.h>
+
 #include <sealtk/core/KwiverFileVideoSourceFactory.hpp>
 
 namespace sealtk
@@ -28,7 +30,7 @@ namespace core
 
 class ImageListVideoSourceFactoryPrivate;
 
-class ImageListVideoSourceFactory :
+class SEALTK_NOAA_CORE_EXPORT ImageListVideoSourceFactory :
   public sealtk::core::KwiverFileVideoSourceFactory
 {
   Q_OBJECT

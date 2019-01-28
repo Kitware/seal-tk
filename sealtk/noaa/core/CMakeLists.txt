@@ -17,4 +17,6 @@ sealtk_add_library(sealtk::noaa_core
     sealtk::core
     qtExtensions
     Qt5::Core
+
+  EXPORT_HEADER Export.h
   )

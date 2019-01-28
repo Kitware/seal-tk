@@ -5,6 +5,8 @@
 #ifndef sealtk_gui_SplitterWindow_hpp
 #define sealtk_gui_SplitterWindow_hpp
 
+#include <sealtk/gui/Export.h>
+
 #include <QWidget>
 #include <qtGlobal.h>
 
@@ -18,7 +20,7 @@ class SplitterWindowPrivate;
 
 class Window;
 
-class SplitterWindow : public QWidget
+class SEALTK_GUI_EXPORT SplitterWindow : public QWidget
 {
   Q_OBJECT
 

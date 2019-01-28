@@ -5,6 +5,8 @@
 #ifndef sealtk_core_VideoController_hpp
 #define sealtk_core_VideoController_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <QObject>
 #include <QSet>
 #include <qtGlobal.h>
@@ -21,7 +23,7 @@ class VideoSource;
 
 class VideoControllerPrivate;
 
-class VideoController : public QObject
+class SEALTK_CORE_EXPORT VideoController : public QObject
 {
   Q_OBJECT
 

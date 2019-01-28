@@ -5,6 +5,8 @@
 #ifndef sealtk_core_VideoSource_hpp
 #define sealtk_core_VideoSource_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <QImage>
 #include <QObject>
 #include <QSet>
@@ -20,7 +22,7 @@ namespace core
 
 class VideoSourcePrivate;
 
-class VideoSource : public QObject
+class SEALTK_CORE_EXPORT VideoSource : public QObject
 {
   Q_OBJECT
 

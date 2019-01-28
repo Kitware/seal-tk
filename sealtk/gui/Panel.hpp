@@ -5,6 +5,8 @@
 #ifndef sealtk_gui_Panel_hpp
 #define sealtk_gui_Panel_hpp
 
+#include <sealtk/gui/Export.h>
+
 #include <QMainWindow>
 #include <qtGlobal.h>
 
@@ -18,7 +20,7 @@ class PanelPrivate;
 
 class Window;
 
-class Panel : public QMainWindow
+class SEALTK_GUI_EXPORT Panel : public QMainWindow
 {
   Q_OBJECT
 

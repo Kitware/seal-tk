@@ -38,6 +38,7 @@ sealtk_add_library(sealtk::core
     kwiver::vital
     kwiver::kwiver_algo_qt
 
+  EXPORT_HEADER Export.h
   TARGET_NAME_VAR name
   )
 

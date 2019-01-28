@@ -19,4 +19,6 @@ sealtk_add_library(sealtk::noaa_gui
     sealtk::noaa_core
     qtExtensions
     Qt5::Widgets
+
+  EXPORT_HEADER Export.h
   )

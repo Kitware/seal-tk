@@ -18,4 +18,6 @@ sealtk_add_kwiver_plugin(sealtk::noaa_kwiver
     kwiver::vital
     kwiver::vital_algo
     Qt5::Core
+
+  EXPORT_HEADER Export.h
   )
