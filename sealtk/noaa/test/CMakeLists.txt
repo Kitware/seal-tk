@@ -9,7 +9,7 @@ sealtk_add_test(FilenameUtils
     FilenameUtils.cpp
 
   PRIVATE_LINK_LIBRARIES
-    sealtk::noaa
+    sealtk::noaa_core
   )
 
 sealtk_add_test(ImageListVideoSourceFactory
@@ -17,5 +17,5 @@ sealtk_add_test(ImageListVideoSourceFactory
     ImageListVideoSourceFactory.cpp
 
   PRIVATE_LINK_LIBRARIES
-    sealtk::noaa
+    sealtk::noaa_core
   )
