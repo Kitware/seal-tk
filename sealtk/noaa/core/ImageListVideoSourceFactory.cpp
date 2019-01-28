@@ -2,12 +2,15 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/noaa/ImageListVideoSourceFactory.hpp>
+#include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
 namespace sealtk
 {
 
 namespace noaa
+{
+
+namespace core
 {
 
 // ============================================================================
@@ -18,8 +21,8 @@ public:
 
 // ----------------------------------------------------------------------------
 ImageListVideoSourceFactory::ImageListVideoSourceFactory(
-  core::VideoController* parent)
-  : core::KwiverFileVideoSourceFactory{parent},
+  sealtk::core::VideoController* parent)
+  : sealtk::core::KwiverFileVideoSourceFactory{parent},
     d_ptr{new ImageListVideoSourceFactoryPrivate}
 {
 }
@@ -41,6 +44,8 @@ kwiver::vital::config_block_sptr ImageListVideoSourceFactory::config(
     "noaa_timestamp_passthrough:image_reader:type", "qt");
 
   return config;
+}
+
 }
 
 }

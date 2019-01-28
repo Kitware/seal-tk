@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef sealtk_noaa_ImageListVideoSourceFactory_hpp
-#define sealtk_noaa_ImageListVideoSourceFactory_hpp
+#ifndef sealtk_noaa_core_ImageListVideoSourceFactory_hpp
+#define sealtk_noaa_core_ImageListVideoSourceFactory_hpp
 
 #include <QObject>
 #include <qtGlobal.h>
@@ -23,15 +23,19 @@ class VideoController;
 namespace noaa
 {
 
+namespace core
+{
+
 class ImageListVideoSourceFactoryPrivate;
 
-class ImageListVideoSourceFactory : public core::KwiverFileVideoSourceFactory
+class ImageListVideoSourceFactory :
+  public sealtk::core::KwiverFileVideoSourceFactory
 {
   Q_OBJECT
 
 public:
   explicit ImageListVideoSourceFactory(
-    core::VideoController* parent = nullptr);
+    sealtk::core::VideoController* parent = nullptr);
   ~ImageListVideoSourceFactory() override;
 
 protected:
@@ -42,6 +46,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(ImageListVideoSourceFactory)
 };
+
+}
 
 }
 

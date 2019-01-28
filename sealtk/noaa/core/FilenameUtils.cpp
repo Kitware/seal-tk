@@ -2,7 +2,7 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/noaa/FilenameUtils.hpp>
+#include <sealtk/noaa/core/FilenameUtils.hpp>
 
 #include <QRegularExpression>
 
@@ -10,6 +10,9 @@ namespace sealtk
 {
 
 namespace noaa
+{
+
+namespace core
 {
 
 QDateTime imageFilenameToQDateTime(QString const& path)
@@ -44,6 +47,8 @@ QDateTime imageFilenameToQDateTime(QString const& path)
   }
 
   return QDateTime{};
+}
+
 }
 
 }

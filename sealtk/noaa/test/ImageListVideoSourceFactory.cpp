@@ -4,8 +4,7 @@
 
 #include <sealtk/test/TestCore.hpp>
 
-#include <sealtk/noaa/ImageListVideoSourceFactory.hpp>
-#include <sealtk/noaa/Plugins.hpp>
+#include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
 #include <sealtk/core/DateUtils.hpp>
 #include <sealtk/core/VideoController.hpp>
@@ -43,23 +42,22 @@ private slots:
   void cleanup();
 
 private:
-  std::unique_ptr<core::VideoController> videoController;
-  ImageListVideoSourceFactory* videoSourceFactory;
+  std::unique_ptr<sealtk::core::VideoController> videoController;
+  sealtk::noaa::core::ImageListVideoSourceFactory* videoSourceFactory;
 };
 
 // ----------------------------------------------------------------------------
 void TestImageListVideoSourceFactory::initTestCase()
 {
   kwiver::vital::plugin_manager::instance().load_all_plugins();
-  registerKwiverPlugins();
 }
 
 // ----------------------------------------------------------------------------
 void TestImageListVideoSourceFactory::init()
 {
-  this->videoController = std::make_unique<core::VideoController>();
+  this->videoController = std::make_unique<sealtk::core::VideoController>();
   this->videoSourceFactory =
-    new ImageListVideoSourceFactory{this->videoController.get()};
+    new core::ImageListVideoSourceFactory{this->videoController.get()};
 }
 
 // ----------------------------------------------------------------------------
@@ -72,13 +70,20 @@ void TestImageListVideoSourceFactory::cleanup()
 void TestImageListVideoSourceFactory::loadVideoSource()
 {
   static QVector<kv::timestamp::time_t> const seekTimes{
-    core::qDateTimeToVitalTime({{2016, 4, 9}, {0, 27, 37, 735}, Qt::UTC}),
-    core::qDateTimeToVitalTime({{2016, 4, 14}, {23, 28, 3, 877}, Qt::UTC}),
-    core::qDateTimeToVitalTime({{2016, 4, 23}, {0, 32, 33, 327}, Qt::UTC}),
-    core::qDateTimeToVitalTime({{2016, 5, 17}, {1, 26, 7, 322}, Qt::UTC}),
-    core::qDateTimeToVitalTime({{2016, 5, 17}, {2, 46, 14, 880}, Qt::UTC}),
-    core::qDateTimeToVitalTime({{2016, 5, 17}, {23, 55, 21, 737}, Qt::UTC}),
-    core::qDateTimeToVitalTime({{2016, 5, 17}, {23, 57, 25, 346}, Qt::UTC}),
+    sealtk::core::qDateTimeToVitalTime(
+      {{2016, 4, 9}, {0, 27, 37, 735}, Qt::UTC}),
+    sealtk::core::qDateTimeToVitalTime(
+      {{2016, 4, 14}, {23, 28, 3, 877}, Qt::UTC}),
+    sealtk::core::qDateTimeToVitalTime(
+      {{2016, 4, 23}, {0, 32, 33, 327}, Qt::UTC}),
+    sealtk::core::qDateTimeToVitalTime(
+      {{2016, 5, 17}, {1, 26, 7, 322}, Qt::UTC}),
+    sealtk::core::qDateTimeToVitalTime(
+      {{2016, 5, 17}, {2, 46, 14, 880}, Qt::UTC}),
+    sealtk::core::qDateTimeToVitalTime(
+      {{2016, 5, 17}, {23, 55, 21, 737}, Qt::UTC}),
+    sealtk::core::qDateTimeToVitalTime(
+      {{2016, 5, 17}, {23, 57, 25, 346}, Qt::UTC}),
     0,
   };
 
@@ -93,18 +98,18 @@ void TestImageListVideoSourceFactory::loadVideoSource()
     QString{},
   };
 
-  core::VideoSource* videoSource = nullptr;
+  sealtk::core::VideoSource* videoSource = nullptr;
 
   connect(this->videoSourceFactory,
-          &core::FileVideoSourceFactory::fileRequested,
+          &sealtk::core::FileVideoSourceFactory::fileRequested,
           [this](void* handle)
   {
     this->videoSourceFactory->loadFile(
       handle, SEALTK_TEST_DATA_PATH("ImageListVideoSourceFactory/list.txt"));
   });
   connect(this->videoSourceFactory,
-          &core::VideoSourceFactory::videoSourceLoaded,
-          [&videoSource](core::VideoSource* vs)
+          &sealtk::core::VideoSourceFactory::videoSourceLoaded,
+          [&videoSource](sealtk::core::VideoSource* vs)
   {
     videoSource = vs;
   });
@@ -112,7 +117,7 @@ void TestImageListVideoSourceFactory::loadVideoSource()
 
   QVector<QImage> seekImages;
 
-  connect(videoSource, &core::VideoSource::imageDisplayed,
+  connect(videoSource, &sealtk::core::VideoSource::imageDisplayed,
           [&seekImages](QImage const& image)
   {
     seekImages.append(image);

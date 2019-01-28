@@ -2,10 +2,10 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/noaa/Window.hpp>
+#include <sealtk/noaa/gui/Window.hpp>
 #include "ui_Window.h"
 
-#include <sealtk/noaa/About.hpp>
+#include <sealtk/noaa/gui/About.hpp>
 
 #include <sealtk/gui/Panel.hpp>
 #include <sealtk/gui/SplitterWindow.hpp>
@@ -16,6 +16,9 @@ namespace sealtk
 {
 
 namespace noaa
+{
+
+namespace gui
 {
 
 //=============================================================================
@@ -33,7 +36,7 @@ QTE_IMPLEMENT_D_FUNC(Window)
 
 //-----------------------------------------------------------------------------
 Window::Window(QWidget* parent)
-  : gui::Window{parent},
+  : sealtk::gui::Window{parent},
     d_ptr{new WindowPrivate{this}}
 {
   QTE_D();
@@ -97,7 +100,7 @@ void Window::newLeftPanel(const QMetaObject& type)
 
   auto* panel = this->createPanel(type);
 
-  auto* window = new gui::SplitterWindow{this};
+  auto* window = new sealtk::gui::SplitterWindow{this};
   window->setCentralWidget(panel);
   window->setWindowTitle(panel->windowTitle());
   connect(panel, &QWidget::windowTitleChanged,
@@ -114,7 +117,7 @@ void Window::newRightPanel(const QMetaObject& type)
 
   auto* panel = this->createPanel(type);
 
-  auto* window = new gui::SplitterWindow{this};
+  auto* window = new sealtk::gui::SplitterWindow{this};
   window->setCentralWidget(panel);
   window->setWindowTitle(panel->windowTitle());
   connect(panel, &QWidget::windowTitleChanged,
@@ -128,6 +131,8 @@ void Window::newRightPanel(const QMetaObject& type)
 WindowPrivate::WindowPrivate(Window* parent)
   : parent{parent}
 {
+}
+
 }
 
 }

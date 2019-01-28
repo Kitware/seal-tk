@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef sealtk_noaa_Window_hpp
-#define sealtk_noaa_Window_hpp
+#ifndef sealtk_noaa_gui_Window_hpp
+#define sealtk_noaa_gui_Window_hpp
 
 #include <sealtk/gui/Window.hpp>
 
@@ -13,9 +13,12 @@ namespace sealtk
 namespace noaa
 {
 
+namespace gui
+{
+
 class WindowPrivate;
 
-class Window : public gui::Window
+class Window : public sealtk::gui::Window
 {
   Q_OBJECT
 
@@ -35,6 +38,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(Window)
 };
+
+}
 
 }
 

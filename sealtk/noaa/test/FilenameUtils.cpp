@@ -2,7 +2,7 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/noaa/FilenameUtils.hpp>
+#include <sealtk/noaa/core/FilenameUtils.hpp>
 
 #include <QObject>
 #include <QtTest>
@@ -32,7 +32,7 @@ void TestFilenameUtils::imageFilenameToQDateTime()
   QFETCH(QString, input);
   QFETCH(QDateTime, expected);
 
-  QCOMPARE(noaa::imageFilenameToQDateTime(input), expected);
+  QCOMPARE(core::imageFilenameToQDateTime(input), expected);
 }
 
 // ----------------------------------------------------------------------------

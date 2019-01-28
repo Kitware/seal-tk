@@ -2,7 +2,7 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/noaa/About.hpp>
+#include <sealtk/noaa/gui/About.hpp>
 #include "ui_About.h"
 
 #include <sealtk/core/Version.h>
@@ -11,6 +11,9 @@ namespace sealtk
 {
 
 namespace noaa
+{
+
+namespace gui
 {
 
 //=============================================================================
@@ -40,6 +43,8 @@ About::About(QWidget* parent)
 //-----------------------------------------------------------------------------
 About::~About()
 {
+}
+
 }
 
 }

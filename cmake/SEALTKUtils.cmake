@@ -96,6 +96,65 @@ function(sealtk_add_library name)
   endif()
 endfunction()
 
+function(sealtk_add_kwiver_plugin name)
+  sealtk_parse_name(${name} suffix)
+
+  set(sakp_multi
+    SOURCES
+    HEADERS
+    PRIVATE_LINK_LIBRARIES
+    PUBLIC_LINK_LIBRARIES
+    INTERFACE_LINK_LIBRARIES
+    )
+  cmake_parse_arguments(sakp
+    "NOINSTALL"
+    "TARGET_NAME_VAR"
+    "${sakp_multi}"
+    ${ARGN}
+    )
+
+  add_library(${suffix} MODULE ${sakp_SOURCES} ${sakp_HEADERS})
+  add_library(sealtk::${suffix} ALIAS ${suffix})
+
+  set_target_properties(${suffix} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/kwiver/modules"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/kwiver/modules"
+    OUTPUT_NAME "sealtk_${suffix}"
+    )
+
+  target_link_libraries(${suffix}
+    PRIVATE ${sakp_PRIVATE_LINK_LIBRARIES}
+    PUBLIC ${sakp_PUBLIC_LINK_LIBRARIES}
+    INTERFACE ${sakp_INTERFACE_LINK_LIBRARIES}
+    )
+
+  target_include_directories(${suffix} PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+    "$<INSTALL_INTERFACE:include>"
+    )
+
+  if(NOT sakp_NOINSTALL)
+    file(RELATIVE_PATH include_dir
+      "${PROJECT_SOURCE_DIR}"
+      "${CMAKE_CURRENT_SOURCE_DIR}"
+      )
+    install(TARGETS ${suffix} EXPORT sealtk
+      RUNTIME COMPONENT Runtime DESTINATION
+        "${CMAKE_INSTALL_LIBDIR}/kwiver/modules"
+      LIBRARY COMPONENT Runtime DESTINATION
+        "${CMAKE_INSTALL_LIBDIR}/kwiver/modules"
+      )
+    install(FILES ${sakp_HEADERS}
+      COMPONENT Development DESTINATION
+        "${CMAKE_INSTALL_INCLUDEDIR}/${include_dir}"
+      )
+  endif()
+
+  if(DEFINED sakp_TARGET_NAME_VAR)
+    set(${sakp_TARGET_NAME_VAR} ${suffix} PARENT_SCOPE)
+  endif()
+endfunction()
+
 function(sealtk_add_executable name)
   sealtk_parse_name(${name} suffix)
 

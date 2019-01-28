@@ -2,8 +2,8 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef sealtk_noaa_About_hpp
-#define sealtk_noaa_About_hpp
+#ifndef sealtk_noaa_gui_About_hpp
+#define sealtk_noaa_gui_About_hpp
 
 #include <QDialog>
 #include <qtGlobal.h>
@@ -12,6 +12,9 @@ namespace sealtk
 {
 
 namespace noaa
+{
+
+namespace gui
 {
 
 class AboutPrivate;
@@ -30,6 +33,8 @@ protected:
 private:
   QTE_DECLARE_PRIVATE_RPTR(About)
 };
+
+}
 
 }
 

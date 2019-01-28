@@ -4,21 +4,19 @@
 
 include(SEALTKUtils)
 
-add_subdirectory(core)
-add_subdirectory(gui)
-add_subdirectory(kwiver)
-
-sealtk_add_executable(sealtk::noaa_app
+sealtk_add_library(sealtk::noaa_gui
   SOURCES
-    Main.cpp
+    About.cpp
+    Window.cpp
+    SEALTKBranding.qrc
+
+  HEADERS
+    About.hpp
+    Window.hpp
 
   PUBLIC_LINK_LIBRARIES
+    sealtk::gui
     sealtk::noaa_core
-    sealtk::noaa_gui
-
-  TARGET_NAME_VAR name
+    qtExtensions
+    Qt5::Widgets
   )
-
-set_property(TARGET ${name} PROPERTY OUTPUT_NAME sealtk)
-
-add_subdirectory(test)
