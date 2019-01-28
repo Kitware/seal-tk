@@ -26,6 +26,10 @@ copyright_notice_qrc_re = "^<!--" + copyright_notice.replace("\n", "\n    ") \
     + "-->\n\n"
 copyright_notice_glsl_re = "^/\* " + copyright_notice.replace("\n", "\n \* ") \
     + " \*/\n\n"
+copyright_notice_sh_re = "^(#!/bin/(ba)?sh\n\n)?# " \
+    + copyright_notice.replace("\n", "\n# ") + "\n\n"
+copyright_notice_bat_re = "^:: " + copyright_notice.replace("\n", "\n:: ") \
+    + "\n\n"
 
 
 def filename_components(s):
@@ -75,6 +79,12 @@ class SourceFile:
     def is_glsl(self):
         return matches(self.filename, r"\.glsl$")
 
+    def is_sh(self):
+        return matches(self.filename, r"\.sh\.in$")
+
+    def is_bat(self):
+        return matches(self.filename, r"\.bat\.in$")
+
     def is_thirdparty(self):
         if filename_components(self.filename)[:2] == ["cmake", "thirdparty"]:
             return True
@@ -102,6 +112,10 @@ class SourceFile:
             assert matches(self.contents(), copyright_notice_qrc_re)
         elif self.is_glsl():
             assert matches(self.contents(), copyright_notice_glsl_re)
+        elif self.is_sh():
+            assert matches(self.contents(), copyright_notice_sh_re)
+        elif self.is_bat():
+            assert matches(self.contents(), copyright_notice_bat_re)
 
     def test_include_guards(self):
         if self.is_cpp_header():

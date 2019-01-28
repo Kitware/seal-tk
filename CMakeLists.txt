@@ -76,3 +76,13 @@ install(FILES
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/sealtk"
   COMPONENT Development
   )
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/cmake/setup_KWIVER.sh.in"
+  "${PROJECT_BINARY_DIR}/setup_KWIVER.sh"
+  )
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/cmake/setup_KWIVER.bat.in"
+  "${PROJECT_BINARY_DIR}/setup_KWIVER.bat"
+  )
