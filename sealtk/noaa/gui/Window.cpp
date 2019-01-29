@@ -58,9 +58,9 @@ Window::Window(QWidget* parent)
             this, [&type, this]() { this->newLeftPanel(type); });
 
     auto* rightAction = new QAction{name, this};
-    d->ui.menuNewLeftPanel->addAction(rightAction);
+    d->ui.menuNewRightPanel->addAction(rightAction);
     connect(rightAction, &QAction::triggered,
-            this, [&type, this]() { this->newLeftPanel(type); });
+            this, [&type, this]() { this->newRightPanel(type); });
   });
 }
 
