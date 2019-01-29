@@ -11,8 +11,6 @@
 #include <vital/algo/algorithm_factory.h>
 #include <vital/plugin_loader/plugin_manager.h>
 
-#include <QRegularExpression>
-
 #include <sstream>
 
 namespace sealtk
