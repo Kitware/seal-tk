@@ -37,10 +37,6 @@ Player::Player(QWidget* parent)
 
   d->ui.setupUi(this);
 
-  d->ui.video->addAction(d->ui.actionOpen);
-
-  connect(d->ui.actionOpen, &QAction::triggered,
-          this, &Player::openFile);
   connect(this, &Player::imageOpened,
           d->ui.video, &PlayerViewer::setImage);
 }

@@ -20,6 +20,7 @@ class VideoControllerPrivate
 public:
   QSet<VideoSource*> videoSources;
   QSet<kwiver::vital::timestamp::time_t> times;
+  kwiver::vital::timestamp::time_t time;
 
   void rebuildTimes();
 };
@@ -50,24 +51,25 @@ QSet<VideoSource*> VideoController::videoSources() const
 void VideoController::addVideoSource(VideoSource* videoSource)
 {
   QTE_D();
-  d->videoSources.insert(videoSource);
-
-  connect(this, &VideoController::timestampSelected,
-          videoSource, &VideoSource::seek);
-
-  emit this->videoSourcesChanged();
+  if (!d->videoSources.contains(videoSource))
+  {
+    d->videoSources.insert(videoSource);
+    connect(this, &VideoController::timeSelected,
+            videoSource, &VideoSource::seek);
+    emit this->videoSourcesChanged();
+  }
 }
 
 // ----------------------------------------------------------------------------
 void VideoController::removeVideoSource(VideoSource* videoSource)
 {
   QTE_D();
-  d->videoSources.remove(videoSource);
-
-  disconnect(this, &VideoController::timestampSelected,
-             videoSource, &VideoSource::seek);
-
-  emit this->videoSourcesChanged();
+  if (d->videoSources.remove(videoSource))
+  {
+    disconnect(this, &VideoController::timeSelected,
+               videoSource, &VideoSource::seek);
+    emit this->videoSourcesChanged();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -85,9 +87,21 @@ QSet<kwiver::vital::timestamp::time_t> VideoController::times() const
 }
 
 // ----------------------------------------------------------------------------
+kwiver::vital::timestamp::time_t VideoController::time() const
+{
+  QTE_D();
+  return d->time;
+}
+
+// ----------------------------------------------------------------------------
 void VideoController::seek(kwiver::vital::timestamp::time_t time)
 {
-  emit this->timestampSelected(time);
+  QTE_D();
+  if (time != d->time)
+  {
+    d->time = time;
+    emit this->timeSelected(time);
+  }
 }
 
 // ----------------------------------------------------------------------------

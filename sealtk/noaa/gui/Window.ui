@@ -17,10 +17,19 @@
    <iconset resource="SEALTKBranding.qrc">
     <normaloff>:/logo256.png</normaloff>:/logo256.png</iconset>
   </property>
-  <widget class="QSplitter" name="centralwidget">
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
+  <widget class="QWidget" name="layout">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QSplitter" name="centralwidget">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="sealtk::gui::PlayerControl" name="control" native="true"/>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -63,13 +72,20 @@
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAbout">
    <property name="text">
     <string>About...</string>
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>sealtk::gui::PlayerControl</class>
+   <extends>QWidget</extends>
+   <header location="global">sealtk/gui/PlayerControl.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="SEALTKBranding.qrc"/>
  </resources>

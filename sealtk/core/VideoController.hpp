@@ -37,9 +37,11 @@ public:
 
   QSet<kwiver::vital::timestamp::time_t> times() const;
 
+  kwiver::vital::timestamp::time_t time() const;
+
 signals:
   void videoSourcesChanged();
-  void timestampSelected(kwiver::vital::timestamp::time_t time);
+  void timeSelected(kwiver::vital::timestamp::time_t time);
 
 public slots:
   void seek(kwiver::vital::timestamp::time_t time);

@@ -13,50 +13,7 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <widget class="sealtk::gui::PlayerViewer" name="video">
-   <property name="contextMenuPolicy">
-    <enum>Qt::ActionsContextMenu</enum>
-   </property>
-  </widget>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>BottomToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionPlay"/>
-   <addaction name="actionPause"/>
-  </widget>
-  <action name="actionPlay">
-   <property name="icon">
-    <iconset theme="media-playback-start">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
-   <property name="text">
-    <string>Play</string>
-   </property>
-  </action>
-  <action name="actionPause">
-   <property name="icon">
-    <iconset theme="media-playback-pause">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
-   <property name="text">
-    <string>Pause</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionOpen">
-   <property name="text">
-    <string>Open...</string>
-   </property>
-  </action>
+  <widget class="sealtk::gui::PlayerViewer" name="video"/>
  </widget>
  <customwidgets>
   <customwidget>

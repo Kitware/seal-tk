@@ -7,10 +7,14 @@
 
 #include <sealtk/noaa/gui/About.hpp>
 
+#include <sealtk/core/VideoController.hpp>
+
 #include <sealtk/gui/Panel.hpp>
 #include <sealtk/gui/SplitterWindow.hpp>
 
 #include <QDockWidget>
+
+#include <memory>
 
 namespace sealtk
 {
@@ -27,8 +31,12 @@ class WindowPrivate
 public:
   WindowPrivate(Window* parent);
 
-  Window* parent;
+  QTE_DECLARE_PUBLIC(Window)
+  QTE_DECLARE_PUBLIC_PTR(Window)
+
   Ui::Window ui;
+
+  std::unique_ptr<sealtk::core::VideoController> videoController;
 };
 
 //-----------------------------------------------------------------------------
@@ -41,6 +49,9 @@ Window::Window(QWidget* parent)
 {
   QTE_D();
   d->ui.setupUi(this);
+
+  d->videoController = std::make_unique<sealtk::core::VideoController>(this);
+  d->ui.control->setVideoController(d->videoController.get());
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
@@ -129,7 +140,7 @@ void Window::newRightPanel(const QMetaObject& type)
 
 //-----------------------------------------------------------------------------
 WindowPrivate::WindowPrivate(Window* parent)
-  : parent{parent}
+  : q_ptr{parent}
 {
 }
 

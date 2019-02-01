@@ -8,6 +8,7 @@ sealtk_add_library(sealtk::gui
   SOURCES
     Panel.cpp
     Player.cpp
+    PlayerControl.cpp
     PlayerTree.cpp
     PlayerViewer.cpp
     Resources.cpp
@@ -19,6 +20,7 @@ sealtk_add_library(sealtk::gui
   HEADERS
     Panel.hpp
     Player.hpp
+    PlayerControl.hpp
     PlayerTree.hpp
     PlayerViewer.hpp
     Resources.hpp
