@@ -151,7 +151,12 @@ void WindowPrivate::registerVideoSourceFactory(
       }
 
       case Dockable:
+      {
+        auto* dockableWindow = new QDockWidget{q};
+        dockableWindow->setWidget(player);
+        q->addDockWidget(Qt::LeftDockWidgetArea, dockableWindow);
         break;
+      }
     }
 
     delete type;
