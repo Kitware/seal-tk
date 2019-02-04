@@ -45,6 +45,8 @@ public:
 
   std::unique_ptr<sealtk::core::VideoController> videoController;
 
+  bool firstWindow = true;
+
   void registerVideoSourceFactory(QString const& name,
                                   sealtk::core::VideoSourceFactory* factory);
 
@@ -156,6 +158,26 @@ void WindowPrivate::registerVideoSourceFactory(
         dockableWindow->setWidget(player);
         q->addDockWidget(Qt::LeftDockWidgetArea, dockableWindow);
         break;
+      }
+    }
+
+    if (this->firstWindow)
+    {
+      this->firstWindow = false;
+      auto times = this->videoController->times();
+      auto it = times.begin();
+      if (it != times.end())
+      {
+        auto min = *it;
+        while (++it != times.end())
+        {
+          if (*it < min)
+          {
+            min = *it;
+          }
+        }
+
+        this->videoController->seek(min);
       }
     }
 
