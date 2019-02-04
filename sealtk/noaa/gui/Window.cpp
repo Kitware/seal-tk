@@ -7,11 +7,19 @@
 
 #include <sealtk/noaa/gui/About.hpp>
 
-#include <sealtk/core/VideoController.hpp>
+#include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
+#include <sealtk/core/FileVideoSourceFactory.hpp>
+#include <sealtk/core/VideoController.hpp>
+#include <sealtk/core/VideoSource.hpp>
+#include <sealtk/core/VideoSourceFactory.hpp>
+
+#include <sealtk/gui/Player.hpp>
 #include <sealtk/gui/SplitterWindow.hpp>
 
 #include <QDockWidget>
+#include <QFileDialog>
+#include <QVector>
 
 #include <memory>
 
@@ -36,6 +44,16 @@ public:
   Ui::Window ui;
 
   std::unique_ptr<sealtk::core::VideoController> videoController;
+
+  void registerVideoSourceFactory(QString const& name,
+                                  sealtk::core::VideoSourceFactory* factory);
+
+  enum WindowType
+  {
+    Left,
+    Right,
+    Dockable,
+  };
 };
 
 //-----------------------------------------------------------------------------
@@ -54,6 +72,10 @@ Window::Window(QWidget* parent)
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
+
+  d->registerVideoSourceFactory(
+    "Image List File...",
+    new core::ImageListVideoSourceFactory{d->videoController.get()});
 }
 
 //-----------------------------------------------------------------------------
@@ -72,6 +94,88 @@ void Window::showAbout()
 WindowPrivate::WindowPrivate(Window* parent)
   : q_ptr{parent}
 {
+}
+
+//-----------------------------------------------------------------------------
+void WindowPrivate::registerVideoSourceFactory(
+  QString const& name, sealtk::core::VideoSourceFactory* factory)
+{
+  QTE_Q();
+
+  auto* leftAction = new QAction{name, q};
+  this->ui.menuNewLeftWindow->addAction(leftAction);
+  QObject::connect(leftAction, &QAction::triggered, [factory]()
+  {
+    factory->loadVideoSource(new WindowType{Left});
+  });
+
+  auto* rightAction = new QAction{name, q};
+  this->ui.menuNewRightWindow->addAction(rightAction);
+  QObject::connect(rightAction, &QAction::triggered, [factory]()
+  {
+    factory->loadVideoSource(new WindowType{Right});
+  });
+
+  auto* dockableAction = new QAction{name, q};
+  this->ui.menuNewDockableWindow->addAction(dockableAction);
+  QObject::connect(dockableAction, &QAction::triggered, [factory]()
+  {
+    factory->loadVideoSource(new WindowType{Dockable});
+  });
+
+  QObject::connect(
+    factory, &sealtk::core::VideoSourceFactory::videoSourceLoaded,
+    [this, q](void* handle, sealtk::core::VideoSource* videoSource)
+  {
+    auto* player = new sealtk::gui::Player{q};
+    QObject::connect(videoSource, &sealtk::core::VideoSource::imageDisplayed,
+                     player, &sealtk::gui::Player::setImage);
+
+    WindowType* type = static_cast<WindowType*>(handle);
+    switch (*type)
+    {
+      case Left:
+      case Right:
+      {
+        auto* splitterWindow = new sealtk::gui::SplitterWindow{q};
+        splitterWindow->setCentralWidget(player);
+        if (*type == Left)
+        {
+          this->ui.centralwidget->insertWidget(0, splitterWindow);
+        }
+        else
+        {
+          this->ui.centralwidget->addWidget(splitterWindow);
+        }
+        break;
+      }
+
+      case Dockable:
+        break;
+    }
+
+    delete type;
+  });
+
+  auto* fileFactory =
+    dynamic_cast<sealtk::core::FileVideoSourceFactory*>(factory);
+  if (fileFactory)
+  {
+    QObject::connect(
+      fileFactory, &sealtk::core::FileVideoSourceFactory::fileRequested,
+      [q, fileFactory](void* handle)
+    {
+      QString filename = QFileDialog::getOpenFileName(q);
+      if (!filename.isNull())
+      {
+        fileFactory->loadFile(handle, filename);
+      }
+      else
+      {
+        delete static_cast<WindowType*>(handle);
+      }
+    });
+  }
 }
 
 }

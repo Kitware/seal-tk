@@ -36,13 +36,11 @@ signals:
   void fileRequested(void* handle);
 
 public slots:
-  void loadVideoSource() override;
+  void loadVideoSource(void* handle) override;
   virtual void loadFile(void* handle, QString const& path) = 0;
 
 protected:
   QTE_DECLARE_PRIVATE(FileVideoSourceFactory)
-
-  void freeHandle(void* handle);
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(FileVideoSourceFactory)

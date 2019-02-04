@@ -40,8 +40,6 @@ KwiverFileVideoSourceFactory::~KwiverFileVideoSourceFactory()
 // ----------------------------------------------------------------------------
 void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
 {
-  this->freeHandle(handle);
-
   kwiver::vital::algo::video_input_sptr vi;
   kwiver::vital::algo::video_input::set_nested_algo_configuration(
     "video_reader", this->config(path), vi);
@@ -49,7 +47,7 @@ void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
 
   auto* vs = new KwiverVideoSource{this->videoController()};
   vs->setVideoInput(vi);
-  emit this->videoSourceLoaded(vs);
+  emit this->videoSourceLoaded(handle, vs);
 }
 
 }

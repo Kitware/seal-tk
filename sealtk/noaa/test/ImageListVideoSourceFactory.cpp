@@ -109,11 +109,11 @@ void TestImageListVideoSourceFactory::loadVideoSource()
   });
   connect(this->videoSourceFactory,
           &sealtk::core::VideoSourceFactory::videoSourceLoaded,
-          [&videoSource](sealtk::core::VideoSource* vs)
+          [&videoSource](void* handle, sealtk::core::VideoSource* vs)
   {
     videoSource = vs;
   });
-  this->videoSourceFactory->loadVideoSource();
+  this->videoSourceFactory->loadVideoSource(nullptr);
 
   QVector<QImage> seekImages;
 

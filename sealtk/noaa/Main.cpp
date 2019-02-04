@@ -9,11 +9,15 @@
 
 #include <sealtk/gui/Resources.hpp>
 
+#include <vital/plugin_loader/plugin_manager.h>
+
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
   sealtk::gui::Resources r;
   Q_INIT_RESOURCE(SEALTKBranding);
+
+  kwiver::vital::plugin_manager::instance().load_all_plugins();
 
   QApplication app{argc, argv};
 

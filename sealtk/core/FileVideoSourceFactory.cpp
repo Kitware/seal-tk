@@ -11,11 +11,6 @@ namespace core
 {
 
 // ============================================================================
-class FileVideoSourceFactoryHandle
-{
-};
-
-// ============================================================================
 class FileVideoSourceFactoryPrivate
 {
 public:
@@ -34,15 +29,9 @@ FileVideoSourceFactory::~FileVideoSourceFactory()
 }
 
 // ----------------------------------------------------------------------------
-void FileVideoSourceFactory::loadVideoSource()
+void FileVideoSourceFactory::loadVideoSource(void* handle)
 {
-  emit this->fileRequested(new FileVideoSourceFactoryHandle);
-}
-
-// ----------------------------------------------------------------------------
-void FileVideoSourceFactory::freeHandle(void* handle)
-{
-  delete static_cast<FileVideoSourceFactoryHandle*>(handle);
+  emit this->fileRequested(handle);
 }
 
 }

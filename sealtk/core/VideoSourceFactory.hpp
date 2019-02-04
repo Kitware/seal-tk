@@ -32,10 +32,10 @@ public:
   VideoController* videoController() const;
 
 signals:
-  void videoSourceLoaded(VideoSource* videoSource);
+  void videoSourceLoaded(void* handle, VideoSource* videoSource);
 
 public slots:
-  virtual void loadVideoSource() = 0;
+  virtual void loadVideoSource(void* handle) = 0;
 
 protected:
   QTE_DECLARE_PRIVATE(VideoSourceFactory)
