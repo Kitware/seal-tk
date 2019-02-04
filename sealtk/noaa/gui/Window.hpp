@@ -7,7 +7,8 @@
 
 #include <sealtk/noaa/gui/Export.h>
 
-#include <sealtk/gui/Window.hpp>
+#include <QMainWindow>
+#include <qtGlobal.h>
 
 namespace sealtk
 {
@@ -20,7 +21,7 @@ namespace gui
 
 class WindowPrivate;
 
-class SEALTK_NOAA_GUI_EXPORT Window : public sealtk::gui::Window
+class SEALTK_NOAA_GUI_EXPORT Window : public QMainWindow
 {
   Q_OBJECT
 
@@ -30,9 +31,6 @@ public:
 
 public slots:
   void showAbout();
-  void newDockablePanel(QMetaObject const& type);
-  void newLeftPanel(QMetaObject const& type);
-  void newRightPanel(QMetaObject const& type);
 
 protected:
   QTE_DECLARE_PRIVATE(Window)

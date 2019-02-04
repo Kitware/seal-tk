@@ -50,24 +50,6 @@
     <property name="title">
      <string>View</string>
     </property>
-    <widget class="QMenu" name="menuNewDockablePanel">
-     <property name="title">
-      <string>New Dockable Panel</string>
-     </property>
-    </widget>
-    <widget class="QMenu" name="menuNewLeftPanel">
-     <property name="title">
-      <string>New Left Panel</string>
-     </property>
-    </widget>
-    <widget class="QMenu" name="menuNewRightPanel">
-     <property name="title">
-      <string>New Right Panel</string>
-     </property>
-    </widget>
-    <addaction name="menuNewDockablePanel"/>
-    <addaction name="menuNewLeftPanel"/>
-    <addaction name="menuNewRightPanel"/>
    </widget>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>

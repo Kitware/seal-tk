@@ -7,8 +7,8 @@
 
 #include <sealtk/gui/Export.h>
 
-#include <sealtk/gui/Panel.hpp>
-
+#include <QMatrix3x3>
+#include <QOpenGLWidget>
 #include <qtGlobal.h>
 
 class QImage;
@@ -21,26 +21,23 @@ namespace gui
 
 class PlayerPrivate;
 
-class Window;
-
-class SEALTK_GUI_EXPORT Player : public Panel
+class SEALTK_GUI_EXPORT Player : public QOpenGLWidget
 {
   Q_OBJECT
 
 public:
-  Q_INVOKABLE explicit Player(QWidget* parent = nullptr);
+  explicit Player(QWidget* parent = nullptr);
   ~Player() override;
 
-  void init(Window* window) override;
-
-signals:
-  void imageOpened(const QImage& image);
-
 public slots:
-  void openFile();
+  void setImage(QImage const& image);
+  void setHomography(QMatrix3x3 const& homography);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
+
+  void initializeGL() override;
+  void paintGL() override;
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(Player)

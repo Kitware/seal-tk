@@ -3,14 +3,18 @@
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
 #include <sealtk/gui/Player.hpp>
-#include "ui_Player.h"
 
-#include <sealtk/gui/PlayerViewer.hpp>
-#include <sealtk/gui/Window.hpp>
+#include <QApplication>
+#include <QMatrix3x3>
+#include <QMatrix4x4>
+#include <QOpenGLBuffer>
+#include <QOpenGLFunctions>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLTexture>
+#include <QVector>
+#include <QVector2D>
 
-#include <QFileDialog>
-#include <QImage>
-#include <QString>
+#include <memory>
 
 namespace sealtk
 {
@@ -18,11 +22,31 @@ namespace sealtk
 namespace gui
 {
 
+struct VertexData
+{
+  QVector2D vertexCoords;
+  QVector2D textureCoords;
+};
+
 //=============================================================================
 class PlayerPrivate
 {
 public:
-  Ui::Player ui;
+  PlayerPrivate(Player* parent);
+
+  void destroyResources();
+  void createTexture();
+
+  QTE_DECLARE_PUBLIC(Player)
+  QTE_DECLARE_PUBLIC_PTR(Player)
+
+  QImage image;
+  QMatrix3x3 homography;
+  QMatrix4x4 homographyGl;
+  int homographyLocation;
+  std::unique_ptr<QOpenGLTexture> imageTexture;
+  std::unique_ptr<QOpenGLBuffer> vertexBuffer;
+  std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
 };
 
 //-----------------------------------------------------------------------------
@@ -30,15 +54,9 @@ QTE_IMPLEMENT_D_FUNC(Player)
 
 //-----------------------------------------------------------------------------
 Player::Player(QWidget* parent)
-  : Panel(parent),
-    d_ptr{new PlayerPrivate}
+  : QOpenGLWidget(parent),
+    d_ptr{new PlayerPrivate{this}}
 {
-  QTE_D();
-
-  d->ui.setupUi(this);
-
-  connect(this, &Player::imageOpened,
-          d->ui.video, &PlayerViewer::setImage);
 }
 
 //-----------------------------------------------------------------------------
@@ -47,25 +65,137 @@ Player::~Player()
 }
 
 //-----------------------------------------------------------------------------
-void Player::init(Window* window)
+void Player::setImage(QImage const& image)
 {
-  int counter = window->panelCounter();
-  this->setWindowTitle(QStringLiteral("Untitled-%1").arg(counter));
-  window->setPanelCounter(counter + 1);
+  QTE_D();
+
+  d->image = image;
+  this->makeCurrent();
+  d->createTexture();
+  this->doneCurrent();
+  this->update();
 }
 
 //-----------------------------------------------------------------------------
-void Player::openFile()
+void Player::setHomography(QMatrix3x3 const& homography)
 {
-  QString filename = QFileDialog::getOpenFileName(this);
-  if (!filename.isNull())
+  QTE_D();
+
+  d->homography = homography;
+  for (int row = 0; row < 3; row++)
   {
-    QImage image(filename);
-    if (!image.isNull())
+    for (int column = 0; column < 3; column++)
     {
-      emit this->imageOpened(image);
+      int glRow = row;
+      if (glRow >= 2)
+      {
+        glRow++;
+      }
+      int glColumn = column;
+      if (glColumn >= 2)
+      {
+        glColumn++;
+      }
+      d->homographyGl(glRow, glColumn) = d->homography(row, column);
     }
   }
+  this->update();
+}
+
+//-----------------------------------------------------------------------------
+void Player::initializeGL()
+{
+  QTE_D();
+
+  static QVector<VertexData> const vertexData{
+    {{1.0f, 1.0f}, {1.0f, 0.0f}},
+    {{-1.0f, 1.0f}, {0.0f, 0.0f}},
+    {{-1.0f, -1.0f}, {0.0f, 1.0f}},
+    {{1.0f, -1.0f}, {1.0f, 1.0f}},
+  };
+
+  connect(this->context(), &QOpenGLContext::aboutToBeDestroyed,
+          [d]() {d->destroyResources();});
+
+  d->createTexture();
+
+  d->vertexBuffer = std::make_unique<QOpenGLBuffer>(
+    QOpenGLBuffer::VertexBuffer);
+  d->vertexBuffer->create();
+  d->vertexBuffer->bind();
+  d->vertexBuffer->allocate(vertexData.data(),
+                            vertexData.size() * sizeof(VertexData));
+
+  d->shaderProgram = std::make_unique<QOpenGLShaderProgram>(this);
+  d->shaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                           ":/PlayerViewerVertex.glsl");
+  d->shaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                           ":/PlayerViewerFragment.glsl");
+  d->shaderProgram->bindAttributeLocation("a_vertexCoords", 0);
+  d->shaderProgram->bindAttributeLocation("a_textureCoords", 1);
+  d->shaderProgram->link();
+
+  d->homographyLocation = d->shaderProgram->uniformLocation("homography");
+}
+
+//-----------------------------------------------------------------------------
+void Player::paintGL()
+{
+  QTE_D();
+  auto* functions = this->context()->functions();
+
+  functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (d->imageTexture)
+  {
+    d->shaderProgram->bind();
+    d->imageTexture->bind();
+
+    d->vertexBuffer->bind();
+    d->shaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2,
+                                         sizeof(VertexData));
+    d->shaderProgram->enableAttributeArray(0);
+    d->shaderProgram->setAttributeBuffer(1, GL_FLOAT, 2 * sizeof(GLfloat), 2,
+                                        sizeof(VertexData));
+    d->shaderProgram->enableAttributeArray(1);
+
+    d->shaderProgram->setUniformValueArray(d->homographyLocation,
+                                           &d->homographyGl, 1);
+
+    functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    d->vertexBuffer->release();
+    d->imageTexture->release();
+    d->shaderProgram->release();
+  }
+}
+
+//-----------------------------------------------------------------------------
+PlayerPrivate::PlayerPrivate(Player* parent)
+  : q_ptr{parent}
+{
+  this->homography.setToIdentity();
+  this->homographyGl.setToIdentity();
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::createTexture()
+{
+  if (!this->image.isNull())
+  {
+    this->imageTexture = std::make_unique<QOpenGLTexture>(this->image);
+  }
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::destroyResources()
+{
+  QTE_Q();
+
+  q->makeCurrent();
+  this->imageTexture = nullptr;
+  this->vertexBuffer = nullptr;
+  this->shaderProgram = nullptr;
+  q->doneCurrent();
 }
 
 }
