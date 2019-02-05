@@ -4,6 +4,7 @@
 
 #include <sealtk/core/VideoController.hpp>
 
+#include <sealtk/core/TimeMap.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
 #include <QSet>
@@ -19,7 +20,6 @@ class VideoControllerPrivate
 {
 public:
   QSet<VideoSource*> videoSources;
-  QSet<kwiver::vital::timestamp::time_t> times;
   kwiver::vital::timestamp::time_t time;
 
   void rebuildTimes();
@@ -97,6 +97,27 @@ kwiver::vital::timestamp::time_t VideoController::time() const
 void VideoController::seek(kwiver::vital::timestamp::time_t time)
 {
   QTE_D();
+  if (time != d->time)
+  {
+    d->time = time;
+    emit this->timeSelected(time);
+  }
+}
+
+// ----------------------------------------------------------------------------
+void VideoController::seekNearest(kwiver::vital::timestamp::time_t time)
+{
+  QTE_D();
+  TimeMap<void*> times;
+  for (auto t : this->times())
+  {
+    times[t] = nullptr;
+  }
+  auto it = times.find(time, SeekNearest);
+  if (it != times.end())
+  {
+    time = it.key();
+  }
   if (time != d->time)
   {
     d->time = time;

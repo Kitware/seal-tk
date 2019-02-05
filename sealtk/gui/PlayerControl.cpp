@@ -42,6 +42,8 @@ PlayerControl::PlayerControl(QWidget* parent)
           d->ui.scrubber, &qtDoubleSlider::setRange);
   connect(this, &PlayerControl::timeSet,
           d->ui.scrubber, &qtDoubleSlider::setValue);
+  connect(d->ui.scrubber, &qtDoubleSlider::valueChanged,
+          this, &PlayerControl::setTime);
 }
 
 // ----------------------------------------------------------------------------
@@ -82,7 +84,7 @@ void PlayerControl::setVideoController(core::VideoController* videoController)
     connect(d->videoController, &core::VideoController::timeSelected,
             this, &PlayerControl::setTime);
     connect(this, &PlayerControl::timeSet,
-            d->videoController, &core::VideoController::seek);
+            d->videoController, &core::VideoController::seekNearest);
   }
 
   this->setParamsFromVideoController();
