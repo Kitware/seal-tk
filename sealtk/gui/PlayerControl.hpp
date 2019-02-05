@@ -44,10 +44,8 @@ public:
   core::VideoController* videoController() const;
   void setVideoController(core::VideoController* videoController);
 
-  Q_PROPERTY(kwiver::vital::timestamp::time_t min READ min WRITE setMin
-             NOTIFY minSet);
-  Q_PROPERTY(kwiver::vital::timestamp::time_t max READ max WRITE setMax
-             NOTIFY maxSet);
+  Q_PROPERTY(kwiver::vital::timestamp::time_t min READ min WRITE setMin);
+  Q_PROPERTY(kwiver::vital::timestamp::time_t max READ max WRITE setMax);
   Q_PROPERTY(kwiver::vital::timestamp::time_t time READ time WRITE setTime
              NOTIFY timeSet);
   Q_PROPERTY(State state READ state WRITE setState NOTIFY stateSet);
@@ -60,12 +58,14 @@ public:
 signals:
   void previousFrameTriggered();
   void nextFrameTriggered();
-  void minSet(kwiver::vital::timestamp::time_t time);
-  void maxSet(kwiver::vital::timestamp::time_t time);
+  void rangeSet(kwiver::vital::timestamp::time_t min,
+                kwiver::vital::timestamp::time_t max);
   void timeSet(kwiver::vital::timestamp::time_t time);
   void stateSet(State state);
 
 public slots:
+  void setRange(kwiver::vital::timestamp::time_t min,
+                kwiver::vital::timestamp::time_t max);
   void setMin(kwiver::vital::timestamp::time_t min);
   void setMax(kwiver::vital::timestamp::time_t max);
   void setTime(kwiver::vital::timestamp::time_t time);

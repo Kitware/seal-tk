@@ -38,10 +38,8 @@ PlayerControl::PlayerControl(QWidget* parent)
 
   d->ui.setupUi(this);
 
-  connect(this, &PlayerControl::minSet,
-          d->ui.scrubber, &qtDoubleSlider::setMinimum);
-  connect(this, &PlayerControl::maxSet,
-          d->ui.scrubber, &qtDoubleSlider::setMaximum);
+  connect(this, &PlayerControl::rangeSet,
+          d->ui.scrubber, &qtDoubleSlider::setRange);
   connect(this, &PlayerControl::timeSet,
           d->ui.scrubber, &qtDoubleSlider::setValue);
 }
@@ -119,25 +117,30 @@ PlayerControl::State PlayerControl::state() const
 }
 
 // ----------------------------------------------------------------------------
+void PlayerControl::setRange(kwiver::vital::timestamp::time_t min,
+                             kwiver::vital::timestamp::time_t max)
+{
+  QTE_D();
+  if (min != d->min || max != d->max)
+  {
+    d->min = min;
+    d->max = max;
+    emit this->rangeSet(min, max);
+  }
+}
+
+// ----------------------------------------------------------------------------
 void PlayerControl::setMin(kwiver::vital::timestamp::time_t min)
 {
   QTE_D();
-  if (min != d->min)
-  {
-    d->min = min;
-    emit this->minSet(min);
-  }
+  this->setRange(min, d->max);
 }
 
 // ----------------------------------------------------------------------------
 void PlayerControl::setMax(kwiver::vital::timestamp::time_t max)
 {
   QTE_D();
-  if (max != d->max)
-  {
-    d->max = max;
-    emit this->maxSet(max);
-  }
+  this->setRange(d->min, max);
 }
 
 // ----------------------------------------------------------------------------

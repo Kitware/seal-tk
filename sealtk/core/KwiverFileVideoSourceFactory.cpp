@@ -46,8 +46,8 @@ void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
   vi->open(path.toStdString());
 
   auto* vs = new KwiverVideoSource{this->videoController()};
-  this->videoController()->addVideoSource(vs);
   vs->setVideoInput(vi);
+  this->videoController()->addVideoSource(vs);
   emit this->videoSourceLoaded(handle, vs);
 }
 
