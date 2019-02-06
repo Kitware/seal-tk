@@ -70,7 +70,7 @@ void PlayerControl::setVideoController(core::VideoController* videoController)
     disconnect(d->videoController, &core::VideoController::timeSelected,
                this, &PlayerControl::setTime);
     disconnect(this, &PlayerControl::timeSet,
-               d->videoController, &core::VideoController::seek);
+               d->videoController, &core::VideoController::seekNearest);
 
     d->videoController = nullptr;
   }
