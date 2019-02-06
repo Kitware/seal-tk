@@ -77,7 +77,10 @@ Window::Window(QWidget* parent)
 
   d->registerVideoSourceFactory(
     "Image List File...",
-    new core::ImageListVideoSourceFactory{d->videoController.get()});
+    new core::ImageListVideoSourceFactory{false, d->videoController.get()});
+  d->registerVideoSourceFactory(
+    "Image Directory...",
+    new core::ImageListVideoSourceFactory{true, d->videoController.get()});
 }
 
 //-----------------------------------------------------------------------------
@@ -192,7 +195,16 @@ void WindowPrivate::registerVideoSourceFactory(
       fileFactory, &sealtk::core::FileVideoSourceFactory::fileRequested,
       [q, fileFactory](void* handle)
     {
-      QString filename = QFileDialog::getOpenFileName(q);
+      QString filename;
+      if (fileFactory->expectsDirectory())
+      {
+        filename = QFileDialog::getExistingDirectory(q);
+      }
+      else
+      {
+        filename = QFileDialog::getOpenFileName(q);
+      }
+
       if (!filename.isNull())
       {
         fileFactory->loadFile(handle, filename);

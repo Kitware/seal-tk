@@ -37,8 +37,10 @@ class SEALTK_NOAA_CORE_EXPORT ImageListVideoSourceFactory :
 
 public:
   explicit ImageListVideoSourceFactory(
-    sealtk::core::VideoController* parent = nullptr);
+    bool directory, sealtk::core::VideoController* parent = nullptr);
   ~ImageListVideoSourceFactory() override;
+
+  bool expectsDirectory() const override;
 
 protected:
   QTE_DECLARE_PRIVATE(ImageListVideoSourceFactory)

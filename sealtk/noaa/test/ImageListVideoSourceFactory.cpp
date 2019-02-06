@@ -57,7 +57,7 @@ void TestImageListVideoSourceFactory::init()
 {
   this->videoController = std::make_unique<sealtk::core::VideoController>();
   this->videoSourceFactory =
-    new core::ImageListVideoSourceFactory{this->videoController.get()};
+    new core::ImageListVideoSourceFactory{false, this->videoController.get()};
 }
 
 // ----------------------------------------------------------------------------

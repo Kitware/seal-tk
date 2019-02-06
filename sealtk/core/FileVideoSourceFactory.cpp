@@ -29,6 +29,12 @@ FileVideoSourceFactory::~FileVideoSourceFactory()
 }
 
 // ----------------------------------------------------------------------------
+bool FileVideoSourceFactory::expectsDirectory() const
+{
+  return false;
+}
+
+// ----------------------------------------------------------------------------
 void FileVideoSourceFactory::loadVideoSource(void* handle)
 {
   emit this->fileRequested(handle);

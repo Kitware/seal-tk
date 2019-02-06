@@ -32,6 +32,8 @@ public:
   explicit FileVideoSourceFactory(VideoController* parent = nullptr);
   ~FileVideoSourceFactory() override;
 
+  virtual bool expectsDirectory() const;
+
 signals:
   void fileRequested(void* handle);
 

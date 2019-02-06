@@ -17,19 +17,32 @@ namespace core
 class ImageListVideoSourceFactoryPrivate
 {
 public:
+  bool expectsDirectory;
 };
 
 // ----------------------------------------------------------------------------
+QTE_IMPLEMENT_D_FUNC(ImageListVideoSourceFactory)
+
+// ----------------------------------------------------------------------------
 ImageListVideoSourceFactory::ImageListVideoSourceFactory(
-  sealtk::core::VideoController* parent)
+  bool directory, sealtk::core::VideoController* parent)
   : sealtk::core::KwiverFileVideoSourceFactory{parent},
     d_ptr{new ImageListVideoSourceFactoryPrivate}
 {
+  QTE_D();
+  d->expectsDirectory = directory;
 }
 
 // ----------------------------------------------------------------------------
 ImageListVideoSourceFactory::~ImageListVideoSourceFactory()
 {
+}
+
+// ----------------------------------------------------------------------------
+bool ImageListVideoSourceFactory::expectsDirectory() const
+{
+  QTE_D();
+  return d->expectsDirectory;
 }
 
 // ----------------------------------------------------------------------------
