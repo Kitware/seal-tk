@@ -6,6 +6,7 @@ include(SEALTKUtils)
 
 sealtk_add_library(sealtk::gui
   SOURCES
+    OpenGLUtils.cpp
     Player.cpp
     PlayerControl.cpp
     Resources.cpp
@@ -14,6 +15,7 @@ sealtk_add_library(sealtk::gui
     glsl/PlayerViewer.qrc
 
   HEADERS
+    OpenGLUtils.hpp
     Player.hpp
     PlayerControl.hpp
     Resources.hpp

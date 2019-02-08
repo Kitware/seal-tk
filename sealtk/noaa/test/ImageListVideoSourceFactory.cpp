@@ -12,6 +12,8 @@
 
 #include <vital/plugin_loader/plugin_manager.h>
 
+#include <arrows/qt/image_container.h>
+
 #include <QDateTime>
 #include <QObject>
 
@@ -117,10 +119,15 @@ void TestImageListVideoSourceFactory::loadVideoSource()
 
   QVector<QImage> seekImages;
 
-  connect(videoSource, &sealtk::core::VideoSource::imageDisplayed,
-          [&seekImages](QImage const& image)
+  connect(videoSource, &sealtk::core::VideoSource::kwiverImageDisplayed,
+          [&seekImages](kwiver::vital::image const& image)
   {
-    seekImages.append(image);
+    seekImages.append(kwiver::arrows::qt::image_container::vital_to_qt(image));
+  });
+  connect(videoSource, &sealtk::core::VideoSource::noImageDisplayed,
+          [&seekImages]()
+  {
+    seekImages.append(QImage{});
   });
 
   for (auto t : seekTimes)

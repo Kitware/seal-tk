@@ -11,6 +11,8 @@
 #include <QOpenGLWidget>
 #include <qtGlobal.h>
 
+#include <vital/types/image.h>
+
 class QImage;
 
 namespace sealtk
@@ -30,7 +32,7 @@ public:
   ~Player() override;
 
 public slots:
-  void setImage(QImage const& image);
+  void setImage(kwiver::vital::image const& image);
   void setHomography(QMatrix3x3 const& homography);
 
 protected:

@@ -4,6 +4,8 @@
 
 #include <sealtk/gui/Player.hpp>
 
+#include <sealtk/gui/OpenGLUtils.hpp>
+
 #include <QApplication>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
@@ -40,7 +42,7 @@ public:
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
 
-  QImage image;
+  kwiver::vital::image image;
   QMatrix3x3 homography;
   QMatrix4x4 homographyGl;
   int homographyLocation;
@@ -65,7 +67,7 @@ Player::~Player()
 }
 
 //-----------------------------------------------------------------------------
-void Player::setImage(QImage const& image)
+void Player::setImage(kwiver::vital::image const& image)
 {
   QTE_D();
 
@@ -180,9 +182,11 @@ PlayerPrivate::PlayerPrivate(Player* parent)
 //-----------------------------------------------------------------------------
 void PlayerPrivate::createTexture()
 {
-  if (!this->image.isNull())
+  if (this->image.memory())
   {
-    this->imageTexture = std::make_unique<QOpenGLTexture>(this->image);
+    this->imageTexture = std::make_unique<QOpenGLTexture>(
+      QOpenGLTexture::Target2D);
+    setTextureDataFromKwiver(*this->imageTexture, this->image);
   }
 }
 

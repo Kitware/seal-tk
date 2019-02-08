@@ -13,6 +13,8 @@
 #include <vital/config/config_block.h>
 #include <vital/types/timestamp.h>
 
+#include <arrows/qt/image_container.h>
+
 #include <QImage>
 #include <QVector>
 
@@ -135,10 +137,16 @@ void TestVideoController::seek()
 
   for (int i = 0; i < 3; i++)
   {
-    connect(this->videoSources[i], &VideoSource::imageDisplayed,
-            [&seekImages, i](QImage const& image)
+    connect(this->videoSources[i], &VideoSource::kwiverImageDisplayed,
+            [&seekImages, i](kwiver::vital::image const& image)
     {
-      seekImages[i].append(image);
+      seekImages[i].append(
+        kwiver::arrows::qt::image_container::vital_to_qt(image));
+    });
+    connect(this->videoSources[i], &VideoSource::noImageDisplayed,
+            [&seekImages, i]()
+    {
+      seekImages[i].append(QImage{});
     });
   }
 
@@ -155,7 +163,7 @@ void TestVideoController::seek()
     {
       if (!seekFiles[i][j].isNull())
       {
-        QImage expected = QImage{sealtk::test::testDataPath(
+        QImage expected{sealtk::test::testDataPath(
           "VideoController/" + seekFiles[i][j])};
         QCOMPARE(seekImages[i][j], expected);
       }
@@ -192,10 +200,16 @@ void TestVideoController::removeVideoSource()
 
   for (int i = 0; i < 3; i++)
   {
-    connect(this->videoSources[i], &VideoSource::imageDisplayed,
-            [&seekImages, i](QImage const& image)
+    connect(this->videoSources[i], &VideoSource::kwiverImageDisplayed,
+            [&seekImages, i](kwiver::vital::image const& image)
     {
-      seekImages[i].append(image);
+      seekImages[i].append(kwiver::arrows::qt::image_container::vital_to_qt(
+        image));
+    });
+    connect(this->videoSources[i], &VideoSource::noImageDisplayed,
+            [&seekImages, i]()
+    {
+      seekImages[i].append(QImage{});
     });
   }
 
@@ -219,7 +233,7 @@ void TestVideoController::removeVideoSource()
     {
       if (!seekFiles[i][j].isNull())
       {
-        QImage expected = QImage{sealtk::test::testDataPath(
+        QImage expected{sealtk::test::testDataPath(
           "VideoController/" + seekFiles[i][j])};
         QCOMPARE(seekImages[i][j], expected);
       }

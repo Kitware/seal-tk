@@ -79,18 +79,17 @@ void KwiverVideoSource::seek(kwiver::vital::timestamp::time_t time)
     kwiver::vital::timestamp ts;
     if (d->videoInput->seek_frame(ts, it->second))
     {
-      emit this->imageDisplayed(
-        kwiver::arrows::qt::image_container::vital_to_qt(
-          d->videoInput->frame_image()->get_image()));
+      emit this->kwiverImageDisplayed(
+        d->videoInput->frame_image()->get_image());
     }
     else
     {
-      emit this->imageDisplayed(QImage{});
+      emit this->noImageDisplayed();
     }
   }
   else
   {
-    emit this->imageDisplayed(QImage{});
+    emit this->noImageDisplayed();
   }
 }
 

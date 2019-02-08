@@ -12,6 +12,8 @@
 #include <vital/config/config_block.h>
 #include <vital/types/timestamp.h>
 
+#include <arrows/qt/image_container.h>
+
 #include <QImage>
 #include <QSet>
 #include <QVector>
@@ -91,10 +93,15 @@ void TestKwiverVideoSource::seek()
   };
 
   QVector<QImage> seekImages;
-  connect(this->videoSource.get(), &VideoSource::imageDisplayed,
-          [&seekImages](QImage const& image)
+  connect(this->videoSource.get(), &VideoSource::kwiverImageDisplayed,
+          [&seekImages](kwiver::vital::image const& image)
   {
-    seekImages.append(image);
+    seekImages.append(kwiver::arrows::qt::image_container::vital_to_qt(image));
+  });
+  connect(this->videoSource.get(), &VideoSource::noImageDisplayed,
+          [&seekImages]()
+  {
+    seekImages.append(QImage{});
   });
 
   for (auto t : seekTimes)
@@ -108,7 +115,7 @@ void TestKwiverVideoSource::seek()
   {
     if (!seekFiles[i].isNull())
     {
-      QImage expected = QImage{sealtk::test::testDataPath(
+      QImage expected{sealtk::test::testDataPath(
         "KwiverVideoSource/" + seekFiles[i])};
       QCOMPARE(seekImages[i], expected);
     }
