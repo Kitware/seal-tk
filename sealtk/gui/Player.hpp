@@ -11,7 +11,7 @@
 #include <QOpenGLWidget>
 #include <qtGlobal.h>
 
-#include <vital/types/image.h>
+#include <vital/types/image_container.h>
 
 class QImage;
 
@@ -32,7 +32,7 @@ public:
   ~Player() override;
 
 public slots:
-  void setImage(kwiver::vital::image const& image);
+  void setImage(kwiver::vital::image_container_sptr const& image);
   void setHomography(QMatrix3x3 const& homography);
 
 protected:

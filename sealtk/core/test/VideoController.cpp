@@ -6,6 +6,7 @@
 
 #include <sealtk/core/test/TestCommon.hpp>
 
+#include <sealtk/core/ImageUtils.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 
@@ -138,10 +139,9 @@ void TestVideoController::seek()
   for (int i = 0; i < 3; i++)
   {
     connect(this->videoSources[i], &VideoSource::kwiverImageDisplayed,
-            [&seekImages, i](kwiver::vital::image const& image)
+            [&seekImages, i](kv::image_container_sptr const& image)
     {
-      seekImages[i].append(
-        kwiver::arrows::qt::image_container::vital_to_qt(image));
+      seekImages[i].append(sealtk::core::imageContainerToQImage(image));
     });
     connect(this->videoSources[i], &VideoSource::noImageDisplayed,
             [&seekImages, i]()
@@ -201,10 +201,9 @@ void TestVideoController::removeVideoSource()
   for (int i = 0; i < 3; i++)
   {
     connect(this->videoSources[i], &VideoSource::kwiverImageDisplayed,
-            [&seekImages, i](kwiver::vital::image const& image)
+            [&seekImages, i](kv::image_container_sptr const& image)
     {
-      seekImages[i].append(kwiver::arrows::qt::image_container::vital_to_qt(
-        image));
+      seekImages[i].append(sealtk::core::imageContainerToQImage(image));
     });
     connect(this->videoSources[i], &VideoSource::noImageDisplayed,
             [&seekImages, i]()

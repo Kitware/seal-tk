@@ -140,7 +140,7 @@ void WindowPrivate::registerVideoSourceFactory(
       videoSource, &sealtk::core::VideoSource::noImageDisplayed,
       [player]()
     {
-      player->setImage(kwiver::vital::image{});
+      player->setImage(nullptr);
     });
 
     WindowType* type = static_cast<WindowType*>(handle);

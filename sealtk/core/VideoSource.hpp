@@ -12,7 +12,7 @@
 #include <QSet>
 #include <qtGlobal.h>
 
-#include <vital/types/image.h>
+#include <vital/types/image_container.h>
 #include <vital/types/timestamp.h>
 
 namespace sealtk
@@ -34,7 +34,7 @@ public:
   virtual QSet<kwiver::vital::timestamp::time_t> times() const = 0;
 
 signals:
-  void kwiverImageDisplayed(kwiver::vital::image const& image);
+  void kwiverImageDisplayed(kwiver::vital::image_container_sptr const& image);
   void noImageDisplayed();
   void videoInputChanged();
 

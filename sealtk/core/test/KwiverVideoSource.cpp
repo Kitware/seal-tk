@@ -6,6 +6,7 @@
 
 #include <sealtk/core/test/TestCommon.hpp>
 
+#include <sealtk/core/ImageUtils.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 
 #include <vital/algo/video_input.h>
@@ -94,9 +95,9 @@ void TestKwiverVideoSource::seek()
 
   QVector<QImage> seekImages;
   connect(this->videoSource.get(), &VideoSource::kwiverImageDisplayed,
-          [&seekImages](kwiver::vital::image const& image)
+          [&seekImages](kv::image_container_sptr const& image)
   {
-    seekImages.append(kwiver::arrows::qt::image_container::vital_to_qt(image));
+    seekImages.append(sealtk::core::imageContainerToQImage(image));
   });
   connect(this->videoSource.get(), &VideoSource::noImageDisplayed,
           [&seekImages]()
