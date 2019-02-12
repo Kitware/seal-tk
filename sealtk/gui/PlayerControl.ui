@@ -22,12 +22,9 @@
      <property name="text">
       <string>...</string>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QToolButton" name="playPauseButton">
-     <property name="text">
-      <string>...</string>
+     <property name="icon">
+      <iconset theme="media-seek-backward">
+       <normaloff>.</normaloff>.</iconset>
      </property>
     </widget>
    </item>
@@ -35,6 +32,10 @@
     <widget class="QToolButton" name="nextFrameButton">
      <property name="text">
       <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset theme="media-seek-forward">
+       <normaloff>.</normaloff>.</iconset>
      </property>
     </widget>
    </item>

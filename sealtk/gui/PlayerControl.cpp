@@ -7,6 +7,8 @@
 
 #include <sealtk/core/VideoController.hpp>
 
+#include <QAction>
+
 namespace sealtk
 {
 
@@ -44,6 +46,17 @@ PlayerControl::PlayerControl(QWidget* parent)
           d->ui.scrubber, &qtDoubleSlider::setValue);
   connect(d->ui.scrubber, &qtDoubleSlider::valueChanged,
           this, &PlayerControl::setTime);
+
+  connect(d->ui.previousFrameButton, &QToolButton::pressed,
+          [this]()
+  {
+    emit this->previousFrameTriggered();
+  });
+  connect(d->ui.nextFrameButton, &QToolButton::pressed,
+          [this]()
+  {
+    emit this->nextFrameTriggered();
+  });
 }
 
 // ----------------------------------------------------------------------------

@@ -74,6 +74,11 @@ Window::Window(QWidget* parent)
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
+  connect(
+    d->ui.control, &sealtk::gui::PlayerControl::previousFrameTriggered,
+    d->videoController.get(), &sealtk::core::VideoController::previousFrame);
+  connect(d->ui.control, &sealtk::gui::PlayerControl::nextFrameTriggered,
+          d->videoController.get(), &sealtk::core::VideoController::nextFrame);
 
   d->registerVideoSourceFactory(
     "Image List File...",

@@ -46,6 +46,8 @@ signals:
 public slots:
   void seek(kwiver::vital::timestamp::time_t time);
   void seekNearest(kwiver::vital::timestamp::time_t time);
+  void previousFrame();
+  void nextFrame();
 
 protected:
   QTE_DECLARE_PRIVATE(VideoController)

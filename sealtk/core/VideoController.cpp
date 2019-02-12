@@ -147,6 +147,48 @@ void VideoController::seekNearest(kwiver::vital::timestamp::time_t time)
 }
 
 // ----------------------------------------------------------------------------
+void VideoController::previousFrame()
+{
+  QTE_D();
+  TimeMap<void*> times;
+  for (auto t : this->times())
+  {
+    times[t] = nullptr;
+  }
+  auto it = times.find(d->time, SeekPrevious);
+  if (it != times.end())
+  {
+    auto time = it.key();
+    if (time != d->time)
+    {
+      d->time = time;
+      emit this->timeSelected(time);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+void VideoController::nextFrame()
+{
+  QTE_D();
+  TimeMap<void*> times;
+  for (auto t : this->times())
+  {
+    times[t] = nullptr;
+  }
+  auto it = times.find(d->time, SeekNext);
+  if (it != times.end())
+  {
+    auto time = it.key();
+    if (time != d->time)
+    {
+      d->time = time;
+      emit this->timeSelected(time);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
 void VideoControllerPrivate::rebuildTimes()
 {
 }
