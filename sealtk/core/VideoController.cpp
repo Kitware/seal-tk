@@ -56,6 +56,27 @@ void VideoController::addVideoSource(VideoSource* videoSource)
     d->videoSources.insert(videoSource);
     connect(this, &VideoController::timeSelected,
             videoSource, &VideoSource::seek);
+    if (d->videoSources.size() == 1)
+    {
+      auto times = videoSource->times();
+      auto it = times.begin();
+      if (it != times.end())
+      {
+        auto min = *it;
+        while (++it != times.end())
+        {
+          if (*it < min)
+          {
+            min = *it;
+          }
+        }
+        this->seek(min);
+      }
+    }
+    else
+    {
+      videoSource->seek(d->time);
+    }
     emit this->videoSourcesChanged();
   }
 }

@@ -40,6 +40,7 @@ public:
 
 public slots:
   void seek(kwiver::vital::timestamp::time_t time) override;
+  void invalidate() const override;
 
 protected:
   QTE_DECLARE_PRIVATE(KwiverVideoSource)

@@ -192,6 +192,8 @@ void WindowPrivate::registerVideoSourceFactory(
     }
 
     delete type;
+
+    videoSource->invalidate();
   });
 
   auto* fileFactory =

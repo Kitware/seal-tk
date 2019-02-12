@@ -34,11 +34,13 @@ public:
   virtual QSet<kwiver::vital::timestamp::time_t> times() const = 0;
 
 signals:
-  void kwiverImageDisplayed(kwiver::vital::image_container_sptr const& image);
-  void noImageDisplayed();
-  void videoInputChanged();
+  void kwiverImageDisplayed(
+    kwiver::vital::image_container_sptr const& image) const;
+  void noImageDisplayed() const;
+  void videoInputChanged() const;
 
 public slots:
+  virtual void invalidate() const = 0;
   virtual void seek(kwiver::vital::timestamp::time_t time) = 0;
 
 protected:

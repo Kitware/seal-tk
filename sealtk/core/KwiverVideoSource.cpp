@@ -21,6 +21,7 @@ public:
   kwiver::vital::algo::video_input_sptr videoInput;
   std::map<kwiver::vital::timestamp::time_t, kwiver::vital::timestamp::frame_t>
     timestampMap;
+  kwiver::vital::image_container_sptr image;
 
   void rebuildTimestampMap();
 };
@@ -79,12 +80,28 @@ void KwiverVideoSource::seek(kwiver::vital::timestamp::time_t time)
     kwiver::vital::timestamp ts;
     if (d->videoInput->seek_frame(ts, it->second))
     {
-      emit this->kwiverImageDisplayed(d->videoInput->frame_image());
+      d->image = d->videoInput->frame_image();
     }
     else
     {
-      emit this->noImageDisplayed();
+      d->image = nullptr;
     }
+  }
+  else
+  {
+    d->image = nullptr;
+  }
+
+  this->invalidate();
+}
+
+// ----------------------------------------------------------------------------
+void KwiverVideoSource::invalidate() const
+{
+  QTE_D();
+  if (d->image)
+  {
+    emit this->kwiverImageDisplayed(d->image);
   }
   else
   {
