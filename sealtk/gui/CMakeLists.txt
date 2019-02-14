@@ -11,7 +11,7 @@ sealtk_add_library(sealtk::gui
     Resources.cpp
     SplitterWindow.cpp
 
-    glsl/PlayerViewer.qrc
+    resources/Resources.qrc
 
   HEADERS
     Player.hpp

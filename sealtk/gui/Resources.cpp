@@ -8,12 +8,12 @@
 
 static void init()
 {
-  Q_INIT_RESOURCE(PlayerViewer);
+  Q_INIT_RESOURCE(Resources);
 }
 
 static void cleanup()
 {
-  Q_CLEANUP_RESOURCE(PlayerViewer);
+  Q_CLEANUP_RESOURCE(Resources);
 }
 
 namespace sealtk

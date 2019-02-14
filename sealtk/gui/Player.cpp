@@ -47,6 +47,7 @@ public:
   QMatrix4x4 homographyGl;
   int homographyLocation;
   std::unique_ptr<QOpenGLTexture> imageTexture;
+  std::unique_ptr<QOpenGLTexture> noImageTexture;
   std::unique_ptr<QOpenGLBuffer> vertexBuffer;
   std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
 };
@@ -119,6 +120,9 @@ void Player::initializeGL()
   connect(this->context(), &QOpenGLContext::aboutToBeDestroyed,
           [d]() {d->destroyResources();});
 
+  d->noImageTexture = std::make_unique<QOpenGLTexture>(QImage{
+    ":/PlayerX.png"});
+
   d->createTexture();
 
   d->vertexBuffer = std::make_unique<QOpenGLBuffer>(
@@ -130,9 +134,9 @@ void Player::initializeGL()
 
   d->shaderProgram = std::make_unique<QOpenGLShaderProgram>(this);
   d->shaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,
-                                           ":/PlayerViewerVertex.glsl");
+                                           ":/PlayerVertex.glsl");
   d->shaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                           ":/PlayerViewerFragment.glsl");
+                                           ":/PlayerFragment.glsl");
   d->shaderProgram->bindAttributeLocation("a_vertexCoords", 0);
   d->shaderProgram->bindAttributeLocation("a_textureCoords", 1);
   d->shaderProgram->link();
@@ -147,28 +151,39 @@ void Player::paintGL()
   auto* functions = this->context()->functions();
 
   functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  d->shaderProgram->bind();
   if (d->imageTexture)
   {
-    d->shaderProgram->bind();
     d->imageTexture->bind();
-
-    d->vertexBuffer->bind();
-    d->shaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2,
-                                         sizeof(VertexData));
-    d->shaderProgram->enableAttributeArray(0);
-    d->shaderProgram->setAttributeBuffer(1, GL_FLOAT, 2 * sizeof(GLfloat), 2,
-                                        sizeof(VertexData));
-    d->shaderProgram->enableAttributeArray(1);
-
-    d->shaderProgram->setUniformValueArray(d->homographyLocation,
-                                           &d->homographyGl, 1);
-
-    functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    d->vertexBuffer->release();
-    d->imageTexture->release();
-    d->shaderProgram->release();
   }
+  else
+  {
+    d->noImageTexture->bind();
+  }
+
+  d->vertexBuffer->bind();
+  d->shaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2,
+                                       sizeof(VertexData));
+  d->shaderProgram->enableAttributeArray(0);
+  d->shaderProgram->setAttributeBuffer(1, GL_FLOAT, 2 * sizeof(GLfloat), 2,
+                                      sizeof(VertexData));
+  d->shaderProgram->enableAttributeArray(1);
+
+  d->shaderProgram->setUniformValueArray(d->homographyLocation,
+                                         &d->homographyGl, 1);
+
+  functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+  d->vertexBuffer->release();
+  if (d->imageTexture)
+  {
+    d->imageTexture->release();
+  }
+  else
+  {
+    d->noImageTexture->release();
+  }
+  d->shaderProgram->release();
 }
 
 //-----------------------------------------------------------------------------
@@ -186,6 +201,10 @@ void PlayerPrivate::createTexture()
   {
     this->imageTexture = std::make_unique<QOpenGLTexture>(
       sealtk::core::imageContainerToQImage(this->image));
+  }
+  else
+  {
+    this->imageTexture = nullptr;
   }
 }
 
