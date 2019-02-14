@@ -40,6 +40,7 @@ protected:
 
   void initializeGL() override;
   void paintGL() override;
+  void resizeEvent(QResizeEvent* event) override;
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(Player)

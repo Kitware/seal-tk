@@ -38,6 +38,7 @@ public:
 
   void destroyResources();
   void createTexture();
+  void calculateViewHomography();
 
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
@@ -46,6 +47,8 @@ public:
   QMatrix3x3 homography;
   QMatrix4x4 homographyGl;
   int homographyLocation;
+  QMatrix4x4 viewHomography;
+  int viewHomographyLocation;
   std::unique_ptr<QOpenGLTexture> imageTexture;
   std::unique_ptr<QOpenGLTexture> noImageTexture;
   std::unique_ptr<QOpenGLBuffer> vertexBuffer;
@@ -73,6 +76,7 @@ void Player::setImage(kwiver::vital::image_container_sptr const& image)
   QTE_D();
 
   d->image = image;
+  d->calculateViewHomography();
   this->makeCurrent();
   d->createTexture();
   this->doneCurrent();
@@ -142,6 +146,8 @@ void Player::initializeGL()
   d->shaderProgram->link();
 
   d->homographyLocation = d->shaderProgram->uniformLocation("homography");
+  d->viewHomographyLocation = d->shaderProgram->uniformLocation(
+    "viewHomography");
 }
 
 //-----------------------------------------------------------------------------
@@ -171,6 +177,8 @@ void Player::paintGL()
 
   d->shaderProgram->setUniformValueArray(d->homographyLocation,
                                          &d->homographyGl, 1);
+  d->shaderProgram->setUniformValueArray(d->viewHomographyLocation,
+                                         &d->viewHomography, 1);
 
   functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
@@ -187,11 +195,20 @@ void Player::paintGL()
 }
 
 //-----------------------------------------------------------------------------
+void Player::resizeEvent(QResizeEvent* event)
+{
+  QTE_D();
+  d->calculateViewHomography();
+  this->QOpenGLWidget::resizeEvent(event);
+}
+
+//-----------------------------------------------------------------------------
 PlayerPrivate::PlayerPrivate(Player* parent)
   : q_ptr{parent}
 {
   this->homography.setToIdentity();
   this->homographyGl.setToIdentity();
+  this->viewHomography.setToIdentity();
 }
 
 //-----------------------------------------------------------------------------
@@ -215,9 +232,52 @@ void PlayerPrivate::destroyResources()
 
   q->makeCurrent();
   this->imageTexture = nullptr;
+  this->noImageTexture = nullptr;
   this->vertexBuffer = nullptr;
   this->shaderProgram = nullptr;
   q->doneCurrent();
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::calculateViewHomography()
+{
+  QTE_Q();
+
+  double width, height;
+
+  if (this->image)
+  {
+    width = this->image->width();
+    height = this->image->height();
+  }
+  else if (this->noImageTexture)
+  {
+    width = this->noImageTexture->width();
+    height = this->noImageTexture->height();
+  }
+
+  float quotient = (width / height) /
+    (static_cast<double>(q->width()) / static_cast<double>(q->height()));
+  if (quotient > 1.0f)
+  {
+    this->viewHomography = QMatrix4x4{
+      1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f / quotient,
+                  0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f,
+    };
+  }
+  else
+  {
+    this->viewHomography = QMatrix4x4{
+      quotient,
+            0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f,
+    };
+  }
 }
 
 }
