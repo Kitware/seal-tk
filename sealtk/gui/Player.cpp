@@ -195,11 +195,10 @@ void Player::paintGL()
 }
 
 //-----------------------------------------------------------------------------
-void Player::resizeEvent(QResizeEvent* event)
+void Player::resizeGL(int w, int h)
 {
   QTE_D();
   d->calculateViewHomography();
-  this->QOpenGLWidget::resizeEvent(event);
 }
 
 //-----------------------------------------------------------------------------
