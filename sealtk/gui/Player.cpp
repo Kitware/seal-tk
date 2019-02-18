@@ -50,8 +50,9 @@ public:
   QMatrix4x4 viewHomography;
   int viewHomographyLocation;
   std::unique_ptr<QOpenGLTexture> imageTexture;
+  std::unique_ptr<QOpenGLBuffer> imageVertexBuffer;
   std::unique_ptr<QOpenGLTexture> noImageTexture;
-  std::unique_ptr<QOpenGLBuffer> vertexBuffer;
+  std::unique_ptr<QOpenGLBuffer> noImageVertexBuffer;
   std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
 };
 
@@ -114,27 +115,28 @@ void Player::initializeGL()
 {
   QTE_D();
 
-  static QVector<VertexData> const vertexData{
-    {{1.0f, 1.0f}, {1.0f, 0.0f}},
-    {{-1.0f, 1.0f}, {0.0f, 0.0f}},
-    {{-1.0f, -1.0f}, {0.0f, 1.0f}},
-    {{1.0f, -1.0f}, {1.0f, 1.0f}},
-  };
-
   connect(this->context(), &QOpenGLContext::aboutToBeDestroyed,
           [d]() {d->destroyResources();});
 
   d->noImageTexture = std::make_unique<QOpenGLTexture>(QImage{
     ":/PlayerX.png"});
 
+  float w = d->noImageTexture->width(), h = d->noImageTexture->height();
+  QVector<VertexData> noImageVertexData{
+    {{w, 0.0f}, {1.0f, 0.0f}},
+    {{0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.0f, h}, {0.0f, 1.0f}},
+    {{w, h}, {1.0f, 1.0f}},
+  };
+
   d->createTexture();
 
-  d->vertexBuffer = std::make_unique<QOpenGLBuffer>(
+  d->noImageVertexBuffer = std::make_unique<QOpenGLBuffer>(
     QOpenGLBuffer::VertexBuffer);
-  d->vertexBuffer->create();
-  d->vertexBuffer->bind();
-  d->vertexBuffer->allocate(vertexData.data(),
-                            vertexData.size() * sizeof(VertexData));
+  d->noImageVertexBuffer->create();
+  d->noImageVertexBuffer->bind();
+  d->noImageVertexBuffer->allocate(
+    noImageVertexData.data(), noImageVertexData.size() * sizeof(VertexData));
 
   d->shaderProgram = std::make_unique<QOpenGLShaderProgram>(this);
   d->shaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,
@@ -161,13 +163,14 @@ void Player::paintGL()
   if (d->imageTexture)
   {
     d->imageTexture->bind();
+    d->imageVertexBuffer->bind();
   }
   else
   {
     d->noImageTexture->bind();
+    d->noImageVertexBuffer->bind();
   }
 
-  d->vertexBuffer->bind();
   d->shaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2,
                                        sizeof(VertexData));
   d->shaderProgram->enableAttributeArray(0);
@@ -182,13 +185,14 @@ void Player::paintGL()
 
   functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-  d->vertexBuffer->release();
   if (d->imageTexture)
   {
+    d->imageVertexBuffer->release();
     d->imageTexture->release();
   }
   else
   {
+    d->noImageVertexBuffer->release();
     d->noImageTexture->release();
   }
   d->shaderProgram->release();
@@ -217,10 +221,26 @@ void PlayerPrivate::createTexture()
   {
     this->imageTexture = std::make_unique<QOpenGLTexture>(
       sealtk::core::imageContainerToQImage(this->image));
+
+    float w = this->image->width(), h = this->image->height();
+    QVector<VertexData> imageVertexData{
+      {{w, 0.0f}, {1.0f, 0.0f}},
+      {{0.0f, 0.0f}, {0.0f, 0.0f}},
+      {{0.0f, h}, {0.0f, 1.0f}},
+      {{w, h}, {1.0f, 1.0f}},
+    };
+
+    this->imageVertexBuffer = std::make_unique<QOpenGLBuffer>(
+      QOpenGLBuffer::VertexBuffer);
+    this->imageVertexBuffer->create();
+    this->imageVertexBuffer->bind();
+    this->imageVertexBuffer->allocate(
+      imageVertexData.data(), imageVertexData.size() * sizeof(VertexData));
   }
   else
   {
     this->imageTexture = nullptr;
+    this->imageVertexBuffer = nullptr;
   }
 }
 
@@ -231,8 +251,9 @@ void PlayerPrivate::destroyResources()
 
   q->makeCurrent();
   this->imageTexture = nullptr;
+  this->imageVertexBuffer = nullptr;
   this->noImageTexture = nullptr;
-  this->vertexBuffer = nullptr;
+  this->noImageVertexBuffer = nullptr;
   this->shaderProgram = nullptr;
   q->doneCurrent();
 }
@@ -242,7 +263,7 @@ void PlayerPrivate::calculateViewHomography()
 {
   QTE_Q();
 
-  double width, height;
+  float width, height;
 
   if (this->image)
   {
@@ -255,28 +276,39 @@ void PlayerPrivate::calculateViewHomography()
     height = this->noImageTexture->height();
   }
 
+  float left, right, top, bottom;
   float quotient = (width / height) /
-    (static_cast<double>(q->width()) / static_cast<double>(q->height()));
+    (static_cast<float>(q->width()) / static_cast<float>(q->height()));
   if (quotient > 1.0f)
   {
-    this->viewHomography = QMatrix4x4{
-      1.0f, 0.0f, 0.0f, 0.0f,
-      0.0f, 1.0f / quotient,
-                  0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f,
-      0.0f, 0.0f, 0.0f, 1.0f,
-    };
+    float height2 = (q->height() * width) / q->width();
+    float gap = (height - height2) / 2.0f;
+    left = 0.0f;
+    right = width;
+    top = gap;
+    bottom = height2 + gap;
   }
   else
   {
-    this->viewHomography = QMatrix4x4{
-      quotient,
-            0.0f, 0.0f, 0.0f,
-      0.0f, 1.0f, 0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f,
-      0.0f, 0.0f, 0.0f, 1.0f,
-    };
+    float width2 = (q->width() * height) / q->height();
+    float gap = (width - width2) / 2.0f;
+    left = gap;
+    right = width2 + gap;
+    top = 0.0f;
+    bottom = height;
   }
+
+  float invX = 1.0f / (right - left);
+  float invY = 1.0f / (top - bottom);
+
+  this->viewHomography = QMatrix4x4{
+    2.0f * invX,
+          0.0f, 0.0f, -(right + left) * invX,
+    0.0f, 2.0f * invY,
+                0.0f, -(top + bottom) * invY,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f,
+  };
 }
 
 }
