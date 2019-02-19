@@ -29,8 +29,16 @@ public:
   explicit Window(QWidget* parent = nullptr);
   ~Window() override;
 
+  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomSet);
+
+  float zoom() const;
+
+signals:
+  void zoomSet(float zoom) const;
+
 public slots:
   void showAbout();
+  void setZoom(float zoom);
 
 protected:
   QTE_DECLARE_PRIVATE(Window)

@@ -21,6 +21,8 @@
 #include <QFileDialog>
 #include <QVector>
 
+#include <QtGlobal>
+
 #include <memory>
 
 namespace sealtk
@@ -46,6 +48,8 @@ public:
   std::unique_ptr<sealtk::core::VideoController> videoController;
 
   bool firstWindow = true;
+
+  float zoom = 1.0f;
 
   void registerVideoSourceFactory(QString const& name,
                                   sealtk::core::VideoSourceFactory* factory);
@@ -91,6 +95,24 @@ Window::Window(QWidget* parent)
 //-----------------------------------------------------------------------------
 Window::~Window()
 {
+}
+
+//-----------------------------------------------------------------------------
+float Window::zoom() const
+{
+  QTE_D();
+  return d->zoom;
+}
+
+//-----------------------------------------------------------------------------
+void Window::setZoom(float zoom)
+{
+  QTE_D();
+  if (!qFuzzyCompare(zoom, d->zoom))
+  {
+    d->zoom = zoom;
+    emit this->zoomSet(zoom);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -147,6 +169,11 @@ void WindowPrivate::registerVideoSourceFactory(
     {
       player->setImage(nullptr);
     });
+    QObject::connect(q, &Window::zoomSet,
+                     player, &sealtk::gui::Player::setZoom);
+    QObject::connect(player, &sealtk::gui::Player::zoomSet,
+                     q, &Window::setZoom);
+    player->setZoom(q->zoom());
 
     WindowType* type = static_cast<WindowType*>(handle);
     switch (*type)
