@@ -17,6 +17,8 @@
 #include <QVector2D>
 #include <QWheelEvent>
 
+#include <QtGlobal>
+
 #include <memory>
 
 #include <cmath>
@@ -59,7 +61,7 @@ public:
   std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
 
   float centerX = 0.0f, centerY = 0.0f;
-  float scale = 1.0f;
+  float zoom = 1.0f;
 };
 
 //-----------------------------------------------------------------------------
@@ -70,11 +72,26 @@ Player::Player(QWidget* parent)
   : QOpenGLWidget(parent),
     d_ptr{new PlayerPrivate{this}}
 {
+  QTE_D();
+
+  connect(this, &Player::zoomSet,
+          [this, d](float zoom)
+  {
+    d->calculateViewHomography();
+    this->update();
+  });
 }
 
 //-----------------------------------------------------------------------------
 Player::~Player()
 {
+}
+
+//-----------------------------------------------------------------------------
+float Player::zoom() const
+{
+  QTE_D();
+  return d->zoom;
 }
 
 //-----------------------------------------------------------------------------
@@ -114,6 +131,17 @@ void Player::setHomography(QMatrix3x3 const& homography)
     }
   }
   this->update();
+}
+
+//-----------------------------------------------------------------------------
+void Player::setZoom(float zoom)
+{
+  QTE_D();
+  if (!qFuzzyCompare(zoom, d->zoom))
+  {
+    d->zoom = zoom;
+    emit this->zoomSet(zoom);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -209,6 +237,7 @@ void Player::resizeGL(int w, int h)
 {
   QTE_D();
   d->calculateViewHomography();
+  this->update();
 }
 
 //-----------------------------------------------------------------------------
@@ -232,10 +261,7 @@ void Player::mouseReleaseEvent(QMouseEvent* event)
 //-----------------------------------------------------------------------------
 void Player::wheelEvent(QWheelEvent* event)
 {
-  QTE_D();
-  d->scale *= std::pow(1.001f, event->angleDelta().y());
-  d->calculateViewHomography();
-  this->update();
+  this->setZoom(this->zoom() * std::pow(1.001f, event->angleDelta().y()));
 }
 
 //-----------------------------------------------------------------------------
@@ -314,20 +340,20 @@ void PlayerPrivate::calculateViewHomography()
     static_cast<float>(q->width()) / static_cast<float>(q->height());
   if (aspectRatio > width / height)
   {
-    left = this->centerX + width / 2.0f - this->scale * height / 2.0f
+    left = this->centerX + width / 2.0f - this->zoom * height / 2.0f
       * aspectRatio;
-    right = this->centerX + width / 2.0f + this->scale * height / 2.0f
+    right = this->centerX + width / 2.0f + this->zoom * height / 2.0f
       * aspectRatio;
-    top = this->centerY + height / 2.0f - this->scale * height / 2.0f;
-    bottom = this->centerY + height / 2.0f + this->scale * height / 2.0f;
+    top = this->centerY + height / 2.0f - this->zoom * height / 2.0f;
+    bottom = this->centerY + height / 2.0f + this->zoom * height / 2.0f;
   }
   else
   {
-    left = this->centerX + width / 2.0f - this->scale * width / 2.0f;
-    right = this->centerX + width / 2.0f + this->scale * width / 2.0f;
-    top = this->centerY + height / 2.0f - this->scale * width / 2.0f
+    left = this->centerX + width / 2.0f - this->zoom * width / 2.0f;
+    right = this->centerX + width / 2.0f + this->zoom * width / 2.0f;
+    top = this->centerY + height / 2.0f - this->zoom * width / 2.0f
       / aspectRatio;
-    bottom = this->centerY + height / 2.0f + this->scale * width / 2.0f
+    bottom = this->centerY + height / 2.0f + this->zoom * width / 2.0f
       / aspectRatio;
   }
 

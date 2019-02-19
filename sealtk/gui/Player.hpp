@@ -31,9 +31,17 @@ public:
   explicit Player(QWidget* parent = nullptr);
   ~Player() override;
 
+  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomSet);
+
+  float zoom() const;
+
+signals:
+  void zoomSet(float zoom) const;
+
 public slots:
   void setImage(kwiver::vital::image_container_sptr const& image);
   void setHomography(QMatrix3x3 const& homography);
+  void setZoom(float zoom);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
