@@ -15,8 +15,11 @@
 #include <QOpenGLTexture>
 #include <QVector>
 #include <QVector2D>
+#include <QWheelEvent>
 
 #include <memory>
+
+#include <cmath>
 
 namespace sealtk
 {
@@ -54,6 +57,9 @@ public:
   std::unique_ptr<QOpenGLTexture> noImageTexture;
   std::unique_ptr<QOpenGLBuffer> noImageVertexBuffer;
   std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
+
+  float centerX = 0.0f, centerY = 0.0f;
+  float scale = 1.0f;
 };
 
 //-----------------------------------------------------------------------------
@@ -206,12 +212,42 @@ void Player::resizeGL(int w, int h)
 }
 
 //-----------------------------------------------------------------------------
+void Player::mousePressEvent(QMouseEvent* event)
+{
+  QTE_D();
+}
+
+//-----------------------------------------------------------------------------
+void Player::mouseMoveEvent(QMouseEvent* event)
+{
+  QTE_D();
+}
+
+//-----------------------------------------------------------------------------
+void Player::mouseReleaseEvent(QMouseEvent* event)
+{
+  QTE_D();
+}
+
+//-----------------------------------------------------------------------------
+void Player::wheelEvent(QWheelEvent* event)
+{
+  QTE_D();
+  d->scale *= std::pow(1.001f, event->angleDelta().y());
+  d->calculateViewHomography();
+  this->update();
+}
+
+//-----------------------------------------------------------------------------
 PlayerPrivate::PlayerPrivate(Player* parent)
   : q_ptr{parent}
 {
   this->homography.setToIdentity();
   this->homographyGl.setToIdentity();
   this->viewHomography.setToIdentity();
+
+  // TODO Remove this hack
+  this->scale = 4000.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -277,9 +313,9 @@ void PlayerPrivate::calculateViewHomography()
   }
 
   float left, right, top, bottom;
-  float quotient = (width / height) /
-    (static_cast<float>(q->width()) / static_cast<float>(q->height()));
-  if (quotient > 1.0f)
+  float aspectRatio =
+    static_cast<float>(q->width()) / static_cast<float>(q->height());
+  /*if (quotient > 1.0f)
   {
     float height2 = (q->height() * width) / q->width();
     float gap = (height - height2) / 2.0f;
@@ -296,7 +332,11 @@ void PlayerPrivate::calculateViewHomography()
     right = width2 + gap;
     top = 0.0f;
     bottom = height;
-  }
+  }*/
+  left = this->centerX + width / 2.0f - this->scale * aspectRatio;
+  right = this->centerX + width / 2.0f + this->scale * aspectRatio;
+  top = this->centerY + height / 2.0f - this->scale;
+  bottom = this->centerY + height / 2.0f + this->scale;
 
   float invX = 1.0f / (right - left);
   float invY = 1.0f / (top - bottom);
