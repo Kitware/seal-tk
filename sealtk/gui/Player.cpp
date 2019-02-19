@@ -245,9 +245,6 @@ PlayerPrivate::PlayerPrivate(Player* parent)
   this->homography.setToIdentity();
   this->homographyGl.setToIdentity();
   this->viewHomography.setToIdentity();
-
-  // TODO Remove this hack
-  this->scale = 4000.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -315,28 +312,24 @@ void PlayerPrivate::calculateViewHomography()
   float left, right, top, bottom;
   float aspectRatio =
     static_cast<float>(q->width()) / static_cast<float>(q->height());
-  /*if (quotient > 1.0f)
+  if (aspectRatio > width / height)
   {
-    float height2 = (q->height() * width) / q->width();
-    float gap = (height - height2) / 2.0f;
-    left = 0.0f;
-    right = width;
-    top = gap;
-    bottom = height2 + gap;
+    left = this->centerX + width / 2.0f - this->scale * height / 2.0f
+      * aspectRatio;
+    right = this->centerX + width / 2.0f + this->scale * height / 2.0f
+      * aspectRatio;
+    top = this->centerY + height / 2.0f - this->scale * height / 2.0f;
+    bottom = this->centerY + height / 2.0f + this->scale * height / 2.0f;
   }
   else
   {
-    float width2 = (q->width() * height) / q->height();
-    float gap = (width - width2) / 2.0f;
-    left = gap;
-    right = width2 + gap;
-    top = 0.0f;
-    bottom = height;
-  }*/
-  left = this->centerX + width / 2.0f - this->scale * aspectRatio;
-  right = this->centerX + width / 2.0f + this->scale * aspectRatio;
-  top = this->centerY + height / 2.0f - this->scale;
-  bottom = this->centerY + height / 2.0f + this->scale;
+    left = this->centerX + width / 2.0f - this->scale * width / 2.0f;
+    right = this->centerX + width / 2.0f + this->scale * width / 2.0f;
+    top = this->centerY + height / 2.0f - this->scale * width / 2.0f
+      / aspectRatio;
+    bottom = this->centerY + height / 2.0f + this->scale * width / 2.0f
+      / aspectRatio;
+  }
 
   float invX = 1.0f / (right - left);
   float invY = 1.0f / (top - bottom);
