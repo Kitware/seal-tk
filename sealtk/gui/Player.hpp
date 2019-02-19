@@ -9,6 +9,7 @@
 
 #include <QMatrix3x3>
 #include <QOpenGLWidget>
+#include <QPointF>
 #include <qtGlobal.h>
 
 #include <vital/types/image_container.h>
@@ -32,16 +33,20 @@ public:
   ~Player() override;
 
   Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomSet);
+  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerSet);
 
   float zoom() const;
+  QPointF center() const;
 
 signals:
   void zoomSet(float zoom) const;
+  void centerSet(QPointF center) const;
 
 public slots:
   void setImage(kwiver::vital::image_container_sptr const& image);
   void setHomography(QMatrix3x3 const& homography);
   void setZoom(float zoom);
+  void setCenter(QPointF center);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)

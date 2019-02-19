@@ -60,8 +60,11 @@ public:
   std::unique_ptr<QOpenGLBuffer> noImageVertexBuffer;
   std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
 
-  float centerX = 0.0f, centerY = 0.0f;
+  QPointF center{0.0f, 0.0f};
   float zoom = 1.0f;
+
+  QPoint dragStart;
+  bool dragging = false;
 };
 
 //-----------------------------------------------------------------------------
@@ -80,6 +83,12 @@ Player::Player(QWidget* parent)
     d->calculateViewHomography();
     this->update();
   });
+  connect(this, &Player::centerSet,
+          [this, d](QPointF center)
+  {
+    d->calculateViewHomography();
+    this->update();
+  });
 }
 
 //-----------------------------------------------------------------------------
@@ -92,6 +101,13 @@ float Player::zoom() const
 {
   QTE_D();
   return d->zoom;
+}
+
+//-----------------------------------------------------------------------------
+QPointF Player::center() const
+{
+  QTE_D();
+  return d->center;
 }
 
 //-----------------------------------------------------------------------------
@@ -141,6 +157,18 @@ void Player::setZoom(float zoom)
   {
     d->zoom = zoom;
     emit this->zoomSet(zoom);
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Player::setCenter(QPointF center)
+{
+  QTE_D();
+  if (!(qFuzzyCompare(center.x(), d->center.x()) &&
+        qFuzzyCompare(center.y(), d->center.y())))
+  {
+    d->center = center;
+    emit this->centerSet(center);
   }
 }
 
@@ -244,18 +272,39 @@ void Player::resizeGL(int w, int h)
 void Player::mousePressEvent(QMouseEvent* event)
 {
   QTE_D();
+
+  if (event->button() == Qt::MiddleButton)
+  {
+    d->dragging = true;
+    d->dragStart = event->pos();
+  }
 }
 
 //-----------------------------------------------------------------------------
 void Player::mouseMoveEvent(QMouseEvent* event)
 {
   QTE_D();
+
+  if (d->dragging && event->buttons() & Qt::MiddleButton)
+  {
+    this->setCenter(this->center() - (event->pos() - d->dragStart));
+    d->dragStart = event->pos();
+  }
+  else
+  {
+    d->dragging = false;
+  }
 }
 
 //-----------------------------------------------------------------------------
 void Player::mouseReleaseEvent(QMouseEvent* event)
 {
   QTE_D();
+
+  if (event->button() == Qt::MiddleButton)
+  {
+    d->dragging = false;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -340,20 +389,20 @@ void PlayerPrivate::calculateViewHomography()
     static_cast<float>(q->width()) / static_cast<float>(q->height());
   if (aspectRatio > width / height)
   {
-    left = this->centerX + width / 2.0f - this->zoom * height / 2.0f
+    left = this->center.x() + width / 2.0f - this->zoom * height / 2.0f
       * aspectRatio;
-    right = this->centerX + width / 2.0f + this->zoom * height / 2.0f
+    right = this->center.x() + width / 2.0f + this->zoom * height / 2.0f
       * aspectRatio;
-    top = this->centerY + height / 2.0f - this->zoom * height / 2.0f;
-    bottom = this->centerY + height / 2.0f + this->zoom * height / 2.0f;
+    top = this->center.y() + height / 2.0f - this->zoom * height / 2.0f;
+    bottom = this->center.y() + height / 2.0f + this->zoom * height / 2.0f;
   }
   else
   {
-    left = this->centerX + width / 2.0f - this->zoom * width / 2.0f;
-    right = this->centerX + width / 2.0f + this->zoom * width / 2.0f;
-    top = this->centerY + height / 2.0f - this->zoom * width / 2.0f
+    left = this->center.x() + width / 2.0f - this->zoom * width / 2.0f;
+    right = this->center.x() + width / 2.0f + this->zoom * width / 2.0f;
+    top = this->center.y() + height / 2.0f - this->zoom * width / 2.0f
       / aspectRatio;
-    bottom = this->centerY + height / 2.0f + this->zoom * width / 2.0f
+    bottom = this->center.y() + height / 2.0f + this->zoom * width / 2.0f
       / aspectRatio;
   }
 
