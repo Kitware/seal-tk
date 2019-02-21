@@ -8,6 +8,7 @@
 #include <sealtk/noaa/gui/Export.h>
 
 #include <QMainWindow>
+#include <QPointF>
 #include <qtGlobal.h>
 
 namespace sealtk
@@ -32,13 +33,16 @@ public:
   Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomSet);
 
   float zoom() const;
+  QPointF center() const;
 
 signals:
   void zoomSet(float zoom) const;
+  void centerSet(QPointF center) const;
 
 public slots:
   void showAbout();
   void setZoom(float zoom);
+  void setCenter(QPointF center);
 
 protected:
   QTE_DECLARE_PRIVATE(Window)

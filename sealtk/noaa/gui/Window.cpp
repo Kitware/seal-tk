@@ -50,6 +50,7 @@ public:
   bool firstWindow = true;
 
   float zoom = 1.0f;
+  QPointF center{0.0f, 0.0f};
 
   void registerVideoSourceFactory(QString const& name,
                                   sealtk::core::VideoSourceFactory* factory);
@@ -105,6 +106,13 @@ float Window::zoom() const
 }
 
 //-----------------------------------------------------------------------------
+QPointF Window::center() const
+{
+  QTE_D();
+  return d->center;
+}
+
+//-----------------------------------------------------------------------------
 void Window::setZoom(float zoom)
 {
   QTE_D();
@@ -112,6 +120,18 @@ void Window::setZoom(float zoom)
   {
     d->zoom = zoom;
     emit this->zoomSet(zoom);
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Window::setCenter(QPointF center)
+{
+  QTE_D();
+  if (!(qFuzzyCompare(center.x(), d->center.x()) &&
+        qFuzzyCompare(center.y(), d->center.y())))
+  {
+    d->center = center;
+    emit this->centerSet(center);
   }
 }
 
@@ -169,11 +189,18 @@ void WindowPrivate::registerVideoSourceFactory(
     {
       player->setImage(nullptr);
     });
+
     QObject::connect(q, &Window::zoomSet,
                      player, &sealtk::gui::Player::setZoom);
     QObject::connect(player, &sealtk::gui::Player::zoomSet,
                      q, &Window::setZoom);
     player->setZoom(q->zoom());
+
+    QObject::connect(q, &Window::centerSet,
+                     player, &sealtk::gui::Player::setCenter);
+    QObject::connect(player, &sealtk::gui::Player::centerSet,
+                     q, &Window::setCenter);
+    player->setCenter(q->center());
 
     WindowType* type = static_cast<WindowType*>(handle);
     switch (*type)
