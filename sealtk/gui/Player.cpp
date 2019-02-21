@@ -385,8 +385,6 @@ void PlayerPrivate::calculateViewHomography()
   }
 
   float left, right, top, bottom;
-  float aspectRatio =
-    static_cast<float>(q->width()) / static_cast<float>(q->height());
   left = this->center.x() + width / 2.0f - q->width() / 2.0f / this->zoom;
   right = this->center.x() + width / 2.0f + q->width() / 2.0f / this->zoom;
   top = this->center.y() + height / 2.0f - q->height() / 2.0f / this->zoom;
