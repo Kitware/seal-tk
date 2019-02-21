@@ -371,24 +371,43 @@ void PlayerPrivate::calculateViewHomography()
 {
   QTE_Q();
 
-  float width, height;
-
+  float left, right, top, bottom;
   if (this->image)
   {
-    width = this->image->width();
-    height = this->image->height();
+    left = this->center.x() + this->image->width() / 2.0f
+      - q->width() / 2.0f / this->zoom;
+    right = this->center.x() + this->image->width() / 2.0f
+      + q->width() / 2.0f / this->zoom;
+    top = this->center.y() + this->image->height() / 2.0f
+      - q->height() / 2.0f / this->zoom;
+    bottom = this->center.y() + this->image->height() / 2.0f
+      + q->height() / 2.0f / this->zoom;
   }
   else if (this->noImageTexture)
   {
-    width = this->noImageTexture->width();
-    height = this->noImageTexture->height();
+    float quotient =
+      (static_cast<float>(q->width()) / static_cast<float>(q->height()))
+      / (static_cast<float>(this->noImageTexture->width())
+        / static_cast<float>(this->noImageTexture->height()));
+    if (quotient > 1.0f)
+    {
+      left = this->noImageTexture->width() / 2.0f
+        - this->noImageTexture->width() * quotient / 2.0f;
+      right = this->noImageTexture->width() / 2.0f
+        + this->noImageTexture->width() * quotient / 2.0f;
+      top = 0.0f;
+      bottom = this->noImageTexture->height();
+    }
+    else
+    {
+      left = 0.0f;
+      right = this->noImageTexture->width();
+      top = this->noImageTexture->height() / 2.0f
+        - this->noImageTexture->height() / quotient / 2.0f;
+      bottom = this->noImageTexture->height() / 2.0f
+        + this->noImageTexture->height() / quotient / 2.0f;
+    }
   }
-
-  float left, right, top, bottom;
-  left = this->center.x() + width / 2.0f - q->width() / 2.0f / this->zoom;
-  right = this->center.x() + width / 2.0f + q->width() / 2.0f / this->zoom;
-  top = this->center.y() + height / 2.0f - q->height() / 2.0f / this->zoom;
-  bottom = this->center.y() + height / 2.0f + q->height() / 2.0f / this->zoom;
 
   float invX = 1.0f / (right - left);
   float invY = 1.0f / (top - bottom);
