@@ -15,6 +15,7 @@
 #include <qtGlobal.h>
 
 #include <vital/types/timestamp.h>
+#include <vital/algo/detected_object_set_input.h>
 #include <vital/algo/video_input.h>
 
 namespace sealtk
@@ -35,6 +36,9 @@ public:
 
   kwiver::vital::algo::video_input_sptr videoInput() const;
   void setVideoInput(kwiver::vital::algo::video_input_sptr const& videoInput);
+  void setDetectedObjectSetInput(
+    kwiver::vital::algo::detected_object_set_input_sptr const&
+      detectedObjectSetInput);
 
   QSet<kwiver::vital::timestamp::time_t> times() const override;
 

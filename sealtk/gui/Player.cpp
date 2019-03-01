@@ -49,6 +49,7 @@ public:
   QTE_DECLARE_PUBLIC_PTR(Player)
 
   kwiver::vital::image_container_sptr image;
+  kwiver::vital::detected_object_set_sptr detectedObjectSet;
   QMatrix3x3 homography;
   QMatrix4x4 homographyGl;
   int homographyLocation;
@@ -120,6 +121,16 @@ void Player::setImage(kwiver::vital::image_container_sptr const& image)
   this->makeCurrent();
   d->createTexture();
   this->doneCurrent();
+  this->update();
+}
+
+//-----------------------------------------------------------------------------
+void Player::setDetectedObjectSet(
+  kwiver::vital::detected_object_set_sptr const& detectedObjectSet)
+{
+  QTE_D();
+
+  d->detectedObjectSet = detectedObjectSet;
   this->update();
 }
 

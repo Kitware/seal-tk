@@ -7,6 +7,7 @@
 #include <arrows/qt/image_container.h>
 
 #include <map>
+#include <vector>
 
 namespace sealtk
 {
@@ -22,6 +23,8 @@ public:
   std::map<kwiver::vital::timestamp::time_t, kwiver::vital::timestamp::frame_t>
     timestampMap;
   kwiver::vital::image_container_sptr image;
+  kwiver::vital::timestamp::frame_t frame;
+  std::vector<kwiver::vital::detected_object_set_sptr> detectedObjectSets;
 
   void rebuildTimestampMap();
 };
@@ -34,6 +37,8 @@ KwiverVideoSource::KwiverVideoSource(QObject* parent)
   : VideoSource{parent},
     d_ptr{new KwiverVideoSourcePrivate}
 {
+  QTE_D();
+  d->frame = 1;
 }
 
 // ----------------------------------------------------------------------------
@@ -59,6 +64,27 @@ void KwiverVideoSource::setVideoInput(
 }
 
 // ----------------------------------------------------------------------------
+void KwiverVideoSource::setDetectedObjectSetInput(
+  kwiver::vital::algo::detected_object_set_input_sptr const&
+    detectedObjectSetInput)
+{
+  QTE_D();
+  d->detectedObjectSets.clear();
+
+  if (detectedObjectSetInput)
+  {
+    kwiver::vital::detected_object_set_sptr set;
+    std::string imageName;
+    while (detectedObjectSetInput->read_set(set, imageName))
+    {
+      d->detectedObjectSets.push_back(set);
+    }
+  }
+
+  this->invalidate();
+}
+
+// ----------------------------------------------------------------------------
 QSet<kwiver::vital::timestamp::time_t> KwiverVideoSource::times() const
 {
   QTE_D();
@@ -77,8 +103,9 @@ void KwiverVideoSource::seek(kwiver::vital::timestamp::time_t time)
   auto it = d->timestampMap.find(time);
   if (it != d->timestampMap.end())
   {
+    d->frame = it->second;
     kwiver::vital::timestamp ts;
-    if (d->videoInput->seek_frame(ts, it->second))
+    if (d->videoInput->seek_frame(ts, d->frame))
     {
       d->image = d->videoInput->frame_image();
     }
@@ -106,6 +133,23 @@ void KwiverVideoSource::invalidate() const
   else
   {
     emit this->noImageDisplayed();
+  }
+  auto frame = d->frame - 1;
+  if (frame >= 0 && frame < d->detectedObjectSets.size())
+  {
+    auto set = d->detectedObjectSets[frame];
+    if (set)
+    {
+      emit this->detectedObjectSetDisplayed(set);
+    }
+    else
+    {
+      emit this->noDetectedObjectSetDisplayed();
+    }
+  }
+  else
+  {
+    emit this->noDetectedObjectSetDisplayed();
   }
 }
 

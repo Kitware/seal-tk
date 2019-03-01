@@ -10,6 +10,7 @@
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
 #include <sealtk/core/FileVideoSourceFactory.hpp>
+#include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
 #include <sealtk/core/VideoSourceFactory.hpp>
@@ -189,6 +190,36 @@ void WindowPrivate::registerVideoSourceFactory(
     {
       player->setImage(nullptr);
     });
+
+    player->setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    auto* kwiverVideoSource = dynamic_cast<sealtk::core::KwiverVideoSource*>(
+      videoSource);
+    if (kwiverVideoSource)
+    {
+      auto* loadDetectionsAction = new QAction{"Load Detections...", player};
+      player->addAction(loadDetectionsAction);
+
+      QObject::connect(loadDetectionsAction, &QAction::triggered,
+                       [q, kwiverVideoSource]()
+      {
+        QString filename = QFileDialog::getOpenFileName(q);
+        if (!filename.isNull())
+        {
+          auto config = kwiver::vital::config_block::empty_config();
+          config->set_value("input:type", "csv");
+          kwiver::vital::algo::detected_object_set_input_sptr input;
+          kwiver::vital::algo::detected_object_set_input
+            ::set_nested_algo_configuration("input", config, input);
+          input->open(filename.toStdString());
+          kwiverVideoSource->setDetectedObjectSetInput(input);
+        }
+      });
+    }
+
+    QObject::connect(
+      videoSource, &sealtk::core::VideoSource::detectedObjectSetDisplayed,
+      player, &sealtk::gui::Player::setDetectedObjectSet);
 
     QObject::connect(q, &Window::zoomSet,
                      player, &sealtk::gui::Player::setZoom);

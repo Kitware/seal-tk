@@ -37,6 +37,9 @@ function(sealtk_add_library name)
     PRIVATE_LINK_LIBRARIES
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
+    PRIVATE_INCLUDE_DIRECTORIES
+    PUBLIC_INCLUDE_DIRECTORIES
+    INTERFACE_INCLUDE_DIRECTORIES
     )
   cmake_parse_arguments(sal
     "STATIC;SHARED;NOINSTALL"
@@ -71,9 +74,15 @@ function(sealtk_add_library name)
     INTERFACE ${sal_INTERFACE_LINK_LIBRARIES}
     )
 
-  target_include_directories(${suffix} PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
-    "$<INSTALL_INTERFACE:include>"
+  target_include_directories(${suffix}
+    PRIVATE
+      ${sal_PRIVATE_INCLUDE_DIRECTORIES}
+    PUBLIC
+      ${sal_PUBLIC_INCLUDE_DIRECTORIES}
+      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+      "$<INSTALL_INTERFACE:include>"
+    INTERFACE
+      ${sal_INTERFACE_INCLUDE_DIRECTORIES}
     )
 
   if(sal_EXPORT_HEADER)
@@ -116,6 +125,9 @@ function(sealtk_add_kwiver_plugin name)
     PRIVATE_LINK_LIBRARIES
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
+    PRIVATE_INCLUDE_DIRECTORIES
+    PUBLIC_INCLUDE_DIRECTORIES
+    INTERFACE_INCLUDE_DIRECTORIES
     )
   cmake_parse_arguments(sakp
     "NOINSTALL"
@@ -140,9 +152,15 @@ function(sealtk_add_kwiver_plugin name)
     INTERFACE ${sakp_INTERFACE_LINK_LIBRARIES}
     )
 
-  target_include_directories(${suffix} PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
-    "$<INSTALL_INTERFACE:include>"
+  target_include_directories(${suffix}
+    PRIVATE
+      ${sakp_PRIVATE_INCLUDE_DIRECTORIES}
+    PUBLIC
+      ${sakp_PUBLIC_INCLUDE_DIRECTORIES}
+      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+      "$<INSTALL_INTERFACE:include>"
+    INTERFACE
+      ${sakp_INTERFACE_INCLUDE_DIRECTORIES}
     )
 
   if(sakp_EXPORT_HEADER)
@@ -187,6 +205,9 @@ function(sealtk_add_executable name)
     PRIVATE_LINK_LIBRARIES
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
+    PRIVATE_INCLUDE_DIRECTORIES
+    PUBLIC_INCLUDE_DIRECTORIES
+    INTERFACE_INCLUDE_DIRECTORIES
     )
   cmake_parse_arguments(sae
     "NOINSTALL"
@@ -208,6 +229,17 @@ function(sealtk_add_executable name)
     INTERFACE ${sae_INTERFACE_LINK_LIBRARIES}
     )
 
+  target_include_directories(${suffix}
+    PRIVATE
+      ${sae_PRIVATE_INCLUDE_DIRECTORIES}
+    PUBLIC
+      ${sae_PUBLIC_INCLUDE_DIRECTORIES}
+      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+      "$<INSTALL_INTERFACE:include>"
+    INTERFACE
+      ${sae_INTERFACE_INCLUDE_DIRECTORIES}
+    )
+
   if(NOT sae_NOINSTALL)
     install(TARGETS ${suffix} EXPORT sealtk
       RUNTIME COMPONENT Runtime DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -225,6 +257,9 @@ function(sealtk_add_test name)
     PRIVATE_LINK_LIBRARIES
     PUBLIC_LINK_LIBRARIES
     INTERFACE_LINK_LIBRARIES
+    PRIVATE_INCLUDE_DIRECTORIES
+    PUBLIC_INCLUDE_DIRECTORIES
+    INTERFACE_INCLUDE_DIRECTORIES
     )
   cmake_parse_arguments(sat "" "" "${sat_multi}" ${ARGN})
 
@@ -232,11 +267,24 @@ function(sealtk_add_test name)
 
   target_link_libraries(test_${name}
     PRIVATE ${sat_PRIVATE_LINK_LIBRARIES} Qt5::Test
-    PUBLIC ${saj_PUBLIC_LINK_LIBRARIES}
+    PUBLIC ${sat_PUBLIC_LINK_LIBRARIES}
     INTERFACE ${sat_INTERFACE_LINK_LIBRARIES}
     )
+
+  target_include_directories(test_${name}
+    PRIVATE
+      ${sat_PRIVATE_INCLUDE_DIRECTORIES}
+    PUBLIC
+      ${sat_PUBLIC_INCLUDE_DIRECTORIES}
+      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+      "$<INSTALL_INTERFACE:include>"
+    INTERFACE
+      ${sat_INTERFACE_INCLUDE_DIRECTORIES}
+    )
+
   target_compile_definitions(test_${name}
     PRIVATE "SEALTK_TEST_DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/data\""
     )
+
   qt5_discover_tests(${name} test_${name})
 endfunction()
