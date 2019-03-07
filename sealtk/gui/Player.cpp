@@ -240,6 +240,7 @@ void Player::initializeGL()
   d->detectionShaderProgram = std::make_unique<QOpenGLShaderProgram>(this);
   d->detectionShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,
                                                      ":/DetectionVertex.glsl");
+  // TODO Get the geometry shader working
   /*d->detectionShaderProgram->addShaderFromSourceFile(
     QOpenGLShader::Geometry, ":/DetectionGeometry.glsl");*/
   d->detectionShaderProgram->addShaderFromSourceFile(
@@ -431,22 +432,6 @@ void PlayerPrivate::calculateViewHomography()
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
   this->detectedObjectVertexBuffers.clear();
-
-  QVector<QVector2D> detectedObjectVertexData{
-    {200.0f, 200.0f},
-    {200.0f, 100.0f},
-    {100.0f, 100.0f},
-    {100.0f, 200.0f},
-    {200.0f, 200.0f},
-    {200.0f, 100.0f},
-  };
-  auto buf = std::make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
-  buf->create();
-  buf->bind();
-  buf->allocate(
-    detectedObjectVertexData.data(), detectedObjectVertexData.size() *
-      sizeof(VertexData));
-  this->detectedObjectVertexBuffers.push_back(std::move(buf));
 
   if (this->detectedObjectSet)
   {
