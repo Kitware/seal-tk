@@ -181,15 +181,7 @@ void WindowPrivate::registerVideoSourceFactory(
     [this, q](void* handle, sealtk::core::VideoSource* videoSource)
   {
     auto* player = new sealtk::gui::Player{q};
-    QObject::connect(
-      videoSource, &sealtk::core::VideoSource::kwiverImageDisplayed,
-      player, &sealtk::gui::Player::setImage);
-    QObject::connect(
-      videoSource, &sealtk::core::VideoSource::noImageDisplayed,
-      [player]()
-    {
-      player->setImage(nullptr);
-    });
+    player->setVideoSource(videoSource);
 
     player->setContextMenuPolicy(Qt::ActionsContextMenu);
 

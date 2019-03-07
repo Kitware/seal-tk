@@ -74,6 +74,11 @@ public:
 
   QPoint dragStart;
   bool dragging = false;
+
+  core::VideoSource* videoSource = nullptr;
+
+  QMetaObject::Connection kwiverImageDisplayedConnection;
+  QMetaObject::Connection noImageDisplayedConnection;
 };
 
 //-----------------------------------------------------------------------------
@@ -117,6 +122,13 @@ QPointF Player::center() const
 {
   QTE_D();
   return d->center;
+}
+
+//-----------------------------------------------------------------------------
+core::VideoSource* Player::videoSource() const
+{
+  QTE_D();
+  return d->videoSource;
 }
 
 //-----------------------------------------------------------------------------
@@ -191,6 +203,33 @@ void Player::setCenter(QPointF center)
   {
     d->center = center;
     emit this->centerSet(center);
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Player::setVideoSource(core::VideoSource* videoSource)
+{
+  QTE_D();
+
+  if (d->videoSource)
+  {
+    QObject::disconnect(d->kwiverImageDisplayedConnection);
+    QObject::disconnect(d->noImageDisplayedConnection);
+  }
+
+  d->videoSource = videoSource;
+
+  if (d->videoSource)
+  {
+    d->kwiverImageDisplayedConnection = QObject::connect(
+      videoSource, &core::VideoSource::kwiverImageDisplayed,
+      this, &Player::setImage);
+    d->noImageDisplayedConnection = QObject::connect(
+      videoSource, &core::VideoSource::noImageDisplayed,
+      [this]()
+    {
+      this->setImage(nullptr);
+    });
   }
 }
 

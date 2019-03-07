@@ -7,6 +7,8 @@
 
 #include <sealtk/gui/Export.h>
 
+#include <sealtk/core/VideoSource.hpp>
+
 #include <QMatrix3x3>
 #include <QOpenGLWidget>
 #include <QPointF>
@@ -38,6 +40,7 @@ public:
 
   float zoom() const;
   QPointF center() const;
+  core::VideoSource* videoSource() const;
 
 signals:
   void zoomSet(float zoom) const;
@@ -50,6 +53,7 @@ public slots:
   void setHomography(QMatrix3x3 const& homography);
   void setZoom(float zoom);
   void setCenter(QPointF center);
+  void setVideoSource(core::VideoSource* videoSource);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
