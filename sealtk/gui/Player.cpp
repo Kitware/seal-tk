@@ -44,22 +44,30 @@ public:
   void destroyResources();
   void createTexture();
   void calculateViewHomography();
+  void updateDetectedObjectVertexBuffers();
+
+  void drawImage(QOpenGLFunctions* functions);
+  void drawDetections(QOpenGLFunctions* functions);
 
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
 
   kwiver::vital::image_container_sptr image;
   kwiver::vital::detected_object_set_sptr detectedObjectSet;
+  std::vector<std::unique_ptr<QOpenGLBuffer>> detectedObjectVertexBuffers;
   QMatrix3x3 homography;
   QMatrix4x4 homographyGl;
-  int homographyLocation;
+  int imageHomographyLocation;
   QMatrix4x4 viewHomography;
-  int viewHomographyLocation;
+  int imageViewHomographyLocation;
   std::unique_ptr<QOpenGLTexture> imageTexture;
   std::unique_ptr<QOpenGLBuffer> imageVertexBuffer;
   std::unique_ptr<QOpenGLTexture> noImageTexture;
   std::unique_ptr<QOpenGLBuffer> noImageVertexBuffer;
-  std::unique_ptr<QOpenGLShaderProgram> shaderProgram;
+  std::unique_ptr<QOpenGLShaderProgram> imageShaderProgram;
+  std::unique_ptr<QOpenGLShaderProgram> detectionShaderProgram;
+  int detectionHomographyLocation;
+  int detectionViewHomographyLocation;
 
   QPointF center{0.0f, 0.0f};
   float zoom = 1.0f;
@@ -131,6 +139,9 @@ void Player::setDetectedObjectSet(
   QTE_D();
 
   d->detectedObjectSet = detectedObjectSet;
+  this->makeCurrent();
+  d->updateDetectedObjectVertexBuffers();
+  this->doneCurrent();
   this->update();
 }
 
@@ -203,6 +214,7 @@ void Player::initializeGL()
   };
 
   d->createTexture();
+  d->updateDetectedObjectVertexBuffers();
 
   d->noImageVertexBuffer = std::make_unique<QOpenGLBuffer>(
     QOpenGLBuffer::VertexBuffer);
@@ -211,18 +223,34 @@ void Player::initializeGL()
   d->noImageVertexBuffer->allocate(
     noImageVertexData.data(), noImageVertexData.size() * sizeof(VertexData));
 
-  d->shaderProgram = std::make_unique<QOpenGLShaderProgram>(this);
-  d->shaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,
-                                           ":/PlayerVertex.glsl");
-  d->shaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                           ":/PlayerFragment.glsl");
-  d->shaderProgram->bindAttributeLocation("a_vertexCoords", 0);
-  d->shaderProgram->bindAttributeLocation("a_textureCoords", 1);
-  d->shaderProgram->link();
+  d->imageShaderProgram = std::make_unique<QOpenGLShaderProgram>(this);
+  d->imageShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                                 ":/PlayerVertex.glsl");
+  d->imageShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                                 ":/PlayerFragment.glsl");
+  d->imageShaderProgram->bindAttributeLocation("a_vertexCoords", 0);
+  d->imageShaderProgram->bindAttributeLocation("a_textureCoords", 1);
+  d->imageShaderProgram->link();
 
-  d->homographyLocation = d->shaderProgram->uniformLocation("homography");
-  d->viewHomographyLocation = d->shaderProgram->uniformLocation(
+  d->imageHomographyLocation =
+    d->imageShaderProgram->uniformLocation("homography");
+  d->imageViewHomographyLocation = d->imageShaderProgram->uniformLocation(
     "viewHomography");
+
+  d->detectionShaderProgram = std::make_unique<QOpenGLShaderProgram>(this);
+  d->detectionShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                                     ":/DetectionVertex.glsl");
+  /*d->detectionShaderProgram->addShaderFromSourceFile(
+    QOpenGLShader::Geometry, ":/DetectionGeometry.glsl");*/
+  d->detectionShaderProgram->addShaderFromSourceFile(
+    QOpenGLShader::Fragment, ":/DetectionFragment.glsl");
+  d->detectionShaderProgram->bindAttributeLocation("a_vertexCoords", 0);
+  d->detectionShaderProgram->link();
+
+  d->detectionHomographyLocation =
+    d->detectionShaderProgram->uniformLocation("homography");
+  d->detectionViewHomographyLocation =
+    d->detectionShaderProgram->uniformLocation("viewHomography");
 }
 
 //-----------------------------------------------------------------------------
@@ -232,43 +260,9 @@ void Player::paintGL()
   auto* functions = this->context()->functions();
 
   functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  d->shaderProgram->bind();
-  if (d->imageTexture)
-  {
-    d->imageTexture->bind();
-    d->imageVertexBuffer->bind();
-  }
-  else
-  {
-    d->noImageTexture->bind();
-    d->noImageVertexBuffer->bind();
-  }
 
-  d->shaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2,
-                                       sizeof(VertexData));
-  d->shaderProgram->enableAttributeArray(0);
-  d->shaderProgram->setAttributeBuffer(1, GL_FLOAT, 2 * sizeof(GLfloat), 2,
-                                      sizeof(VertexData));
-  d->shaderProgram->enableAttributeArray(1);
-
-  d->shaderProgram->setUniformValueArray(d->homographyLocation,
-                                         &d->homographyGl, 1);
-  d->shaderProgram->setUniformValueArray(d->viewHomographyLocation,
-                                         &d->viewHomography, 1);
-
-  functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-  if (d->imageTexture)
-  {
-    d->imageVertexBuffer->release();
-    d->imageTexture->release();
-  }
-  else
-  {
-    d->noImageVertexBuffer->release();
-    d->noImageTexture->release();
-  }
-  d->shaderProgram->release();
+  d->drawImage(functions);
+  d->drawDetections(functions);
 }
 
 //-----------------------------------------------------------------------------
@@ -373,7 +367,7 @@ void PlayerPrivate::destroyResources()
   this->imageVertexBuffer = nullptr;
   this->noImageTexture = nullptr;
   this->noImageVertexBuffer = nullptr;
-  this->shaderProgram = nullptr;
+  this->imageShaderProgram = nullptr;
   q->doneCurrent();
 }
 
@@ -431,6 +425,122 @@ void PlayerPrivate::calculateViewHomography()
     0.0f, 0.0f, 1.0f, 0.0f,
     0.0f, 0.0f, 0.0f, 1.0f,
   };
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::updateDetectedObjectVertexBuffers()
+{
+  this->detectedObjectVertexBuffers.clear();
+
+  QVector<QVector2D> detectedObjectVertexData{
+    {200.0f, 200.0f},
+    {200.0f, 100.0f},
+    {100.0f, 100.0f},
+    {100.0f, 200.0f},
+    {200.0f, 200.0f},
+    {200.0f, 100.0f},
+  };
+  auto buf = std::make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
+  buf->create();
+  buf->bind();
+  buf->allocate(
+    detectedObjectVertexData.data(), detectedObjectVertexData.size() *
+      sizeof(VertexData));
+  this->detectedObjectVertexBuffers.push_back(std::move(buf));
+
+  if (this->detectedObjectSet)
+  {
+    for (auto o : *this->detectedObjectSet)
+    {
+      auto bbox = o->bounding_box();
+      float minX = static_cast<float>(bbox.min_x());
+      float minY = static_cast<float>(bbox.min_y());
+      float maxX = static_cast<float>(bbox.max_x());
+      float maxY = static_cast<float>(bbox.max_y());
+      QVector<QVector2D> detectedObjectVertexData{
+        {maxX, maxY},
+        {maxX, minY},
+        {minX, minY},
+        {minX, maxY},
+        {maxX, maxY},
+        {maxX, minY},
+      };
+      auto buf = std::make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
+      buf->create();
+      buf->bind();
+      buf->allocate(
+        detectedObjectVertexData.data(), detectedObjectVertexData.size() *
+          sizeof(VertexData));
+      this->detectedObjectVertexBuffers.push_back(std::move(buf));
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::drawImage(QOpenGLFunctions* functions)
+{
+  this->imageShaderProgram->bind();
+  if (this->imageTexture)
+  {
+    this->imageTexture->bind();
+    this->imageVertexBuffer->bind();
+  }
+  else
+  {
+    this->noImageTexture->bind();
+    this->noImageVertexBuffer->bind();
+  }
+
+  this->imageShaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2,
+                                               sizeof(VertexData));
+  this->imageShaderProgram->enableAttributeArray(0);
+  this->imageShaderProgram->setAttributeBuffer(1, GL_FLOAT,
+                                               2 * sizeof(GLfloat), 2,
+                                               sizeof(VertexData));
+  this->imageShaderProgram->enableAttributeArray(1);
+
+  this->imageShaderProgram->setUniformValueArray(this->imageHomographyLocation,
+                                                 &this->homographyGl, 1);
+  this->imageShaderProgram->setUniformValueArray(
+    this->imageViewHomographyLocation, &this->viewHomography, 1);
+
+  functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+  if (this->imageTexture)
+  {
+    this->imageVertexBuffer->release();
+    this->imageTexture->release();
+  }
+  else
+  {
+    this->noImageVertexBuffer->release();
+    this->noImageTexture->release();
+  }
+  this->imageShaderProgram->release();
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
+{
+  this->detectionShaderProgram->bind();
+
+  for (auto const& detectionBuffer : this->detectedObjectVertexBuffers)
+  {
+    detectionBuffer->bind();
+
+    this->detectionShaderProgram->setAttributeBuffer(0, GL_FLOAT, 0, 2);
+    this->detectionShaderProgram->enableAttributeArray(0);
+
+    this->detectionShaderProgram->setUniformValueArray(
+      this->detectionHomographyLocation, &this->homographyGl, 1);
+    this->detectionShaderProgram->setUniformValueArray(
+      this->detectionViewHomographyLocation, &this->viewHomography, 1);
+
+    functions->glDrawArrays(GL_LINE_STRIP, 0, 5);
+
+    detectionBuffer->release();
+  }
+  this->imageShaderProgram->release();
 }
 
 }
