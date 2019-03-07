@@ -79,6 +79,8 @@ public:
 
   QMetaObject::Connection kwiverImageDisplayedConnection;
   QMetaObject::Connection noImageDisplayedConnection;
+  QMetaObject::Connection detectedObjectSetDisplayedConnection;
+  QMetaObject::Connection noDetectedObjectSetDisplayedConnection;
 };
 
 //-----------------------------------------------------------------------------
@@ -215,6 +217,8 @@ void Player::setVideoSource(core::VideoSource* videoSource)
   {
     QObject::disconnect(d->kwiverImageDisplayedConnection);
     QObject::disconnect(d->noImageDisplayedConnection);
+    QObject::disconnect(d->detectedObjectSetDisplayedConnection);
+    QObject::disconnect(d->noDetectedObjectSetDisplayedConnection);
   }
 
   d->videoSource = videoSource;
@@ -229,6 +233,16 @@ void Player::setVideoSource(core::VideoSource* videoSource)
       [this]()
     {
       this->setImage(nullptr);
+    });
+
+    d->detectedObjectSetDisplayedConnection = QObject::connect(
+      videoSource, &core::VideoSource::detectedObjectSetDisplayed,
+      this, &Player::setDetectedObjectSet);
+    d->noDetectedObjectSetDisplayedConnection = QObject::connect(
+      videoSource, &core::VideoSource::noDetectedObjectSetDisplayed,
+      [this]()
+    {
+      this->setDetectedObjectSet(nullptr);
     });
   }
 }

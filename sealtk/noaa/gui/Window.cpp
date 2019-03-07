@@ -209,10 +209,6 @@ void WindowPrivate::registerVideoSourceFactory(
       });
     }
 
-    QObject::connect(
-      videoSource, &sealtk::core::VideoSource::detectedObjectSetDisplayed,
-      player, &sealtk::gui::Player::setDetectedObjectSet);
-
     QObject::connect(q, &Window::zoomSet,
                      player, &sealtk::gui::Player::setZoom);
     QObject::connect(player, &sealtk::gui::Player::zoomSet,
