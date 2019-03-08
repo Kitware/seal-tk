@@ -64,6 +64,14 @@ public:
   };
 };
 
+//=============================================================================
+class VideoSourceFactoryData
+{
+public:
+  WindowPrivate::WindowType type;
+  QString title;
+};
+
 //-----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(Window)
 
@@ -159,21 +167,27 @@ void WindowPrivate::registerVideoSourceFactory(
   this->ui.menuNewLeftWindow->addAction(leftAction);
   QObject::connect(leftAction, &QAction::triggered, [factory]()
   {
-    factory->loadVideoSource(new WindowType{Left});
+    auto* data = new VideoSourceFactoryData;
+    data->type = Left;
+    factory->loadVideoSource(data);
   });
 
   auto* rightAction = new QAction{name, q};
   this->ui.menuNewRightWindow->addAction(rightAction);
   QObject::connect(rightAction, &QAction::triggered, [factory]()
   {
-    factory->loadVideoSource(new WindowType{Right});
+    auto* data = new VideoSourceFactoryData;
+    data->type = Right;
+    factory->loadVideoSource(data);
   });
 
   auto* dockableAction = new QAction{name, q};
   this->ui.menuNewDockableWindow->addAction(dockableAction);
   QObject::connect(dockableAction, &QAction::triggered, [factory]()
   {
-    factory->loadVideoSource(new WindowType{Dockable});
+    auto* data = new VideoSourceFactoryData;
+    data->type = Dockable;
+    factory->loadVideoSource(data);
   });
 
   QObject::connect(
@@ -221,15 +235,16 @@ void WindowPrivate::registerVideoSourceFactory(
                      q, &Window::setCenter);
     player->setCenter(q->center());
 
-    WindowType* type = static_cast<WindowType*>(handle);
-    switch (*type)
+    auto* data = static_cast<VideoSourceFactoryData*>(handle);
+    switch (data->type)
     {
       case Left:
       case Right:
       {
         auto* splitterWindow = new sealtk::gui::SplitterWindow{q};
         splitterWindow->setCentralWidget(player);
-        if (*type == Left)
+        splitterWindow->setWindowTitle(data->title);
+        if (data->type == Left)
         {
           this->ui.centralwidget->insertWidget(0, splitterWindow);
         }
@@ -244,6 +259,7 @@ void WindowPrivate::registerVideoSourceFactory(
       {
         auto* dockableWindow = new QDockWidget{q};
         dockableWindow->setWidget(player);
+        dockableWindow->setWindowTitle(data->title);
         q->addDockWidget(Qt::LeftDockWidgetArea, dockableWindow);
         break;
       }
@@ -269,7 +285,7 @@ void WindowPrivate::registerVideoSourceFactory(
       }
     }
 
-    delete type;
+    delete data;
 
     videoSource->invalidate();
   });
@@ -292,13 +308,16 @@ void WindowPrivate::registerVideoSourceFactory(
         filename = QFileDialog::getOpenFileName(q);
       }
 
+      auto* data = static_cast<VideoSourceFactoryData*>(handle);
       if (!filename.isNull())
       {
-        fileFactory->loadFile(handle, filename);
+        QFileInfo fileInfo{filename};
+        data->title = fileInfo.fileName();
+        fileFactory->loadFile(data, filename);
       }
       else
       {
-        delete static_cast<WindowType*>(handle);
+        delete data;
       }
     });
   }
