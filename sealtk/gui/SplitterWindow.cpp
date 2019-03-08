@@ -19,6 +19,8 @@ public:
 
   SplitterWindow* parent;
   Ui::SplitterWindow ui;
+
+  bool closable = true;
 };
 
 //-----------------------------------------------------------------------------
@@ -58,6 +60,24 @@ void SplitterWindow::setCentralWidget(QWidget* widget)
 
   d->ui.verticalLayout->replaceWidget(d->ui.centralWidget, widget);
   d->ui.centralWidget = widget;
+}
+
+//-----------------------------------------------------------------------------
+bool SplitterWindow::closable() const
+{
+  QTE_D();
+
+  return d->closable;
+}
+
+//-----------------------------------------------------------------------------
+void SplitterWindow::setClosable(bool closable)
+{
+  QTE_D();
+
+  d->closable = closable;
+
+  d->ui.closeButton->setVisible(closable);
 }
 
 //-----------------------------------------------------------------------------

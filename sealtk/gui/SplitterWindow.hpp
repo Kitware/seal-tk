@@ -30,6 +30,8 @@ public:
 
   QWidget* centralWidget() const;
   void setCentralWidget(QWidget* widget);
+  bool closable() const;
+  void setClosable(bool closable);
 
 protected:
   QTE_DECLARE_PRIVATE(SplitterWindow)
