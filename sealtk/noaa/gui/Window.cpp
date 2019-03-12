@@ -51,7 +51,7 @@ public:
 
   void registerVideoSourceFactory(QString const& name,
                                   sealtk::core::VideoSourceFactory* factory);
-  void createWindow(WindowData* data);
+  void createWindow(WindowData* data, QString const& title);
 
   QTE_DECLARE_PUBLIC(Window)
   QTE_DECLARE_PUBLIC_PTR(Window)
@@ -80,8 +80,8 @@ Window::Window(QWidget* parent)
   QTE_D();
   d->ui.setupUi(this);
 
-  d->createWindow(&d->eoWindow);
-  d->createWindow(&d->irWindow);
+  d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
+  d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
 
   d->videoController = std::make_unique<sealtk::core::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
@@ -230,7 +230,7 @@ void WindowPrivate::registerVideoSourceFactory(
 }
 
 //-----------------------------------------------------------------------------
-void WindowPrivate::createWindow(WindowData* data)
+void WindowPrivate::createWindow(WindowData* data, QString const& title)
 {
   QTE_Q();
 
@@ -238,6 +238,7 @@ void WindowPrivate::createWindow(WindowData* data)
   data->player = new sealtk::noaa::gui::Player{data->window};
   data->window->setCentralWidget(data->player);
   data->window->setClosable(false);
+  data->window->setWindowTitle(title);
 
   QObject::connect(q, &Window::zoomSet,
                    data->player, &sealtk::gui::Player::setZoom);
