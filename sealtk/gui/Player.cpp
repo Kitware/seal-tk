@@ -213,37 +213,42 @@ void Player::setVideoSource(core::VideoSource* videoSource)
 {
   QTE_D();
 
-  if (d->videoSource)
+  if (d->videoSource != videoSource)
   {
-    QObject::disconnect(d->kwiverImageDisplayedConnection);
-    QObject::disconnect(d->noImageDisplayedConnection);
-    QObject::disconnect(d->detectedObjectSetDisplayedConnection);
-    QObject::disconnect(d->noDetectedObjectSetDisplayedConnection);
-  }
-
-  d->videoSource = videoSource;
-
-  if (d->videoSource)
-  {
-    d->kwiverImageDisplayedConnection = QObject::connect(
-      videoSource, &core::VideoSource::kwiverImageDisplayed,
-      this, &Player::setImage);
-    d->noImageDisplayedConnection = QObject::connect(
-      videoSource, &core::VideoSource::noImageDisplayed,
-      [this]()
+    if (d->videoSource)
     {
-      this->setImage(nullptr);
-    });
+      QObject::disconnect(d->kwiverImageDisplayedConnection);
+      QObject::disconnect(d->noImageDisplayedConnection);
+      QObject::disconnect(d->detectedObjectSetDisplayedConnection);
+      QObject::disconnect(d->noDetectedObjectSetDisplayedConnection);
+    }
 
-    d->detectedObjectSetDisplayedConnection = QObject::connect(
-      videoSource, &core::VideoSource::detectedObjectSetDisplayed,
-      this, &Player::setDetectedObjectSet);
-    d->noDetectedObjectSetDisplayedConnection = QObject::connect(
-      videoSource, &core::VideoSource::noDetectedObjectSetDisplayed,
-      [this]()
+    d->videoSource = videoSource;
+
+    if (d->videoSource)
     {
-      this->setDetectedObjectSet(nullptr);
-    });
+      d->kwiverImageDisplayedConnection = QObject::connect(
+        videoSource, &core::VideoSource::kwiverImageDisplayed,
+        this, &Player::setImage);
+      d->noImageDisplayedConnection = QObject::connect(
+        videoSource, &core::VideoSource::noImageDisplayed,
+        [this]()
+      {
+        this->setImage(nullptr);
+      });
+
+      d->detectedObjectSetDisplayedConnection = QObject::connect(
+        videoSource, &core::VideoSource::detectedObjectSetDisplayed,
+        this, &Player::setDetectedObjectSet);
+      d->noDetectedObjectSetDisplayedConnection = QObject::connect(
+        videoSource, &core::VideoSource::noDetectedObjectSetDisplayed,
+        [this]()
+      {
+        this->setDetectedObjectSet(nullptr);
+      });
+    }
+
+    emit this->videoSourceSet(d->videoSource);
   }
 }
 

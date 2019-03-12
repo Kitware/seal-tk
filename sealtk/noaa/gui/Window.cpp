@@ -6,6 +6,7 @@
 #include "ui_Window.h"
 
 #include <sealtk/noaa/gui/About.hpp>
+#include <sealtk/noaa/gui/Player.hpp>
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
@@ -15,7 +16,6 @@
 #include <sealtk/core/VideoSource.hpp>
 #include <sealtk/core/VideoSourceFactory.hpp>
 
-#include <sealtk/gui/Player.hpp>
 #include <sealtk/gui/SplitterWindow.hpp>
 
 #include <QDockWidget>
@@ -36,10 +36,22 @@ namespace gui
 {
 
 //=============================================================================
+class WindowData
+{
+public:
+  sealtk::gui::SplitterWindow* window;
+  sealtk::noaa::gui::Player* player;
+};
+
+//=============================================================================
 class WindowPrivate
 {
 public:
   WindowPrivate(Window* parent);
+
+  void registerVideoSourceFactory(QString const& name,
+                                  sealtk::core::VideoSourceFactory* factory);
+  void createWindow(WindowData* data);
 
   QTE_DECLARE_PUBLIC(Window)
   QTE_DECLARE_PUBLIC_PTR(Window)
@@ -48,28 +60,13 @@ public:
 
   std::unique_ptr<sealtk::core::VideoController> videoController;
 
+  WindowData eoWindow;
+  WindowData irWindow;
+
   bool firstWindow = true;
 
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
-
-  void registerVideoSourceFactory(QString const& name,
-                                  sealtk::core::VideoSourceFactory* factory);
-
-  enum WindowType
-  {
-    Left,
-    Right,
-    Dockable,
-  };
-};
-
-//=============================================================================
-class VideoSourceFactoryData
-{
-public:
-  WindowPrivate::WindowType type;
-  QString title;
 };
 
 //-----------------------------------------------------------------------------
@@ -82,6 +79,9 @@ Window::Window(QWidget* parent)
 {
   QTE_D();
   d->ui.setupUi(this);
+
+  d->createWindow(&d->eoWindow);
+  d->createWindow(&d->irWindow);
 
   d->videoController = std::make_unique<sealtk::core::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
@@ -163,106 +163,21 @@ void WindowPrivate::registerVideoSourceFactory(
 {
   QTE_Q();
 
-  auto* leftAction = new QAction{name, q};
-  this->ui.menuNewLeftWindow->addAction(leftAction);
-  QObject::connect(leftAction, &QAction::triggered, [factory]()
-  {
-    auto* data = new VideoSourceFactoryData;
-    data->type = Left;
-    factory->loadVideoSource(data);
-  });
-
-  auto* rightAction = new QAction{name, q};
-  this->ui.menuNewRightWindow->addAction(rightAction);
-  QObject::connect(rightAction, &QAction::triggered, [factory]()
-  {
-    auto* data = new VideoSourceFactoryData;
-    data->type = Right;
-    factory->loadVideoSource(data);
-  });
-
-  auto* dockableAction = new QAction{name, q};
-  this->ui.menuNewDockableWindow->addAction(dockableAction);
-  QObject::connect(dockableAction, &QAction::triggered, [factory]()
-  {
-    auto* data = new VideoSourceFactoryData;
-    data->type = Dockable;
-    factory->loadVideoSource(data);
-  });
+  this->eoWindow.player->registerVideoSourceFactory(name, factory,
+                                                    &this->eoWindow);
+  this->irWindow.player->registerVideoSourceFactory(name, factory,
+                                                    &this->irWindow);
 
   QObject::connect(
     factory, &sealtk::core::VideoSourceFactory::videoSourceLoaded,
     [this, q](void* handle, sealtk::core::VideoSource* videoSource)
   {
-    auto* player = new sealtk::gui::Player{q};
-    player->setVideoSource(videoSource);
-
-    player->setContextMenuPolicy(Qt::ActionsContextMenu);
-
-    auto* kwiverVideoSource = dynamic_cast<sealtk::core::KwiverVideoSource*>(
-      videoSource);
-    if (kwiverVideoSource)
+    auto* data = static_cast<WindowData*>(handle);
+    auto* oldVideoSource = data->player->videoSource();
+    data->player->setVideoSource(videoSource);
+    if (oldVideoSource)
     {
-      auto* loadDetectionsAction = new QAction{"Load Detections...", player};
-      player->addAction(loadDetectionsAction);
-
-      QObject::connect(loadDetectionsAction, &QAction::triggered,
-                       [q, kwiverVideoSource]()
-      {
-        QString filename = QFileDialog::getOpenFileName(q);
-        if (!filename.isNull())
-        {
-          auto config = kwiver::vital::config_block::empty_config();
-          config->set_value("input:type", "csv");
-          kwiver::vital::algo::detected_object_set_input_sptr input;
-          kwiver::vital::algo::detected_object_set_input
-            ::set_nested_algo_configuration("input", config, input);
-          input->open(filename.toStdString());
-          kwiverVideoSource->setDetectedObjectSetInput(input);
-        }
-      });
-    }
-
-    QObject::connect(q, &Window::zoomSet,
-                     player, &sealtk::gui::Player::setZoom);
-    QObject::connect(player, &sealtk::gui::Player::zoomSet,
-                     q, &Window::setZoom);
-    player->setZoom(q->zoom());
-
-    QObject::connect(q, &Window::centerSet,
-                     player, &sealtk::gui::Player::setCenter);
-    QObject::connect(player, &sealtk::gui::Player::centerSet,
-                     q, &Window::setCenter);
-    player->setCenter(q->center());
-
-    auto* data = static_cast<VideoSourceFactoryData*>(handle);
-    switch (data->type)
-    {
-      case Left:
-      case Right:
-      {
-        auto* splitterWindow = new sealtk::gui::SplitterWindow{q};
-        splitterWindow->setCentralWidget(player);
-        splitterWindow->setWindowTitle(data->title);
-        if (data->type == Left)
-        {
-          this->ui.centralwidget->insertWidget(0, splitterWindow);
-        }
-        else
-        {
-          this->ui.centralwidget->addWidget(splitterWindow);
-        }
-        break;
-      }
-
-      case Dockable:
-      {
-        auto* dockableWindow = new QDockWidget{q};
-        dockableWindow->setWidget(player);
-        dockableWindow->setWindowTitle(data->title);
-        q->addDockWidget(Qt::LeftDockWidgetArea, dockableWindow);
-        break;
-      }
+      delete oldVideoSource;
     }
 
     if (this->firstWindow)
@@ -285,8 +200,6 @@ void WindowPrivate::registerVideoSourceFactory(
       }
     }
 
-    delete data;
-
     videoSource->invalidate();
   });
 
@@ -308,19 +221,59 @@ void WindowPrivate::registerVideoSourceFactory(
         filename = QFileDialog::getOpenFileName(q);
       }
 
-      auto* data = static_cast<VideoSourceFactoryData*>(handle);
       if (!filename.isNull())
       {
-        QFileInfo fileInfo{filename};
-        data->title = fileInfo.fileName();
-        fileFactory->loadFile(data, filename);
-      }
-      else
-      {
-        delete data;
+        fileFactory->loadFile(handle, filename);
       }
     });
   }
+}
+
+//-----------------------------------------------------------------------------
+void WindowPrivate::createWindow(WindowData* data)
+{
+  QTE_Q();
+
+  data->window = new sealtk::gui::SplitterWindow{q};
+  data->player = new sealtk::noaa::gui::Player{data->window};
+  data->window->setCentralWidget(data->player);
+  data->window->setClosable(false);
+
+  QObject::connect(q, &Window::zoomSet,
+                   data->player, &sealtk::gui::Player::setZoom);
+  QObject::connect(data->player, &sealtk::gui::Player::zoomSet,
+                   q, &Window::setZoom);
+  data->player->setZoom(q->zoom());
+
+  QObject::connect(q, &Window::centerSet,
+                   data->player, &sealtk::gui::Player::setCenter);
+  QObject::connect(data->player, &sealtk::gui::Player::centerSet,
+                   q, &Window::setCenter);
+  data->player->setCenter(q->center());
+
+  QObject::connect(
+    data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,
+    [q, data]()
+  {
+    auto* kwiverVideoSource = qobject_cast<sealtk::core::KwiverVideoSource*>(
+      data->player->videoSource());
+    if (kwiverVideoSource)
+    {
+      QString filename = QFileDialog::getOpenFileName(q);
+      if (!filename.isNull())
+      {
+        auto config = kwiver::vital::config_block::empty_config();
+        config->set_value("input:type", "csv");
+        kwiver::vital::algo::detected_object_set_input_sptr input;
+        kwiver::vital::algo::detected_object_set_input
+          ::set_nested_algo_configuration("input", config, input);
+        input->open(filename.toStdString());
+        kwiverVideoSource->setDetectedObjectSetInput(input);
+      }
+    }
+  });
+
+  this->ui.centralwidget->addWidget(data->window);
 }
 
 }

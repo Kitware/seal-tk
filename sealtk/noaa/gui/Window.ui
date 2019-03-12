@@ -46,30 +46,6 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
-    <widget class="QMenu" name="menuNewLeftWindow">
-     <property name="title">
-      <string>New Left Window</string>
-     </property>
-    </widget>
-    <widget class="QMenu" name="menuNewRightWindow">
-     <property name="title">
-      <string>New Right Window</string>
-     </property>
-    </widget>
-    <widget class="QMenu" name="menuNewDockableWindow">
-     <property name="title">
-      <string>New Dockable Window</string>
-     </property>
-    </widget>
-    <addaction name="menuNewLeftWindow"/>
-    <addaction name="menuNewRightWindow"/>
-    <addaction name="menuNewDockableWindow"/>
-   </widget>
-   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionAbout">

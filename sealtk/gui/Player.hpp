@@ -45,6 +45,7 @@ public:
 signals:
   void zoomSet(float zoom) const;
   void centerSet(QPointF center) const;
+  void videoSourceSet(core::VideoSource* videoSource) const;
 
 public slots:
   void setImage(kwiver::vital::image_container_sptr const& image);

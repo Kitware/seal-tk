@@ -7,11 +7,13 @@ include(SEALTKUtils)
 sealtk_add_library(sealtk::noaa_gui
   SOURCES
     About.cpp
+    Player.cpp
     Window.cpp
     SEALTKBranding.qrc
 
   HEADERS
     About.hpp
+    Player.hpp
     Window.hpp
 
   PUBLIC_LINK_LIBRARIES
