@@ -19,6 +19,7 @@ int main(int argc, char** argv)
 
   kwiver::vital::plugin_manager::instance().load_all_plugins();
 
+  QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
   QApplication app{argc, argv};
 
   auto* window = new sealtk::noaa::gui::Window;
