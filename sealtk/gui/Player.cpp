@@ -76,11 +76,6 @@ public:
   bool dragging = false;
 
   core::VideoSource* videoSource = nullptr;
-
-  QMetaObject::Connection kwiverImageDisplayedConnection;
-  QMetaObject::Connection noImageDisplayedConnection;
-  QMetaObject::Connection detectedObjectSetDisplayedConnection;
-  QMetaObject::Connection noDetectedObjectSetDisplayedConnection;
 };
 
 //-----------------------------------------------------------------------------
@@ -217,35 +212,22 @@ void Player::setVideoSource(core::VideoSource* videoSource)
   {
     if (d->videoSource)
     {
-      QObject::disconnect(d->kwiverImageDisplayedConnection);
-      QObject::disconnect(d->noImageDisplayedConnection);
-      QObject::disconnect(d->detectedObjectSetDisplayedConnection);
-      QObject::disconnect(d->noDetectedObjectSetDisplayedConnection);
+      disconnect(d->videoSource, nullptr, this, nullptr);
     }
 
     d->videoSource = videoSource;
 
     if (d->videoSource)
     {
-      d->kwiverImageDisplayedConnection = QObject::connect(
-        videoSource, &core::VideoSource::kwiverImageDisplayed,
-        this, &Player::setImage);
-      d->noImageDisplayedConnection = QObject::connect(
-        videoSource, &core::VideoSource::noImageDisplayed,
-        [this]()
-      {
-        this->setImage(nullptr);
-      });
+      connect(videoSource, &core::VideoSource::kwiverImageDisplayed,
+              this, &Player::setImage);
+      connect(videoSource, &core::VideoSource::noImageDisplayed,
+              [this](){ this->setImage(nullptr); });
 
-      d->detectedObjectSetDisplayedConnection = QObject::connect(
-        videoSource, &core::VideoSource::detectedObjectSetDisplayed,
-        this, &Player::setDetectedObjectSet);
-      d->noDetectedObjectSetDisplayedConnection = QObject::connect(
-        videoSource, &core::VideoSource::noDetectedObjectSetDisplayed,
-        [this]()
-      {
-        this->setDetectedObjectSet(nullptr);
-      });
+      connect(videoSource, &core::VideoSource::detectedObjectSetDisplayed,
+              this, &Player::setDetectedObjectSet);
+      connect(videoSource, &core::VideoSource::noDetectedObjectSetDisplayed,
+              [this](){ this->setDetectedObjectSet(nullptr); });
     }
 
     emit this->videoSourceSet(d->videoSource);
