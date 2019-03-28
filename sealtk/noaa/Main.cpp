@@ -21,8 +21,8 @@ int main(int argc, char** argv)
 
   QApplication app{argc, argv};
 
-  auto* window = new sealtk::noaa::gui::Window;
-  window->show();
+  sealtk::noaa::gui::Window window;
+  window.show();
 
   return app.exec();
 }
