@@ -7,9 +7,10 @@
 
 #include <sealtk/core/Export.h>
 
-#include <QImage>
-
 #include <vital/types/image_container.h>
+
+class QImage;
+class QOpenGLTexture;
 
 namespace sealtk
 {
@@ -18,6 +19,10 @@ namespace core
 {
 
 QImage SEALTK_CORE_EXPORT imageContainerToQImage(
+  kwiver::vital::image_container_sptr const& image);
+
+void SEALTK_CORE_EXPORT imageToTexture(
+  QOpenGLTexture& texture,
   kwiver::vital::image_container_sptr const& image);
 
 }
