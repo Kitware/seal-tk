@@ -60,7 +60,7 @@ public:
   QMatrix4x4 homographyGl;
   QMatrix4x4 viewHomography;
 
-  QOpenGLTexture imageTexture{QOpenGLTexture::Target2D};
+  QOpenGLTexture imageTexture{QOpenGLTexture::Target2DArray};
   QOpenGLBuffer imageVertexBuffer{QOpenGLBuffer::VertexBuffer};
   QOpenGLShaderProgram imageShaderProgram;
   QOpenGLShaderProgram detectionShaderProgram;
@@ -249,6 +249,8 @@ void Player::initializeGL()
   if (d->initialized)
     return;
 
+  d->imageTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+
   d->imageShaderProgram.addShaderFromSourceFile(
     QOpenGLShader::Vertex, ":/PlayerVertex.glsl");
   d->imageShaderProgram.addShaderFromSourceFile(
@@ -400,8 +402,7 @@ void PlayerPrivate::createTexture()
     if (this->imageTexture.isCreated())
       this->imageTexture.destroy();
 
-    this->imageTexture.setData(
-      sealtk::core::imageContainerToQImage(this->image));
+    sealtk::core::imageToTexture(this->imageTexture, this->image);
 
     float w = this->image->width(), h = this->image->height();
     QVector<VertexData> imageVertexData{

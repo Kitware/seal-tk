@@ -4,7 +4,7 @@
 
 #version 130
 
-uniform sampler2D image;
+uniform sampler2DArray image;
 
 in vec2 v_textureCoords;
 
@@ -12,5 +12,5 @@ out vec4 color;
 
 void main()
 {
-  color = texture(image, v_textureCoords);
+  color = texture(image, vec3(v_textureCoords, 0));
 }

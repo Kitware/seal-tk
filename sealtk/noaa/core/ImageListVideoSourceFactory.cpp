@@ -54,7 +54,7 @@ kwiver::vital::config_block_sptr ImageListVideoSourceFactory::config(
   config->set_value("video_reader:image_list:image_reader:type",
     "noaa_timestamp_passthrough");
   config->set_value("video_reader:image_list:image_reader:"
-    "noaa_timestamp_passthrough:image_reader:type", "qt");
+    "noaa_timestamp_passthrough:image_reader:type", "vxl");
 
   return config;
 }
