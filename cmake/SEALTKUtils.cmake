@@ -62,9 +62,9 @@ function(sealtk_add_library name)
   add_library(sealtk::${suffix} ALIAS ${suffix})
 
   set_target_properties(${suffix} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
-    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
-    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
     OUTPUT_NAME "sealtk_${suffix}"
     )
 
@@ -140,8 +140,10 @@ function(sealtk_add_kwiver_plugin name)
   add_library(sealtk::${suffix} ALIAS ${suffix})
 
   set_target_properties(${suffix} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/kwiver/modules"
-    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/kwiver/modules"
+    RUNTIME_OUTPUT_DIRECTORY
+      "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/kwiver/modules"
+    LIBRARY_OUTPUT_DIRECTORY
+      "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/kwiver/modules"
     OUTPUT_NAME "sealtk_${suffix}"
     PREFIX ""
     )
@@ -220,7 +222,7 @@ function(sealtk_add_executable name)
   add_executable(sealtk::${suffix} ALIAS ${suffix})
 
   set_target_properties(${suffix} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
     )
 
   target_link_libraries(${suffix}

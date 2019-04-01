@@ -3,4 +3,5 @@
 # https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.
 
 export KWIVER_PLUGIN_PATH=\
-"@PROJECT_BINARY_DIR@/lib/kwiver/modules:$KWIVER_PLUGIN_PATH"
+"@sealtk_BUILD_LIBDIR@/kwiver/modules"\
+"${KWIVER_PLUGIN_PATH:+:$KWIVER_PLUGIN_PATH}"

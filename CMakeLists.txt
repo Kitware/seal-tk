@@ -11,6 +11,8 @@ project(sealtk
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
+set(sealtk_BUILD_LIBDIR "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+
 list(APPEND CMAKE_MODULE_PATH
   "${PROJECT_SOURCE_DIR}/cmake"
   "${PROJECT_SOURCE_DIR}/cmake/thirdparty"
@@ -49,7 +51,7 @@ add_subdirectory(sealtk)
 
 export(EXPORT sealtk
   NAMESPACE sealtk::
-  FILE "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-targets.cmake"
+  FILE "${sealtk_BUILD_LIBDIR}/cmake/sealtk/sealtk-targets.cmake"
   )
 
 install(EXPORT sealtk
@@ -60,20 +62,20 @@ install(EXPORT sealtk
   )
 
 write_basic_package_version_file(
-  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config-version.cmake"
+  "${sealtk_BUILD_LIBDIR}/cmake/sealtk/sealtk-config-version.cmake"
   VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion
   )
 
 configure_package_config_file(
   "${PROJECT_SOURCE_DIR}/cmake/sealtk-config.cmake.in"
-  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config.cmake"
+  "${sealtk_BUILD_LIBDIR}/cmake/sealtk/sealtk-config.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/sealtk"
   )
 
 install(FILES
-  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config.cmake"
-  "${PROJECT_BINARY_DIR}/lib/cmake/sealtk/sealtk-config-version.cmake"
+  "${sealtk_BUILD_LIBDIR}/cmake/sealtk/sealtk-config.cmake"
+  "${sealtk_BUILD_LIBDIR}/cmake/sealtk/sealtk-config-version.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/sealtk"
   COMPONENT Development
   )
