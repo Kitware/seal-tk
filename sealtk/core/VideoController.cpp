@@ -51,32 +51,28 @@ QSet<VideoSource*> VideoController::videoSources() const
 void VideoController::addVideoSource(VideoSource* videoSource)
 {
   QTE_D();
+
+  using Time = kwiver::vital::timestamp::time_t;
+
   if (!d->videoSources.contains(videoSource))
   {
     d->videoSources.insert(videoSource);
     connect(this, &VideoController::timeSelected,
-            videoSource, &VideoSource::seek);
+            videoSource, &VideoSource::seekTime);
+
     if (d->videoSources.size() == 1)
     {
-      auto times = videoSource->times();
-      auto it = times.begin();
-      if (it != times.end())
+      auto const& frames = videoSource->frames();
+      if (!frames.empty())
       {
-        auto min = *it;
-        while (++it != times.end())
-        {
-          if (*it < min)
-          {
-            min = *it;
-          }
-        }
-        this->seek(min);
+        seek(frames.begin().key());
       }
     }
     else
     {
-      videoSource->seek(d->time);
+      videoSource->seekTime(d->time);
     }
+
     emit this->videoSourcesChanged();
   }
 }
@@ -87,8 +83,7 @@ void VideoController::removeVideoSource(VideoSource* videoSource)
   QTE_D();
   if (d->videoSources.remove(videoSource))
   {
-    disconnect(this, &VideoController::timeSelected,
-               videoSource, &VideoSource::seek);
+    disconnect(this, nullptr, videoSource, nullptr);
     emit this->videoSourcesChanged();
   }
 }
@@ -101,7 +96,7 @@ QSet<kwiver::vital::timestamp::time_t> VideoController::times() const
 
   for (auto* vs : d->videoSources)
   {
-    result.unite(vs->times());
+    result.unite(vs->frames().keySet());
   }
 
   return result;

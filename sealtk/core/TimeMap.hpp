@@ -5,9 +5,12 @@
 #ifndef sealtk_core_TimeMap_hpp
 #define sealtk_core_TimeMap_hpp
 
-#include <QMap>
-
 #include <vital/types/timestamp.h>
+
+#include <qtEnumerate.h>
+
+#include <QMap>
+#include <QSet>
 
 namespace sealtk
 {
@@ -172,6 +175,19 @@ public:
 
   ~TimeMap()
   {
+  }
+
+  QSet<kwiver::vital::timestamp::time_t> keySet() const
+  {
+    auto out = QSet<kwiver::vital::timestamp::time_t>{};
+    out.reserve(this->size());
+
+    for (auto const& item : qtEnumerate(*this))
+    {
+      out.insert(item.key());
+    }
+
+    return out;
   }
 
   using QMap<kwiver::vital::timestamp::time_t, Value>::find;

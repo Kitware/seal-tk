@@ -138,15 +138,17 @@ void TestVideoController::seek()
 
   for (int i = 0; i < 3; i++)
   {
-    connect(this->videoSources[i], &VideoSource::kwiverImageDisplayed,
+    connect(this->videoSources[i], &VideoSource::imageReady,
             [&seekImages, i](kv::image_container_sptr const& image)
     {
-      seekImages[i].append(sealtk::core::imageContainerToQImage(image));
-    });
-    connect(this->videoSources[i], &VideoSource::noImageDisplayed,
-            [&seekImages, i]()
-    {
-      seekImages[i].append(QImage{});
+      if (image)
+      {
+        seekImages[i].append(sealtk::core::imageContainerToQImage(image));
+      }
+      else
+      {
+        seekImages[i].append(QImage{});
+      }
     });
   }
 
@@ -200,15 +202,17 @@ void TestVideoController::removeVideoSource()
 
   for (int i = 0; i < 3; i++)
   {
-    connect(this->videoSources[i], &VideoSource::kwiverImageDisplayed,
+    connect(this->videoSources[i], &VideoSource::imageReady,
             [&seekImages, i](kv::image_container_sptr const& image)
     {
-      seekImages[i].append(sealtk::core::imageContainerToQImage(image));
-    });
-    connect(this->videoSources[i], &VideoSource::noImageDisplayed,
-            [&seekImages, i]()
-    {
-      seekImages[i].append(QImage{});
+      if (image)
+      {
+        seekImages[i].append(sealtk::core::imageContainerToQImage(image));
+      }
+      else
+      {
+        seekImages[i].append(QImage{});
+      }
     });
   }
 

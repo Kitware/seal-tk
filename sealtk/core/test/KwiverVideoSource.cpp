@@ -43,7 +43,7 @@ private slots:
   void initTestCase();
   void init();
   void seek();
-  void times();
+  void frames();
   void cleanup();
 
 private:
@@ -94,27 +94,29 @@ void TestKwiverVideoSource::seek()
   };
 
   QVector<QImage> seekImages;
-  connect(this->videoSource.get(), &VideoSource::kwiverImageDisplayed,
+  connect(this->videoSource.get(), &VideoSource::imageReady,
           [&seekImages](kv::image_container_sptr const& image)
   {
-    seekImages.append(sealtk::core::imageContainerToQImage(image));
-  });
-  connect(this->videoSource.get(), &VideoSource::noImageDisplayed,
-          [&seekImages]()
-  {
-    seekImages.append(QImage{});
+    if (image)
+    {
+      seekImages.append(sealtk::core::imageContainerToQImage(image));
+    }
+    else
+    {
+      seekImages.append(QImage{});
+    }
   });
 
   for (auto t : seekTimes)
   {
-    this->videoSource->seek(t);
+    this->videoSource->seekTime(t);
   }
 
   QCOMPARE(seekImages.size(), seekFiles.size());
 
   for (int i = 0; i < seekFiles.size(); i++)
   {
-    if (!seekFiles[i].isNull())
+    if (!seekFiles[i].isEmpty())
     {
       QImage expected{sealtk::test::testDataPath(
         "KwiverVideoSource/" + seekFiles[i])};
@@ -128,13 +130,17 @@ void TestKwiverVideoSource::seek()
 }
 
 // ----------------------------------------------------------------------------
-void TestKwiverVideoSource::times()
+void TestKwiverVideoSource::frames()
 {
-  static QSet<kv::timestamp::time_t> const times{
-    1000, 2000, 3000, 4000, 5000,
+  static TimeMap<kv::timestamp::frame_t> const frames{
+    {1000, 1},
+    {2000, 2},
+    {3000, 3},
+    {4000, 4},
+    {5000, 5}
   };
 
-  QCOMPARE(this->videoSource->times(), times);
+  QCOMPARE(this->videoSource->frames(), frames);
 }
 
 }

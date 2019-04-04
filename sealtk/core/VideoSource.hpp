@@ -6,15 +6,15 @@
 #define sealtk_core_VideoSource_hpp
 
 #include <sealtk/core/Export.h>
-
-#include <QImage>
-#include <QObject>
-#include <QSet>
-#include <qtGlobal.h>
+#include <sealtk/core/TimeMap.hpp>
 
 #include <vital/types/detected_object_set.h>
 #include <vital/types/image_container.h>
-#include <vital/types/timestamp.h>
+
+#include <qtGlobal.h>
+
+#include <QImage>
+#include <QObject>
 
 namespace sealtk
 {
@@ -32,20 +32,24 @@ public:
   explicit VideoSource(QObject* parent = nullptr);
   ~VideoSource() override;
 
-  virtual QSet<kwiver::vital::timestamp::time_t> times() const = 0;
+  virtual TimeMap<kwiver::vital::timestamp::frame_t> frames() const = 0;
 
 signals:
-  void kwiverImageDisplayed(
-    kwiver::vital::image_container_sptr const& image) const;
-  void noImageDisplayed() const;
-  void detectedObjectSetDisplayed(
-    kwiver::vital::detected_object_set_sptr const& detetedObjectSet) const;
-  void noDetectedObjectSetDisplayed() const;
+  void imageReady(
+    kwiver::vital::image_container_sptr const& image,
+    kwiver::vital::timestamp const& timeStamp) const;
+  void detectionsReady(
+    kwiver::vital::detected_object_set_sptr const& detetedObjectSet,
+    kwiver::vital::timestamp const& timeStamp) const;
   void videoInputChanged() const;
 
 public slots:
   virtual void invalidate() const = 0;
-  virtual void seek(kwiver::vital::timestamp::time_t time) = 0;
+  virtual void seek(kwiver::vital::timestamp::time_t time, SeekMode mode) = 0;
+  virtual void seekFrame(kwiver::vital::timestamp::frame_t frame) = 0;
+
+  virtual void seekTime(kwiver::vital::timestamp::time_t time)
+  { seek(time, SeekExact); }
 
 protected:
   QTE_DECLARE_PRIVATE(VideoSource)

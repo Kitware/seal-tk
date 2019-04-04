@@ -40,10 +40,11 @@ public:
     kwiver::vital::algo::detected_object_set_input_sptr const&
       detectedObjectSetInput);
 
-  QSet<kwiver::vital::timestamp::time_t> times() const override;
+  TimeMap<kwiver::vital::timestamp::frame_t> frames() const override;
 
 public slots:
-  void seek(kwiver::vital::timestamp::time_t time) override;
+  void seek(kwiver::vital::timestamp::time_t time, SeekMode mode) override;
+  void seekFrame(kwiver::vital::timestamp::frame_t frame);
   void invalidate() const override;
 
 protected:
