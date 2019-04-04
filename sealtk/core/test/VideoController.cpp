@@ -116,20 +116,20 @@ void TestVideoController::cleanup()
 void TestVideoController::seek()
 {
   static QVector<kv::timestamp::time_t> const seekTimes{
-    100, 200, 400, 300, 600, 500, 700, 200, 150,
+    200, 100, 400, 300, 600, 500, 700, 200, 150,
   };
 
   static std::array<QVector<QString>, 3> const seekFiles{{
     {
-      "1/100.png", "1/200.png", "1/400.png", QString{}, "1/600.png", QString{},
+      "1/200.png", "1/100.png", "1/400.png", QString{}, "1/600.png", QString{},
       QString{}, "1/200.png", QString{},
     },
     {
-      QString{}, "2/200.png", "2/400.png", "2/300.png", QString{}, "2/500.png",
+      "2/200.png", QString{}, "2/400.png", "2/300.png", QString{}, "2/500.png",
       QString{}, "2/200.png", QString{},
     },
     {
-      "3/100.png", QString{}, QString{}, "3/300.png", "3/600.png", "3/500.png",
+      QString{}, "3/100.png", QString{}, "3/300.png", "3/600.png", "3/500.png",
       QString{}, QString{}, QString{},
     },
   }};
@@ -179,20 +179,20 @@ void TestVideoController::seek()
 void TestVideoController::removeVideoSource()
 {
   static QVector<kv::timestamp::time_t> const seekTimes{
-    100, 200, 400, 300, 600, 500, 700, 200, 150,
+    200, 100, 400, 300, 600, 500, 700, 200, 150,
   };
 
   static std::array<QVector<QString>, 3> const seekFiles{{
     {
-      "1/100.png", "1/200.png", "1/400.png", QString{}, "1/600.png", QString{},
+      "1/200.png", "1/100.png", "1/400.png", QString{}, "1/600.png", QString{},
       QString{}, "1/200.png", QString{},
     },
     {
-      QString{}, "2/200.png", "2/400.png", "2/300.png", QString{}, "2/500.png",
+      "2/200.png", QString{}, "2/400.png", "2/300.png", QString{}, "2/500.png",
       QString{}, "2/200.png", QString{},
     },
     {
-      "3/100.png", QString{}, QString{}, "3/300.png",
+      QString{}, "3/100.png", QString{}, "3/300.png",
     },
   }};
 
