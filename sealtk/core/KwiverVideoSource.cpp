@@ -4,10 +4,19 @@
 
 #include <sealtk/core/KwiverVideoSource.hpp>
 
+#include <sealtk/core/TimeMap.hpp>
+
 #include <arrows/qt/image_container.h>
 
-#include <map>
-#include <vector>
+#include <vital/range/iota.h>
+
+#include <QDebug>
+#include <QHash>
+
+namespace kv = kwiver::vital;
+namespace kvr = kwiver::vital::range;
+
+using frame_t = kv::timestamp::frame_t;
 
 namespace sealtk
 {
@@ -19,12 +28,13 @@ namespace core
 class KwiverVideoSourcePrivate
 {
 public:
-  kwiver::vital::algo::video_input_sptr videoInput;
-  std::map<kwiver::vital::timestamp::time_t, kwiver::vital::timestamp::frame_t>
-    timestampMap;
-  kwiver::vital::image_container_sptr image;
-  kwiver::vital::timestamp::frame_t frame;
-  std::vector<kwiver::vital::detected_object_set_sptr> detectedObjectSets;
+  kv::algo::video_input_sptr videoInput;
+  TimeMap<frame_t> timestampMap;
+
+  kv::image_container_sptr image;
+  kv::timestamp timeStamp;
+
+  QHash<frame_t, kv::detected_object_set_sptr> detectedObjectSets;
 
   void rebuildTimestampMap();
 };
@@ -37,8 +47,6 @@ KwiverVideoSource::KwiverVideoSource(QObject* parent)
   : VideoSource{parent},
     d_ptr{new KwiverVideoSourcePrivate}
 {
-  QTE_D();
-  d->frame = 1;
 }
 
 // ----------------------------------------------------------------------------
@@ -47,7 +55,7 @@ KwiverVideoSource::~KwiverVideoSource()
 }
 
 // ----------------------------------------------------------------------------
-kwiver::vital::algo::video_input_sptr KwiverVideoSource::videoInput() const
+kv::algo::video_input_sptr KwiverVideoSource::videoInput() const
 {
   QTE_D();
   return d->videoInput;
@@ -55,29 +63,39 @@ kwiver::vital::algo::video_input_sptr KwiverVideoSource::videoInput() const
 
 // ----------------------------------------------------------------------------
 void KwiverVideoSource::setVideoInput(
-  kwiver::vital::algo::video_input_sptr const& videoInput)
+  kv::algo::video_input_sptr const& videoInput)
 {
   QTE_D();
+
   d->videoInput = videoInput;
+  d->image = nullptr;
+  d->timeStamp = {};
+
   d->rebuildTimestampMap();
+
   emit this->videoInputChanged();
 }
 
 // ----------------------------------------------------------------------------
 void KwiverVideoSource::setDetectedObjectSetInput(
-  kwiver::vital::algo::detected_object_set_input_sptr const&
-    detectedObjectSetInput)
+  kv::algo::detected_object_set_input_sptr const& detectedObjectSetInput)
 {
   QTE_D();
   d->detectedObjectSets.clear();
 
   if (detectedObjectSetInput)
   {
-    kwiver::vital::detected_object_set_sptr set;
-    std::string imageName;
+    auto set = kv::detected_object_set_sptr{};
+    auto frame = frame_t{0};
+    auto imageName = std::string{};
+
     while (detectedObjectSetInput->read_set(set, imageName))
     {
-      d->detectedObjectSets.push_back(set);
+      if (set)
+      {
+        d->detectedObjectSets.insert(frame, set);
+      }
+      ++frame;
     }
   }
 
@@ -85,37 +103,41 @@ void KwiverVideoSource::setDetectedObjectSetInput(
 }
 
 // ----------------------------------------------------------------------------
-QSet<kwiver::vital::timestamp::time_t> KwiverVideoSource::times() const
+TimeMap<frame_t> KwiverVideoSource::frames() const
 {
   QTE_D();
-  QSet<kwiver::vital::timestamp::time_t> result;
-  for (auto const& f : d->timestampMap)
-  {
-    result.insert(f.first);
-  }
-  return result;
+  return d->timestampMap;
 }
 
 // ----------------------------------------------------------------------------
-void KwiverVideoSource::seek(kwiver::vital::timestamp::time_t time)
+void KwiverVideoSource::seek(kv::timestamp::time_t time, SeekMode mode)
 {
   QTE_D();
-  auto it = d->timestampMap.find(time);
-  if (it != d->timestampMap.end())
+  auto const iter = d->timestampMap.find(time, mode);
+  if (iter != d->timestampMap.end())
   {
-    d->frame = it->second;
-    kwiver::vital::timestamp ts;
-    if (d->videoInput->seek_frame(ts, d->frame))
+    if (d->videoInput->seek_frame(d->timeStamp, iter.value()))
     {
+      Q_ASSERT(d->timeStamp.has_valid_time());
+      Q_ASSERT(d->timeStamp.has_valid_frame());
+      Q_ASSERT(d->timeStamp.get_time_usec() == iter.key());
+      Q_ASSERT(d->timeStamp.get_frame() == iter.value());
       d->image = d->videoInput->frame_image();
     }
     else
     {
+      // This should never happen
+      qWarning()
+        << this << __func__
+        << "underlying video source failed to seek to frame" << iter.value()
+        << "with expected time" << iter.key();
+      d->timeStamp = {};
       d->image = nullptr;
     }
   }
   else
   {
+    d->timeStamp = {};
     d->image = nullptr;
   }
 
@@ -123,33 +145,41 @@ void KwiverVideoSource::seek(kwiver::vital::timestamp::time_t time)
 }
 
 // ----------------------------------------------------------------------------
+void KwiverVideoSource::seekFrame(frame_t frame)
+{
+  QTE_D();
+
+  if (d->videoInput->seek_frame(d->timeStamp, frame))
+  {
+    Q_ASSERT(d->timeStamp.has_valid_frame());
+    Q_ASSERT(d->timeStamp.get_frame() == frame);
+    d->image = d->videoInput->frame_image();
+  }
+  else
+  {
+    d->timeStamp = {};
+    d->image = nullptr;
+  }
+
+  invalidate();
+}
+
+// ----------------------------------------------------------------------------
 void KwiverVideoSource::invalidate() const
 {
   QTE_D();
-  if (d->image)
+
+  emit imageReady(d->image, d->timeStamp);
+
+  if (d->timeStamp.has_valid_frame())
   {
-    emit this->kwiverImageDisplayed(d->image);
+    auto const& detections =
+      d->detectedObjectSets.value(d->timeStamp.get_frame());
+    emit detectionsReady(detections, d->timeStamp);
   }
   else
   {
-    emit this->noImageDisplayed();
-  }
-  auto frame = d->frame - 1;
-  if (frame >= 0 && frame < d->detectedObjectSets.size())
-  {
-    auto set = d->detectedObjectSets[frame];
-    if (set)
-    {
-      emit this->detectedObjectSetDisplayed(set);
-    }
-    else
-    {
-      emit this->noDetectedObjectSetDisplayed();
-    }
-  }
-  else
-  {
-    emit this->noDetectedObjectSetDisplayed();
+    emit detectionsReady(nullptr, d->timeStamp);
   }
 }
 
@@ -157,16 +187,19 @@ void KwiverVideoSource::invalidate() const
 void KwiverVideoSourcePrivate::rebuildTimestampMap()
 {
   this->timestampMap.clear();
+
   if (this->videoInput)
   {
-    kwiver::vital::timestamp ts;
-    for (kwiver::vital::timestamp::frame_t i = 1;
-        i <= this->videoInput->num_frames(); i++)
+    kv::timestamp ts;
+
+    for (auto const i : kvr::iota(videoInput->num_frames()))
     {
-      if (this->videoInput->seek_frame(ts, i) && ts.has_valid_time() &&
-          ts.has_valid_frame())
+      auto const frame = static_cast<kv::timestamp::frame_t>(i) + 1;
+      if (videoInput->seek_frame(ts, frame) && ts.has_valid_time())
       {
-        this->timestampMap[ts.get_time_usec()] = ts.get_frame();
+        Q_ASSERT(ts.has_valid_frame());
+        Q_ASSERT(ts.get_frame() == frame);
+        timestampMap.insert(ts.get_time_usec(), ts.get_frame());
       }
     }
   }
