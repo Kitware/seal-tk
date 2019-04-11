@@ -120,20 +120,22 @@ void TestImageListVideoSourceFactory::loadVideoSource()
 
   QVector<QImage> seekImages;
 
-  connect(videoSource, &sealtk::core::VideoSource::kwiverImageDisplayed,
+  connect(videoSource, &sealtk::core::VideoSource::imageReady,
           [&seekImages](kv::image_container_sptr const& image)
   {
-    seekImages.append(sealtk::core::imageContainerToQImage(image));
-  });
-  connect(videoSource, &sealtk::core::VideoSource::noImageDisplayed,
-          [&seekImages]()
-  {
-    seekImages.append(QImage{});
+    if (image)
+    {
+      seekImages.append(sealtk::core::imageContainerToQImage(image));
+    }
+    else
+    {
+      seekImages.append(QImage{});
+    }
   });
 
   for (auto t : seekTimes)
   {
-    videoSource->seek(t);
+    videoSource->seekTime(t);
   }
 
   QCOMPARE(seekImages.size(), seekFiles.size());

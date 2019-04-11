@@ -226,15 +226,10 @@ void Player::setVideoSource(core::VideoSource* videoSource)
 
     if (d->videoSource)
     {
-      connect(videoSource, &core::VideoSource::kwiverImageDisplayed,
+      connect(videoSource, &core::VideoSource::imageReady,
               this, &Player::setImage);
-      connect(videoSource, &core::VideoSource::noImageDisplayed,
-              [this](){ this->setImage(nullptr); });
-
-      connect(videoSource, &core::VideoSource::detectedObjectSetDisplayed,
+      connect(videoSource, &core::VideoSource::detectionsReady,
               this, &Player::setDetectedObjectSet);
-      connect(videoSource, &core::VideoSource::noDetectedObjectSetDisplayed,
-              [this](){ this->setDetectedObjectSet(nullptr); });
     }
 
     emit this->videoSourceSet(d->videoSource);
