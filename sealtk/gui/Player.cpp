@@ -54,8 +54,7 @@ public:
   kwiver::vital::image_container_sptr image;
   kwiver::vital::detected_object_set_sptr detectedObjectSet;
   std::vector<std::unique_ptr<QOpenGLBuffer>> detectedObjectVertexBuffers;
-  QMatrix3x3 homography;
-  QMatrix4x4 homographyGl;
+  QMatrix4x4 homography;
   QMatrix4x4 viewHomography;
 
   QOpenGLTexture imageTexture{QOpenGLTexture::Target2DArray};
@@ -146,28 +145,11 @@ void Player::setDetectedObjectSet(
 }
 
 //-----------------------------------------------------------------------------
-void Player::setHomography(QMatrix3x3 const& homography)
+void Player::setHomography(QMatrix4x4 const& homography)
 {
   QTE_D();
 
   d->homography = homography;
-  for (int row = 0; row < 3; row++)
-  {
-    for (int column = 0; column < 3; column++)
-    {
-      int glRow = row;
-      if (glRow >= 2)
-      {
-        glRow++;
-      }
-      int glColumn = column;
-      if (glColumn >= 2)
-      {
-        glColumn++;
-      }
-      d->homographyGl(glRow, glColumn) = d->homography(row, column);
-    }
-  }
   this->update();
 }
 
@@ -378,7 +360,6 @@ PlayerPrivate::PlayerPrivate(Player* parent)
   : q_ptr{parent}
 {
   this->homography.setToIdentity();
-  this->homographyGl.setToIdentity();
   this->viewHomography.setToIdentity();
 }
 
@@ -512,7 +493,7 @@ void PlayerPrivate::drawImage(QOpenGLFunctions* functions)
   this->imageShaderProgram.enableAttributeArray(1);
 
   this->imageShaderProgram.setUniformValueArray(this->imageHomographyLocation,
-                                                &this->homographyGl, 1);
+                                                &this->homography, 1);
   this->imageShaderProgram.setUniformValueArray(
     this->imageViewHomographyLocation, &this->viewHomography, 1);
 
@@ -536,7 +517,7 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
     this->detectionShaderProgram.enableAttributeArray(0);
 
     this->detectionShaderProgram.setUniformValueArray(
-      this->detectionHomographyLocation, &this->homographyGl, 1);
+      this->detectionHomographyLocation, &this->homography, 1);
     this->detectionShaderProgram.setUniformValueArray(
       this->detectionViewHomographyLocation, &this->viewHomography, 1);
 
