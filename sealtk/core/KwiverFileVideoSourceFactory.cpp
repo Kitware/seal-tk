@@ -9,6 +9,8 @@
 
 #include <vital/algo/video_input.h>
 
+#include <qtStlUtil.h>
+
 namespace sealtk
 {
 
@@ -43,7 +45,7 @@ void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
   kwiver::vital::algo::video_input_sptr vi;
   kwiver::vital::algo::video_input::set_nested_algo_configuration(
     "video_reader", this->config(path), vi);
-  vi->open(path.toStdString());
+  vi->open(stdString(path));
 
   auto* vs = new KwiverVideoSource{this->videoController()};
   vs->setVideoInput(vi);

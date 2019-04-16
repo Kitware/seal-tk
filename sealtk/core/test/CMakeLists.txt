@@ -11,6 +11,7 @@ sealtk_add_library(sealtk::core_test_common
     TestCommon.cpp
 
   PRIVATE_LINK_LIBRARIES
+    qtExtensionsHeaders
     Qt5::Core
     kwiver::vital
     kwiver::vital_algo
