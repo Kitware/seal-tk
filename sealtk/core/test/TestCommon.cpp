@@ -6,6 +6,8 @@
 #include <vital/algo/image_io.h>
 #include <vital/plugin_loader/plugin_manager.h>
 
+#include <qtStlUtil.h>
+
 #include <QRegularExpression>
 
 namespace kv = kwiver::vital;
@@ -132,10 +134,10 @@ kv::metadata_sptr TimestampPassthrough::fixupMetadata(
     md = std::make_shared<kv::metadata>();
   }
 
-  auto match = regex.match(QString::fromStdString(filename));
+  auto match = regex.match(qtString(filename));
   if (match.hasMatch())
   {
-    std::istringstream is{match.captured(1).toStdString()};
+    std::istringstream is{stdString(match.captured(1))};
     kv::timestamp::time_t time;
     is >> time;
     kv::timestamp ts;

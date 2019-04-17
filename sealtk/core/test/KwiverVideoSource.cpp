@@ -15,6 +15,8 @@
 
 #include <arrows/qt/image_container.h>
 
+#include <qtStlUtil.h>
+
 #include <QImage>
 #include <QSet>
 #include <QVector>
@@ -70,7 +72,7 @@ void TestKwiverVideoSource::init()
   kv::algo::video_input::set_nested_algo_configuration(
     "video_reader", this->config, videoReader);
   videoReader->open(
-    SEALTK_TEST_DATA_PATH("KwiverVideoSource/list.txt").toStdString());
+    stdString(SEALTK_TEST_DATA_PATH("KwiverVideoSource/list.txt")));
 
   this->videoSource = std::make_unique<core::KwiverVideoSource>();
   this->videoSource->setVideoInput(videoReader);

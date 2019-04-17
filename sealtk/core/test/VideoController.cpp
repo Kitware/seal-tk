@@ -16,6 +16,8 @@
 
 #include <arrows/qt/image_container.h>
 
+#include <qtStlUtil.h>
+
 #include <QImage>
 #include <QVector>
 
@@ -63,7 +65,7 @@ kv::algo::video_input_sptr TestVideoController::generateVideoInput(
   kv::algo::video_input_sptr vi;
   kv::algo::video_input::set_nested_algo_configuration(
     "video_reader", this->config, vi);
-  vi->open(path.toStdString());
+  vi->open(stdString(path));
   return vi;
 }
 

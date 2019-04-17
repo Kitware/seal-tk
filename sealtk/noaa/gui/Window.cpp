@@ -18,11 +18,11 @@
 
 #include <sealtk/gui/SplitterWindow.hpp>
 
+#include <qtStlUtil.h>
+
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QVector>
-
-#include <QtGlobal>
 
 #include <memory>
 
@@ -268,7 +268,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title)
         kwiver::vital::algo::detected_object_set_input_sptr input;
         kwiver::vital::algo::detected_object_set_input
           ::set_nested_algo_configuration("input", config, input);
-        input->open(filename.toStdString());
+        input->open(stdString(filename));
         kwiverVideoSource->setDetectedObjectSetInput(input);
       }
     }
