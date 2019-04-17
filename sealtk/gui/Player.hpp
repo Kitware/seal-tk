@@ -51,9 +51,9 @@ signals:
   void centerChanged(QPointF center) const;
 
 public slots:
-  void setImage(kwiver::vital::image_container_sptr const& image,
-                sealtk::core::VideoMetaData const& metaData);
-  void setDetectedObjectSet(
+  virtual void setImage(kwiver::vital::image_container_sptr const& image,
+                        sealtk::core::VideoMetaData const& metaData);
+  virtual void setDetectedObjectSet(
     kwiver::vital::detected_object_set_sptr const& detectedObjectSet);
   void setHomography(QMatrix4x4 const& homography);
   void setZoom(float zoom);
