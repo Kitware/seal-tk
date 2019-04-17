@@ -13,6 +13,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QPainter>
 #include <QVector>
 #include <QVector2D>
 #include <QWheelEvent>
@@ -61,8 +62,6 @@ public:
 
   QOpenGLTexture imageTexture{QOpenGLTexture::Target2D};
   QOpenGLBuffer imageVertexBuffer{QOpenGLBuffer::VertexBuffer};
-  QOpenGLTexture noImageTexture{QOpenGLTexture::Target2D};
-  QOpenGLBuffer noImageVertexBuffer{QOpenGLBuffer::VertexBuffer};
   QOpenGLShaderProgram imageShaderProgram;
   QOpenGLShaderProgram detectionShaderProgram;
 
@@ -244,27 +243,11 @@ void Player::initializeGL()
   connect(this->context(), &QOpenGLContext::aboutToBeDestroyed,
           this, [d]{ d->destroyResources(); });
 
-  d->noImageTexture.setData(QImage{":/PlayerX.png"});
-
-  float w = d->noImageTexture.width(), h = d->noImageTexture.height();
-  QVector<VertexData> noImageVertexData{
-    {{w, 0.0f}, {1.0f, 0.0f}},
-    {{0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.0f, h}, {0.0f, 1.0f}},
-    {{w, h}, {1.0f, 1.0f}},
-  };
-
   d->createTexture();
   d->updateDetectedObjectVertexBuffers();
 
   if (d->initialized)
     return;
-
-  d->noImageVertexBuffer.create();
-  d->noImageVertexBuffer.bind();
-  d->noImageVertexBuffer.allocate(
-    noImageVertexData.data(),
-    noImageVertexData.size() * static_cast<int>(sizeof(VertexData)));
 
   d->imageShaderProgram.addShaderFromSourceFile(
     QOpenGLShader::Vertex, ":/PlayerVertex.glsl");
@@ -301,12 +284,26 @@ void Player::initializeGL()
 void Player::paintGL()
 {
   QTE_D();
-  auto* functions = this->context()->functions();
+  auto* const functions = this->context()->functions();
 
-  functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (d->image)
+  {
+    functions->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  d->drawImage(functions);
-  d->drawDetections(functions);
+    d->drawImage(functions);
+    d->drawDetections(functions);
+  }
+  else
+  {
+    auto const& bg = palette().color(QPalette::Background);
+    auto const r = static_cast<float>(bg.redF());
+    auto const g = static_cast<float>(bg.greenF());
+    auto const b = static_cast<float>(bg.blueF());
+
+    functions->glClearColor(0.5f * r, 0.5f * g, 0.5f * b, 0.0f);
+    functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -315,6 +312,30 @@ void Player::resizeGL(int w, int h)
   QTE_D();
   d->calculateViewHomography();
   this->update();
+}
+
+//-----------------------------------------------------------------------------
+void Player::paintEvent(QPaintEvent* event)
+{
+  QTE_D();
+
+  // Handle usual GL painting
+  QOpenGLWidget::paintEvent(event);
+
+  // Paint text overlay, if needed
+  if (!d->image)
+  {
+    static auto const noVideo = QStringLiteral("Right-click to load imagery");
+    static auto const noFrame = QStringLiteral("(NO IMAGE)");
+
+    auto const& text = (d->videoSource ? noFrame : noVideo);
+
+    QPainter painter{this};
+    painter.setPen(Qt::white);
+    painter.setFont(font());
+    painter.drawText(rect(), Qt::AlignCenter, text);
+    painter.end();
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -405,61 +426,47 @@ void PlayerPrivate::destroyResources()
 
   q->makeCurrent();
   this->imageTexture.destroy();
-  this->noImageTexture.destroy();
   q->doneCurrent();
 }
 
 //-----------------------------------------------------------------------------
 void PlayerPrivate::calculateViewHomography()
 {
+  if (!this->image)
+  {
+    return;
+  }
+
   QTE_Q();
 
-  float left, right, top, bottom;
-  if (this->image)
-  {
-    left = this->center.x() + this->image->width() / 2.0f
-      - q->width() / 2.0f / this->zoom;
-    right = this->center.x() + this->image->width() / 2.0f
-      + q->width() / 2.0f / this->zoom;
-    top = this->center.y() + this->image->height() / 2.0f
-      - q->height() / 2.0f / this->zoom;
-    bottom = this->center.y() + this->image->height() / 2.0f
-      + q->height() / 2.0f / this->zoom;
-  }
-  else
-  {
-    float quotient =
-      (static_cast<float>(q->width()) / static_cast<float>(q->height()))
-      / (static_cast<float>(this->noImageTexture.width())
-        / static_cast<float>(this->noImageTexture.height()));
-    if (quotient > 1.0f)
-    {
-      left = this->noImageTexture.width() / 2.0f
-        - this->noImageTexture.width() * quotient / 2.0f;
-      right = this->noImageTexture.width() / 2.0f
-        + this->noImageTexture.width() * quotient / 2.0f;
-      top = 0.0f;
-      bottom = this->noImageTexture.height();
-    }
-    else
-    {
-      left = 0.0f;
-      right = this->noImageTexture.width();
-      top = this->noImageTexture.height() / 2.0f
-        - this->noImageTexture.height() / quotient / 2.0f;
-      bottom = this->noImageTexture.height() / 2.0f
-        + this->noImageTexture.height() / quotient / 2.0f;
-    }
-  }
+  // Get image and view sizes
+  auto const iw = static_cast<float>(image->width());
+  auto const ih = static_cast<float>(image->height());
+  auto const vw = static_cast<float>(q->width());
+  auto const vh = static_cast<float>(q->height());
 
-  float invX = 1.0f / (right - left);
-  float invY = 1.0f / (top - bottom);
+  // Compute values for "fit" image
+  auto const left =
+    static_cast<float>(this->center.x() + (0.5 * (iw - (vw / zoom))));
+  auto const right =
+    static_cast<float>(this->center.x() + (0.5 * (iw + (vw / zoom))));
+  auto const top =
+    static_cast<float>(this->center.y() + (0.5 * (ih - (vh / zoom))));
+  auto const bottom =
+    static_cast<float>(this->center.y() + (0.5 * (ih + (vh / zoom))));
+
+  // Compute matrix scale and translation coefficients for x and y
+  auto const invX = 1.0f / (right - left);
+  auto const invY = 1.0f / (top - bottom);
+
+  auto const mxs = 2.0f * invX;
+  auto const mys = 2.0f * invY;
+  auto const mxt = -(right + left) * invX;
+  auto const myt = -(top + bottom) * invY;
 
   this->viewHomography = QMatrix4x4{
-    2.0f * invX,
-          0.0f, 0.0f, -(right + left) * invX,
-    0.0f, 2.0f * invY,
-                0.0f, -(top + bottom) * invY,
+    mxs,  0.0f, 0.0f, mxt,
+    0.0f, mys,  0.0f, myt,
     0.0f, 0.0f, 1.0f, 0.0f,
     0.0f, 0.0f, 0.0f, 1.0f,
   };
@@ -502,16 +509,8 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
 void PlayerPrivate::drawImage(QOpenGLFunctions* functions)
 {
   this->imageShaderProgram.bind();
-  if (this->image)
-  {
-    this->imageTexture.bind();
-    this->imageVertexBuffer.bind();
-  }
-  else
-  {
-    this->noImageTexture.bind();
-    this->noImageVertexBuffer.bind();
-  }
+  this->imageTexture.bind();
+  this->imageVertexBuffer.bind();
 
   this->imageShaderProgram.setAttributeBuffer(0, GL_FLOAT, 0, 2,
                                               sizeof(VertexData));
@@ -528,16 +527,8 @@ void PlayerPrivate::drawImage(QOpenGLFunctions* functions)
 
   functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-  if (this->image)
-  {
-    this->imageVertexBuffer.release();
-    this->imageTexture.release();
-  }
-  else
-  {
-    this->noImageVertexBuffer.release();
-    this->noImageTexture.release();
-  }
+  this->imageVertexBuffer.release();
+  this->imageTexture.release();
   this->imageShaderProgram.release();
 }
 

@@ -6,7 +6,6 @@
 <qresource>
   <file>PlayerVertex.glsl</file>
   <file>PlayerFragment.glsl</file>
-  <file>PlayerX.png</file>
   <file>DetectionVertex.glsl</file>
   <file>DetectionGeometry.glsl</file>
   <file>DetectionFragment.glsl</file>
