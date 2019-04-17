@@ -49,8 +49,8 @@ signals:
   void videoSourceChanged(core::VideoSource* videoSource) const;
 
 public slots:
-  void setImage(kwiver::vital::image_container_sptr const& image);
-  void setDetectedObjectSet(
+  virtual void setImage(kwiver::vital::image_container_sptr const& image);
+  virtual void setDetectedObjectSet(
     kwiver::vital::detected_object_set_sptr const& detectedObjectSet);
   void setHomography(QMatrix4x4 const& homography);
   void setZoom(float zoom);
