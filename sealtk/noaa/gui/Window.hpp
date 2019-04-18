@@ -30,14 +30,15 @@ public:
   explicit Window(QWidget* parent = nullptr);
   ~Window() override;
 
-  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomSet);
+  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged);
+  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged);
 
   float zoom() const;
   QPointF center() const;
 
 signals:
-  void zoomSet(float zoom) const;
-  void centerSet(QPointF center) const;
+  void zoomChanged(float zoom) const;
+  void centerChanged(QPointF center) const;
 
 public slots:
   void showAbout();

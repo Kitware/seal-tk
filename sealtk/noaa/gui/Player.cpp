@@ -45,7 +45,7 @@ Player::Player(QWidget* parent)
   connect(d->loadDetectionsAction, &QAction::triggered,
           this, &Player::loadDetectionsTriggered);
 
-  connect(this, &sealtk::gui::Player::videoSourceSet, this,
+  connect(this, &sealtk::gui::Player::videoSourceChanged, this,
           [d](sealtk::core::VideoSource* videoSource){
             d->loadDetectionsAction->setEnabled(
               videoSource &&
