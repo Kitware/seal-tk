@@ -35,10 +35,11 @@ sealtk_add_library(sealtk::core
     "${SEALTK_CORE_VERSION_OUT}"
 
   PUBLIC_LINK_LIBRARIES
-    Qt5::Core
-    qtExtensions
-    kwiver::vital
+    sealtk::util
     kwiver::kwiver_algo_qt
+    kwiver::vital
+    qtExtensions
+    Qt5::Core
 
   PUBLIC_INCLUDE_DIRECTORIES
     "${EIGEN3_INCLUDE_DIR}"
