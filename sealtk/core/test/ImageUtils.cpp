@@ -264,10 +264,15 @@ void TestImageUtils::imageToTexture()
   m_fbo->release();
   auto const& out = m_fbo->toImage();
 
-  /* TESTING
+#if 0 // TESTING
+  // This code will write the test and reference images to files, which should
+  // be useful for debugging if the test is failing.
+
+  // Write the test image to a sequentially-numbered file
   static int x = 0;
   out.save(QStringLiteral("/tmp/test%1.png").arg(++x));
 
+  // Generate the reference image and write it to a file
   QImage test{FBO_SIZE, FBO_SIZE, QImage::Format_RGB888};
   for (auto const i : kvr::iota(test.width()))
   {
@@ -280,7 +285,7 @@ void TestImageUtils::imageToTexture()
     }
   }
   test.save("/tmp/test-ref.png");
-  //*/
+#endif
 
   // Validate result
   for (auto const i : kvr::iota(out.width()))
