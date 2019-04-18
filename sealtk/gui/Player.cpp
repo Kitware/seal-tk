@@ -21,6 +21,7 @@
 #include <QtGlobal>
 
 #include <memory>
+#include <utility>
 
 #include <cmath>
 
@@ -494,7 +495,8 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
         {maxX, maxY},
         {maxX, minY},
       };
-      auto buf = std::make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
+      auto buf = std::unique_ptr<QOpenGLBuffer>(
+        new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer));
       buf->create();
       buf->bind();
       buf->allocate(

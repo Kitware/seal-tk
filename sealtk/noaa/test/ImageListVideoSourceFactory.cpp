@@ -21,6 +21,7 @@
 #include <QtTest>
 
 #include <memory>
+#include <utility>
 
 namespace kv = kwiver::vital;
 
@@ -58,7 +59,9 @@ void TestImageListVideoSourceFactory::initTestCase()
 // ----------------------------------------------------------------------------
 void TestImageListVideoSourceFactory::init()
 {
-  this->videoController = std::make_unique<sealtk::core::VideoController>();
+  this->videoController =
+    std::unique_ptr<sealtk::core::VideoController>(
+      new sealtk::core::VideoController());
   this->videoSourceFactory =
     new core::ImageListVideoSourceFactory{false, this->videoController.get()};
 }

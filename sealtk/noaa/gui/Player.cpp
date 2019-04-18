@@ -41,7 +41,7 @@ Player::Player(QWidget* parent)
   QTE_D();
 
   d->loadDetectionsAction =
-    std::make_unique<QAction>("Load Detections...", this);
+    std::unique_ptr<QAction>(new QAction("Load Detections...", this));
 
   connect(d->loadDetectionsAction.get(), &QAction::triggered,
           [this]()
@@ -77,7 +77,7 @@ void Player::registerVideoSourceFactory(
 {
   QTE_D();
 
-  auto action = std::make_unique<QAction>(name, this);
+  auto action = std::unique_ptr<QAction>(new QAction(name, this));
   connect(action.get(), &QAction::triggered,
           [factory, handle]()
   {

@@ -83,7 +83,8 @@ Window::Window(QWidget* parent)
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
 
-  d->videoController = std::make_unique<sealtk::core::VideoController>(this);
+  d->videoController = std::unique_ptr<sealtk::core::VideoController>(
+    new sealtk::core::VideoController(this));
   d->ui.control->setVideoController(d->videoController.get());
 
   connect(d->ui.actionAbout, &QAction::triggered,

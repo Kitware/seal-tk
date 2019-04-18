@@ -74,7 +74,9 @@ void TestKwiverVideoSource::init()
   videoReader->open(
     stdString(SEALTK_TEST_DATA_PATH("KwiverVideoSource/list.txt")));
 
-  this->videoSource = std::make_unique<core::KwiverVideoSource>();
+  this->videoSource =
+    std::unique_ptr<core::KwiverVideoSource>(new core::KwiverVideoSource());
+
   this->videoSource->setVideoInput(videoReader);
 }
 

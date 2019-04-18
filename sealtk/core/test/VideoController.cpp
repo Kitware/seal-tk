@@ -84,7 +84,8 @@ void TestVideoController::initTestCase()
 // ----------------------------------------------------------------------------
 void TestVideoController::init()
 {
-  this->videoController = std::make_unique<VideoController>();
+  this->videoController =
+    std::unique_ptr<sealtk::core::VideoController>(new VideoController());
 
   KwiverVideoSource* vs;
 
