@@ -26,7 +26,7 @@ namespace sealtk
 namespace gui
 {
 
-Q_NAMESPACE
+// Q_NAMESPACE
 
 enum class ContrastMode
 {
@@ -34,7 +34,7 @@ enum class ContrastMode
   Percentile,
 };
 
-Q_ENUM_NS(ContrastMode)
+// Q_ENUM_NS(ContrastMode)
 
 class PlayerPrivate;
 

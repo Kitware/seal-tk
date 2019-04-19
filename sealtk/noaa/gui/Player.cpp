@@ -107,11 +107,12 @@ void Player::registerVideoSourceFactory(
 }
 
 // ----------------------------------------------------------------------------
-void Player::setImage(kv::image_container_sptr const& image)
+void Player::setImage(kv::image_container_sptr const& image,
+                      core::VideoMetaData const& metaData)
 {
   QTE_D();
 
-  sealtk::gui::Player::setImage(image);
+  sealtk::gui::Player::setImage(image, metaData);
 
   if (image)
   {

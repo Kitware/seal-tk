@@ -25,6 +25,7 @@
 #include <qtStlUtil.h>
 
 #include <QCollator>
+#include <QDebug>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QMessageBox>

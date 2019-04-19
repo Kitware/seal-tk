@@ -42,7 +42,8 @@ public:
                                   sealtk::core::VideoSourceFactory* factory,
                                   void* handle);
 
-  void setImage(kwiver::vital::image_container_sptr const& image) override;
+  void setImage(kwiver::vital::image_container_sptr const& image,
+                sealtk::core::VideoMetaData const& metaData) override;
 
 signals:
   void loadDetectionsTriggered() const;
