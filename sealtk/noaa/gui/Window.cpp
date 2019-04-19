@@ -85,6 +85,10 @@ Window::Window(QWidget* parent)
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
 
+  d->eoWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Manual);
+  d->irWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Percentile);
+  d->irWindow.player->setPercentiles(0.0, 1.0);
+
   d->videoController = make_unique<sealtk::core::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 

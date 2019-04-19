@@ -25,6 +25,16 @@ namespace sealtk
 namespace gui
 {
 
+Q_NAMESPACE
+
+enum class ContrastMode
+{
+  Manual,
+  Percentile,
+};
+
+Q_ENUM_NS(ContrastMode)
+
 class PlayerPrivate;
 
 class SEALTK_GUI_EXPORT Player : public QOpenGLWidget
@@ -37,10 +47,12 @@ public:
 
   Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged);
   Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged);
+  Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
 
   float zoom() const;
   QPointF center() const;
   core::VideoSource* videoSource() const;
+  ContrastMode contrastMode() const;
 
 signals:
   void zoomChanged(float zoom) const;
@@ -48,13 +60,17 @@ signals:
   void videoSourceChanged(core::VideoSource* videoSource) const;
 
 public slots:
-  void setImage(kwiver::vital::image_container_sptr const& image);
+  void setImage(kwiver::vital::image_container_sptr const& image,
+                sealtk::core::VideoMetaData const& metaData);
   void setDetectedObjectSet(
     kwiver::vital::detected_object_set_sptr const& detectedObjectSet);
   void setHomography(QMatrix3x3 const& homography);
   void setZoom(float zoom);
   void setCenter(QPointF center);
   void setVideoSource(core::VideoSource* videoSource);
+  void setContrastMode(ContrastMode mode);
+  void setManualLevels(float low, float high);
+  void setPercentiles(double deviance, double tolerance);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
