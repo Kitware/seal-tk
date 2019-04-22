@@ -43,8 +43,10 @@ public:
   QAction* loadDetectionsAction;
 
   kv::transform_2d_sptr transform;
+  QSizeF imageSize;
 
   void loadTransform(Player* q);
+  void updateTransform(Player* q);
 };
 
 // ----------------------------------------------------------------------------
@@ -109,33 +111,17 @@ void Player::setImage(kv::image_container_sptr const& image)
 
   sealtk::gui::Player::setImage(image);
 
-  if (image && d->transform)
+  if (image)
   {
     auto const w = static_cast<qreal>(image->height());
     auto const h = static_cast<qreal>(image->height());
-
-    QPolygonF in, out;
-    in.append({0, 0});
-    in.append({0, h});
-    in.append({w, h});
-    in.append({w, 0});
-
-    for (auto const& point : in)
-    {
-      auto const mappedPoint = d->transform->map({point.x(), point.y()});
-      out.append({mappedPoint.x(), mappedPoint.y()});
-    }
-
-    QTransform xf;
-    if (QTransform::quadToQuad(in, out, xf))
-    {
-      this->setHomography(xf);
-      return;
-    }
+    d->imageSize = QSizeF{w, h};
+    d->updateTransform(this);
   }
-
-  // Did not successfully set homography; use identity
-  this->setHomography({});
+  else
+  {
+    d->imageSize = QSizeF{};
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -177,6 +163,7 @@ void PlayerPrivate::loadTransform(Player* q)
       if (ti)
       {
         this->transform = ti->load(stdString(path));
+        this->updateTransform(q);
       }
       else
       {
@@ -195,6 +182,38 @@ void PlayerPrivate::loadTransform(Player* q)
         q, QStringLiteral("Failed to load transformation"), text);
     }
   }
+}
+
+// ----------------------------------------------------------------------------
+void PlayerPrivate::updateTransform(Player* q)
+{
+  if (this->imageSize.isValid() && this->transform)
+  {
+    auto const w = this->imageSize.width();
+    auto const h = this->imageSize.height();
+
+    QPolygonF in, out;
+    in.append({0, 0});
+    in.append({0, h});
+    in.append({w, h});
+    in.append({w, 0});
+
+    for (auto const& point : in)
+    {
+      auto const mappedPoint = this->transform->map({point.x(), point.y()});
+      out.append({mappedPoint.x(), mappedPoint.y()});
+    }
+
+    QTransform xf;
+    if (QTransform::quadToQuad(in, out, xf))
+    {
+      q->setHomography(xf);
+      return;
+    }
+  }
+
+  // Did not successfully set homography; use identity
+  q->setHomography({});
 }
 
 } // namespace gui
