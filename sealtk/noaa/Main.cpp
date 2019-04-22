@@ -19,7 +19,6 @@
 int main(int argc, char** argv)
 {
   sealtk::gui::Resources r;
-  Q_INIT_RESOURCE(SEALTKBranding);
 
   QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
   QApplication app{argc, argv};
