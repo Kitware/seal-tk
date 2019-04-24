@@ -29,6 +29,11 @@ public:
                          kwiver::vital::path_t const& imageName = {});
   ~VideoMetaData();
 
+  VideoMetaData(VideoMetaData const&);
+  VideoMetaData(VideoMetaData&&);
+  VideoMetaData& operator=(VideoMetaData const&);
+  VideoMetaData& operator=(VideoMetaData&);
+
   kwiver::vital::timestamp timeStamp() const;
   kwiver::vital::path_t imageName() const;
 
@@ -40,8 +45,8 @@ private:
   QTE_DECLARE_SHARED(VideoMetaData)
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

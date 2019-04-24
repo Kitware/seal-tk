@@ -38,6 +38,12 @@ VideoMetaData::~VideoMetaData()
 }
 
 // ----------------------------------------------------------------------------
+VideoMetaData::VideoMetaData(VideoMetaData const&) = default;
+VideoMetaData::VideoMetaData(VideoMetaData&&) = default;
+VideoMetaData& VideoMetaData::operator=(VideoMetaData const&) = default;
+VideoMetaData& VideoMetaData::operator=(VideoMetaData&) = default;
+
+// ----------------------------------------------------------------------------
 kv::timestamp VideoMetaData::timeStamp() const
 {
   QTE_D();
@@ -65,6 +71,7 @@ void VideoMetaData::setImageName(kv::path_t const& in)
   QTE_D_DETACH();
   d->imageName = in;
 }
-}
 
-}
+} // namespace core
+
+} // namespace sealtk
