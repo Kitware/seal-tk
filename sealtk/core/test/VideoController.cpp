@@ -10,6 +10,8 @@
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 
+#include <sealtk/util/unique.hpp>
+
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
 #include <vital/types/timestamp.h>
@@ -24,7 +26,6 @@
 #include <QtTest>
 
 #include <array>
-#include <memory>
 
 namespace kv = kwiver::vital;
 
@@ -84,7 +85,7 @@ void TestVideoController::initTestCase()
 // ----------------------------------------------------------------------------
 void TestVideoController::init()
 {
-  this->videoController = std::make_unique<VideoController>();
+  this->videoController = make_unique<VideoController>();
 
   KwiverVideoSource* vs;
 

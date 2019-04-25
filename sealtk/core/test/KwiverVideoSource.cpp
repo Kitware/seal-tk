@@ -9,6 +9,8 @@
 #include <sealtk/core/ImageUtils.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 
+#include <sealtk/util/unique.hpp>
+
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
 #include <vital/types/timestamp.h>
@@ -22,8 +24,6 @@
 #include <QVector>
 
 #include <QtTest>
-
-#include <memory>
 
 namespace kv = kwiver::vital;
 
@@ -74,7 +74,7 @@ void TestKwiverVideoSource::init()
   videoReader->open(
     stdString(SEALTK_TEST_DATA_PATH("KwiverVideoSource/list.txt")));
 
-  this->videoSource = std::make_unique<core::KwiverVideoSource>();
+  this->videoSource = make_unique<core::KwiverVideoSource>();
   this->videoSource->setVideoInput(videoReader);
 }
 

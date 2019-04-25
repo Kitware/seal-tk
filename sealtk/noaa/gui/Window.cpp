@@ -16,6 +16,8 @@
 #include <sealtk/core/VideoSource.hpp>
 #include <sealtk/core/VideoSourceFactory.hpp>
 
+#include <sealtk/util/unique.hpp>
+
 #include <sealtk/gui/SplitterWindow.hpp>
 
 #include <qtStlUtil.h>
@@ -83,7 +85,7 @@ Window::Window(QWidget* parent)
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
 
-  d->videoController = std::make_unique<sealtk::core::VideoController>(this);
+  d->videoController = make_unique<sealtk::core::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
   connect(d->ui.actionAbout, &QAction::triggered,
@@ -128,7 +130,7 @@ void Window::setZoom(float zoom)
   if (!qFuzzyCompare(zoom, d->zoom))
   {
     d->zoom = zoom;
-    emit this->zoomSet(zoom);
+    emit this->zoomChanged(zoom);
   }
 }
 
@@ -140,7 +142,7 @@ void Window::setCenter(QPointF center)
         qFuzzyCompare(center.y(), d->center.y())))
   {
     d->center = center;
-    emit this->centerSet(center);
+    emit this->centerChanged(center);
   }
 }
 
@@ -240,15 +242,15 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title)
   data->window->setClosable(false);
   data->window->setWindowTitle(title);
 
-  QObject::connect(q, &Window::zoomSet,
+  QObject::connect(q, &Window::zoomChanged,
                    data->player, &sealtk::gui::Player::setZoom);
-  QObject::connect(data->player, &sealtk::gui::Player::zoomSet,
+  QObject::connect(data->player, &sealtk::gui::Player::zoomChanged,
                    q, &Window::setZoom);
   data->player->setZoom(q->zoom());
 
-  QObject::connect(q, &Window::centerSet,
+  QObject::connect(q, &Window::centerChanged,
                    data->player, &sealtk::gui::Player::setCenter);
-  QObject::connect(data->player, &sealtk::gui::Player::centerSet,
+  QObject::connect(data->player, &sealtk::gui::Player::centerChanged,
                    q, &Window::setCenter);
   data->player->setCenter(q->center());
 

@@ -6,6 +6,8 @@
 
 #include <sealtk/core/ImageUtils.hpp>
 
+#include <sealtk/util/unique.hpp>
+
 #include <QApplication>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
@@ -17,10 +19,6 @@
 #include <QVector>
 #include <QVector2D>
 #include <QWheelEvent>
-
-#include <QtGlobal>
-
-#include <memory>
 
 #include <cmath>
 
@@ -44,7 +42,7 @@ public:
 
   void destroyResources();
   void createTexture();
-  void calculateViewHomography();
+  void updateViewHomography();
   void updateDetectedObjectVertexBuffers();
 
   void drawImage(QOpenGLFunctions* functions);
@@ -89,20 +87,6 @@ Player::Player(QWidget* parent)
   : QOpenGLWidget(parent),
     d_ptr{new PlayerPrivate{this}}
 {
-  QTE_D();
-
-  connect(this, &Player::zoomSet,
-          [this, d](float zoom)
-  {
-    d->calculateViewHomography();
-    this->update();
-  });
-  connect(this, &Player::centerSet,
-          [this, d](QPointF center)
-  {
-    d->calculateViewHomography();
-    this->update();
-  });
 }
 
 //-----------------------------------------------------------------------------
@@ -140,11 +124,12 @@ void Player::setImage(kwiver::vital::image_container_sptr const& image)
   QTE_D();
 
   d->image = image;
-  d->calculateViewHomography();
+
   this->makeCurrent();
   d->createTexture();
   this->doneCurrent();
-  this->update();
+
+  d->updateViewHomography();
 }
 
 //-----------------------------------------------------------------------------
@@ -193,7 +178,9 @@ void Player::setZoom(float zoom)
   if (!qFuzzyCompare(zoom, d->zoom))
   {
     d->zoom = zoom;
-    emit this->zoomSet(zoom);
+    d->updateViewHomography();
+
+    emit this->zoomChanged(zoom);
   }
 }
 
@@ -205,7 +192,9 @@ void Player::setCenter(QPointF center)
         qFuzzyCompare(center.y(), d->center.y())))
   {
     d->center = center;
-    emit this->centerSet(center);
+    d->updateViewHomography();
+
+    emit this->centerChanged(center);
   }
 }
 
@@ -231,7 +220,7 @@ void Player::setVideoSource(core::VideoSource* videoSource)
               this, &Player::setDetectedObjectSet);
     }
 
-    emit this->videoSourceSet(d->videoSource);
+    emit this->videoSourceChanged(d->videoSource);
   }
 }
 
@@ -312,8 +301,7 @@ void Player::paintGL()
 void Player::resizeGL(int w, int h)
 {
   QTE_D();
-  d->calculateViewHomography();
-  this->update();
+  d->updateViewHomography();
 }
 
 //-----------------------------------------------------------------------------
@@ -431,7 +419,7 @@ void PlayerPrivate::destroyResources()
 }
 
 //-----------------------------------------------------------------------------
-void PlayerPrivate::calculateViewHomography()
+void PlayerPrivate::updateViewHomography()
 {
   if (!this->image)
   {
@@ -471,6 +459,8 @@ void PlayerPrivate::calculateViewHomography()
     0.0f, 0.0f, 1.0f, 0.0f,
     0.0f, 0.0f, 0.0f, 1.0f,
   };
+
+  q->update();
 }
 
 //-----------------------------------------------------------------------------
@@ -495,7 +485,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
         {maxX, maxY},
         {maxX, minY},
       };
-      auto buf = std::make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
+      auto buf = make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
       buf->create();
       buf->bind();
       buf->allocate(

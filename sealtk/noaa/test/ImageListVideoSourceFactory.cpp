@@ -11,6 +11,8 @@
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
+#include <sealtk/util/unique.hpp>
+
 #include <vital/plugin_loader/plugin_manager.h>
 
 #include <arrows/qt/image_container.h>
@@ -19,8 +21,6 @@
 #include <QObject>
 
 #include <QtTest>
-
-#include <memory>
 
 namespace kv = kwiver::vital;
 
@@ -58,7 +58,7 @@ void TestImageListVideoSourceFactory::initTestCase()
 // ----------------------------------------------------------------------------
 void TestImageListVideoSourceFactory::init()
 {
-  this->videoController = std::make_unique<sealtk::core::VideoController>();
+  this->videoController = make_unique<sealtk::core::VideoController>();
   this->videoSourceFactory =
     new core::ImageListVideoSourceFactory{false, this->videoController.get()};
 }

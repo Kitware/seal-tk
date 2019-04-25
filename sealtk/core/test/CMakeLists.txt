@@ -5,7 +5,8 @@
 include(SEALTKUtils)
 
 sealtk_add_library(sealtk::core_test_common
-  STATIC NOINSTALL
+  TYPE STATIC
+  NOINSTALL
 
   SOURCES
     TestCommon.cpp
@@ -38,6 +39,14 @@ sealtk_add_test(VideoController
 sealtk_add_test(ImageUtils
   SOURCES
     ImageUtils.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+  )
+
+sealtk_add_test(AutoLevelsTask
+  SOURCES
+    AutoLevelsTask.cpp
 
   PRIVATE_LINK_LIBRARIES
     sealtk::core
