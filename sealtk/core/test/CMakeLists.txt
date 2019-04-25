@@ -36,6 +36,14 @@ sealtk_add_test(VideoController
     sealtk::core_test_common
   )
 
+sealtk_add_test(AutoLevelsTask
+  SOURCES
+    AutoLevelsTask.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+  )
+
 sealtk_add_test(DateUtils
   SOURCES
     DateUtils.cpp
