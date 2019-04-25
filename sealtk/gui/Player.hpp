@@ -35,17 +35,17 @@ public:
   explicit Player(QWidget* parent = nullptr);
   ~Player() override;
 
-  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomSet);
-  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerSet);
+  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged);
+  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged);
 
   float zoom() const;
   QPointF center() const;
   core::VideoSource* videoSource() const;
 
 signals:
-  void zoomSet(float zoom) const;
-  void centerSet(QPointF center) const;
-  void videoSourceSet(core::VideoSource* videoSource) const;
+  void zoomChanged(float zoom) const;
+  void centerChanged(QPointF center) const;
+  void videoSourceChanged(core::VideoSource* videoSource) const;
 
 public slots:
   void setImage(kwiver::vital::image_container_sptr const& image);

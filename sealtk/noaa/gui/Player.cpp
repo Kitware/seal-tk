@@ -26,8 +26,8 @@ namespace gui
 class PlayerPrivate
 {
 public:
-  std::vector<std::unique_ptr<QAction>> videoSourceActions;
-  std::unique_ptr<QAction> loadDetectionsAction;
+  std::vector<QAction*> videoSourceActions;
+  QAction* loadDetectionsAction;
 };
 
 // ----------------------------------------------------------------------------
@@ -40,28 +40,17 @@ Player::Player(QWidget* parent)
 {
   QTE_D();
 
-  d->loadDetectionsAction =
-    std::make_unique<QAction>("Load Detections...", this);
+  d->loadDetectionsAction = new QAction{"Load Detections...", this};
 
-  connect(d->loadDetectionsAction.get(), &QAction::triggered,
-          [this]()
-  {
-    emit this->loadDetectionsTriggered();
-  });
+  connect(d->loadDetectionsAction, &QAction::triggered,
+          this, &Player::loadDetectionsTriggered);
 
-  connect(this, &sealtk::gui::Player::videoSourceSet,
-          [this, d](sealtk::core::VideoSource* videoSource)
-  {
-    if (videoSource &&
-        qobject_cast<sealtk::core::KwiverVideoSource*>(videoSource))
-    {
-      d->loadDetectionsAction->setEnabled(true);
-    }
-    else
-    {
-      d->loadDetectionsAction->setEnabled(false);
-    }
-  });
+  connect(this, &sealtk::gui::Player::videoSourceChanged, this,
+          [d](sealtk::core::VideoSource* videoSource){
+            d->loadDetectionsAction->setEnabled(
+              videoSource &&
+              qobject_cast<sealtk::core::KwiverVideoSource*>(videoSource));
+          });
 
   d->loadDetectionsAction->setEnabled(false);
 }
@@ -77,13 +66,11 @@ void Player::registerVideoSourceFactory(
 {
   QTE_D();
 
-  auto action = std::make_unique<QAction>(name, this);
-  connect(action.get(), &QAction::triggered,
-          [factory, handle]()
-  {
-    factory->loadVideoSource(handle);
-  });
-  d->videoSourceActions.push_back(std::move(action));
+  auto action = new QAction{name, this};
+  connect(action, &QAction::triggered, factory,
+          [factory, handle]{ factory->loadVideoSource(handle); });
+
+  d->videoSourceActions.emplace_back(action);
 }
 
 // ----------------------------------------------------------------------------
@@ -92,18 +79,20 @@ void Player::contextMenuEvent(QContextMenuEvent* event)
   QTE_D();
 
   auto* menu = new QMenu;
+
   auto* submenu = menu->addMenu("Load Video");
   for (auto& action : d->videoSourceActions)
   {
-    submenu->addAction(action.get());
+    submenu->addAction(action);
   }
-  menu->addAction(d->loadDetectionsAction.get());
+
+  menu->addAction(d->loadDetectionsAction);
 
   menu->exec(event->globalPos());
 }
 
-}
+} // namespace gui
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
