@@ -6,6 +6,8 @@
 
 #include <sealtk/core/ImageUtils.hpp>
 
+#include <sealtk/util/unique.hpp>
+
 #include <QApplication>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
@@ -17,10 +19,6 @@
 #include <QVector>
 #include <QVector2D>
 #include <QWheelEvent>
-
-#include <QtGlobal>
-
-#include <memory>
 
 #include <cmath>
 
@@ -486,7 +484,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
         {maxX, maxY},
         {maxX, minY},
       };
-      auto buf = std::make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
+      auto buf = make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
       buf->create();
       buf->bind();
       buf->allocate(

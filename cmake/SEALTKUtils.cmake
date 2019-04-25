@@ -42,48 +42,60 @@ function(sealtk_add_library name)
     INTERFACE_INCLUDE_DIRECTORIES
     )
   cmake_parse_arguments(sal
-    "STATIC;SHARED;NOINSTALL"
-    "TARGET_NAME_VAR;EXPORT_HEADER"
+    "NOINSTALL"
+    "TYPE;TARGET_NAME_VAR;EXPORT_HEADER"
     "${sal_multi}"
     ${ARGN}
     )
 
-  if(sal_STATIC AND sal_SHARED)
-    message(FATAL_ERROR "Cannot have a library that is both STATIC and SHARED")
-  elseif(sal_STATIC)
-    set(type STATIC)
-  elseif(sal_SHARED)
-    set(type SHARED)
+  if (sal_TYPE STREQUAL INTERFACE)
+    add_library(${suffix} INTERFACE)
+
+    target_link_libraries(${suffix}
+      INTERFACE ${sal_PUBLIC_LINK_LIBRARIES}
+      )
+
+    target_include_directories(${suffix}
+      INTERFACE
+        ${sal_PUBLIC_INCLUDE_DIRECTORIES}
+        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+        "$<INSTALL_INTERFACE:include>"
+      )
   else()
-    set(type)
+    add_library(${suffix} ${sal_TYPE} ${sal_SOURCES} ${sal_HEADERS})
+
+    set_target_properties(${suffix} PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
+      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+      ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+      OUTPUT_NAME "sealtk_${suffix}"
+      )
+
+    target_link_libraries(${suffix}
+      PRIVATE ${sal_PRIVATE_LINK_LIBRARIES}
+      PUBLIC ${sal_PUBLIC_LINK_LIBRARIES}
+      )
+
+    target_include_directories(${suffix}
+      PRIVATE
+        ${sal_PRIVATE_INCLUDE_DIRECTORIES}
+      PUBLIC
+        ${sal_PUBLIC_INCLUDE_DIRECTORIES}
+        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
+        "$<INSTALL_INTERFACE:include>"
+      )
   endif()
 
-  add_library(${suffix} ${type} ${sal_SOURCES} ${sal_HEADERS})
-  add_library(sealtk::${suffix} ALIAS ${suffix})
-
-  set_target_properties(${suffix} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
-    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
-    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
-    OUTPUT_NAME "sealtk_${suffix}"
-    )
-
   target_link_libraries(${suffix}
-    PRIVATE ${sal_PRIVATE_LINK_LIBRARIES}
-    PUBLIC ${sal_PUBLIC_LINK_LIBRARIES}
     INTERFACE ${sal_INTERFACE_LINK_LIBRARIES}
     )
 
   target_include_directories(${suffix}
-    PRIVATE
-      ${sal_PRIVATE_INCLUDE_DIRECTORIES}
-    PUBLIC
-      ${sal_PUBLIC_INCLUDE_DIRECTORIES}
-      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_BINARY_DIR}>"
-      "$<INSTALL_INTERFACE:include>"
     INTERFACE
       ${sal_INTERFACE_INCLUDE_DIRECTORIES}
     )
+
+  add_library(sealtk::${suffix} ALIAS ${suffix})
 
   if(sal_EXPORT_HEADER)
     if(NOT IS_ABSOLUTE "${sal_EXPORT_HEADER}")

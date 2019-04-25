@@ -16,6 +16,8 @@
 #include <sealtk/core/VideoSource.hpp>
 #include <sealtk/core/VideoSourceFactory.hpp>
 
+#include <sealtk/util/unique.hpp>
+
 #include <sealtk/gui/SplitterWindow.hpp>
 
 #include <qtStlUtil.h>
@@ -83,7 +85,7 @@ Window::Window(QWidget* parent)
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
 
-  d->videoController = std::make_unique<sealtk::core::VideoController>(this);
+  d->videoController = make_unique<sealtk::core::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
   connect(d->ui.actionAbout, &QAction::triggered,
