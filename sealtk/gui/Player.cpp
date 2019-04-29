@@ -51,6 +51,8 @@ public:
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
 
+  QMetaObject::Connection destroyResourcesConnection;
+
   kwiver::vital::image_container_sptr image;
   kwiver::vital::detected_object_set_sptr detectedObjectSet;
   std::vector<std::unique_ptr<QOpenGLBuffer>> detectedObjectVertexBuffers;
@@ -92,9 +94,13 @@ Player::Player(QWidget* parent)
 //-----------------------------------------------------------------------------
 Player::~Player()
 {
-  // We need our context to be current so our OpenGL resources can be cleaned
-  // up properly
-  makeCurrent();
+  QTE_D();
+
+  // We need to clean up our textures while our context is current...
+  d->destroyResources();
+
+  // ...and then ensure cleanup isn't called after we're halfway destroyed
+  disconnect(d->destroyResourcesConnection);
 }
 
 //-----------------------------------------------------------------------------
@@ -229,8 +235,9 @@ void Player::initializeGL()
 {
   QTE_D();
 
-  connect(this->context(), &QOpenGLContext::aboutToBeDestroyed,
-          this, [d]{ d->destroyResources(); });
+  d->destroyResourcesConnection = connect(
+    this->context(), &QOpenGLContext::aboutToBeDestroyed,
+    this, [d] { d->destroyResources(); });
 
   d->createTexture();
   d->updateDetectedObjectVertexBuffers();
