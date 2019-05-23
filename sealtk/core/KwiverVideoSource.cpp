@@ -9,6 +9,7 @@
 #include <arrows/qt/image_container.h>
 
 #include <vital/range/iota.h>
+#include <vital/range/valid.h>
 
 #include <QDebug>
 #include <QHash>
@@ -24,6 +25,25 @@ namespace sealtk
 namespace core
 {
 
+namespace // anonymous
+{
+
+// ----------------------------------------------------------------------------
+kv::path_t getImageName(kv::metadata_vector const& mdv)
+{
+  for (auto const& mdp : mdv | kvr::valid)
+  {
+    if ( auto const& mdi = mdp->find( kwiver::vital::VITAL_META_IMAGE_URI ) )
+    {
+      return mdi.as_string();
+    }
+  }
+
+  return {};
+}
+
+} // namespace <anonymous>
+
 // ============================================================================
 class KwiverVideoSourcePrivate
 {
@@ -33,6 +53,7 @@ public:
 
   kv::image_container_sptr image;
   kv::timestamp timeStamp;
+  kv::path_t imageName;
 
   QHash<frame_t, kv::detected_object_set_sptr> detectedObjectSets;
 
@@ -70,6 +91,7 @@ void KwiverVideoSource::setVideoInput(
   d->videoInput = videoInput;
   d->image = nullptr;
   d->timeStamp = {};
+  d->imageName = {};
 
   d->rebuildTimestampMap();
 
@@ -123,6 +145,7 @@ void KwiverVideoSource::seek(kv::timestamp::time_t time, SeekMode mode)
       Q_ASSERT(d->timeStamp.get_time_usec() == iter.key());
       Q_ASSERT(d->timeStamp.get_frame() == iter.value());
       d->image = d->videoInput->frame_image();
+      d->imageName = getImageName(d->videoInput->frame_metadata());
     }
     else
     {
@@ -131,12 +154,14 @@ void KwiverVideoSource::seek(kv::timestamp::time_t time, SeekMode mode)
         << this << __func__
         << "underlying video source failed to seek to frame" << iter.value()
         << "with expected time" << iter.key();
+      d->imageName = {};
       d->timeStamp = {};
       d->image = nullptr;
     }
   }
   else
   {
+    d->imageName = {};
     d->timeStamp = {};
     d->image = nullptr;
   }
@@ -154,9 +179,11 @@ void KwiverVideoSource::seekFrame(frame_t frame)
     Q_ASSERT(d->timeStamp.has_valid_frame());
     Q_ASSERT(d->timeStamp.get_frame() == frame);
     d->image = d->videoInput->frame_image();
+    d->imageName = getImageName(d->videoInput->frame_metadata());
   }
   else
   {
+    d->imageName = {};
     d->timeStamp = {};
     d->image = nullptr;
   }
@@ -169,7 +196,7 @@ void KwiverVideoSource::invalidate() const
 {
   QTE_D();
 
-  emit imageReady(d->image, d->timeStamp);
+  emit imageReady(d->image, VideoMetaData{d->timeStamp, d->imageName});
 
   if (d->timeStamp.has_valid_frame())
   {
