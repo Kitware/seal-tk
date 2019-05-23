@@ -51,6 +51,10 @@ function(sealtk_add_library name)
   if (sal_TYPE STREQUAL INTERFACE)
     add_library(${suffix} INTERFACE)
 
+    target_compile_features(${suffix}
+      INTERFACE cxx_lambda_init_captures
+      )
+
     target_link_libraries(${suffix}
       INTERFACE ${sal_PUBLIC_LINK_LIBRARIES}
       )
@@ -69,6 +73,10 @@ function(sealtk_add_library name)
       LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
       ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
       OUTPUT_NAME "sealtk_${suffix}"
+      )
+
+    target_compile_features(${suffix}
+      PUBLIC cxx_lambda_init_captures
       )
 
     target_link_libraries(${suffix}

@@ -20,6 +20,8 @@ sealtk_add_library(sealtk::core
     TimeStamp.cpp
     VideoController.cpp
     VideoMetaData.cpp
+    VideoRequest.cpp
+    VideoRequestor.cpp
     VideoSource.cpp
     VideoSourceFactory.cpp
 
@@ -33,7 +35,10 @@ sealtk_add_library(sealtk::core
     TimeMap.hpp
     TimeStamp.hpp
     VideoController.hpp
+    VideoFrame.hpp
     VideoMetaData.hpp
+    VideoProvider.hpp
+    VideoRequest.hpp
     VideoSource.hpp
     VideoSourceFactory.hpp
     "${SEALTK_CORE_VERSION_OUT}"
