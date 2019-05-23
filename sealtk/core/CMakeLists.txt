@@ -19,6 +19,7 @@ sealtk_add_library(sealtk::core
     KwiverVideoSource.cpp
     TimeStamp.cpp
     VideoController.cpp
+    VideoMetaData.cpp
     VideoSource.cpp
     VideoSourceFactory.cpp
 
@@ -32,6 +33,7 @@ sealtk_add_library(sealtk::core
     TimeMap.hpp
     TimeStamp.hpp
     VideoController.hpp
+    VideoMetaData.hpp
     VideoSource.hpp
     VideoSourceFactory.hpp
     "${SEALTK_CORE_VERSION_OUT}"

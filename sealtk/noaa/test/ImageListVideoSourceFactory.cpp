@@ -9,13 +9,18 @@
 #include <sealtk/core/DateUtils.hpp>
 #include <sealtk/core/ImageUtils.hpp>
 #include <sealtk/core/VideoController.hpp>
+#include <sealtk/core/VideoMetaData.hpp>
 #include <sealtk/core/VideoSource.hpp>
+
+#include <arrows/qt/image_container.h>
 
 #include <sealtk/util/unique.hpp>
 
 #include <vital/plugin_loader/plugin_manager.h>
 
-#include <arrows/qt/image_container.h>
+#include <vital/range/iota.h>
+
+#include <qtStlUtil.h>
 
 #include <QDateTime>
 #include <QObject>
@@ -23,6 +28,7 @@
 #include <QtTest>
 
 namespace kv = kwiver::vital;
+namespace kvr = kwiver::vital::range;
 
 namespace sealtk
 {
@@ -118,18 +124,20 @@ void TestImageListVideoSourceFactory::loadVideoSource()
   });
   this->videoSourceFactory->loadVideoSource(nullptr);
 
-  QVector<QImage> seekImages;
+  QVector<QPair<QImage, sealtk::core::VideoMetaData>> seekFrames;
 
   connect(videoSource, &sealtk::core::VideoSource::imageReady,
-          [&seekImages](kv::image_container_sptr const& image)
+          [&seekFrames](kv::image_container_sptr const& image,
+                        sealtk::core::VideoMetaData const& metaData)
   {
     if (image)
     {
-      seekImages.append(sealtk::core::imageContainerToQImage(image));
+      seekFrames.append(
+        {sealtk::core::imageContainerToQImage(image), metaData});
     }
     else
     {
-      seekImages.append(QImage{});
+      seekFrames.append({QImage{}, sealtk::core::VideoMetaData{}});
     }
   });
 
@@ -138,19 +146,27 @@ void TestImageListVideoSourceFactory::loadVideoSource()
     videoSource->seekTime(t);
   }
 
-  QCOMPARE(seekImages.size(), seekFiles.size());
+  QCOMPARE(seekFrames.size(), seekFiles.size());
 
-  for (int i = 0; i < seekImages.size(); i++)
+  for (auto const i : kvr::iota(seekFrames.size()))
   {
     if (!seekFiles[i].isNull())
     {
       QImage expected{sealtk::test::testDataPath(
         "ImageListVideoSourceFactory/" + seekFiles[i])};
-      QCOMPARE(seekImages[i], expected);
+      QCOMPARE(seekFrames[i].first, expected);
+
+      QFileInfo fi{qtString(seekFrames[i].second.imageName())};
+      QCOMPARE(fi.fileName(), seekFiles[i]);
+
+      QCOMPARE(seekFrames[i].second.timeStamp().get_time_usec(),
+               seekTimes[i]);
     }
     else
     {
-      QCOMPARE(seekImages[i], QImage{});
+      QCOMPARE(seekFrames[i].first, QImage{});
+      QVERIFY(seekFrames[i].second.imageName().empty());
+      QVERIFY(!seekFrames[i].second.timeStamp().is_valid());
     }
   }
 }
