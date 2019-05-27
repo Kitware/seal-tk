@@ -9,6 +9,8 @@
 #include <sealtk/core/VideoRequest.hpp>
 #include <sealtk/core/VideoRequestor.hpp>
 
+#include <QDebug>
+#include <QPointer>
 #include <QThread>
 
 #include <unordered_map>
@@ -50,7 +52,7 @@ public:
   std::unordered_map<VideoRequestor*, kv::timestamp> lastFrameProvided;
 
   VideoSourceThread thread;
-  VideoProvider* const provider;
+  QPointer<VideoProvider> const provider;
 };
 
 // ----------------------------------------------------------------------------
@@ -65,10 +67,7 @@ VideoSource::VideoSource(VideoProvider* provider, QObject* parent)
 // ----------------------------------------------------------------------------
 VideoSource::~VideoSource()
 {
-  QTE_D();
-
-  d->thread.exit();
-  d->thread.wait();
+  this->cleanup();
 }
 
 // ----------------------------------------------------------------------------
@@ -79,6 +78,28 @@ void VideoSource::start()
   d->moveToThread(&d->thread);
   d->provider->moveToThread(&d->thread);
   d->thread.start();
+}
+
+// ----------------------------------------------------------------------------
+void VideoSource::cleanup()
+{
+  QTE_D();
+
+  if (d->thread.isRunning())
+  {
+    if (!d->provider)
+    {
+      qCritical()
+        << this
+        << "provider is destroyed but source's thread is still running";
+      qDebug()
+        << "(a derived type probably forgot to call cleanup())";
+      qFatal("terminating execution as program is likely about to crash");
+    }
+
+    d->thread.exit();
+    d->thread.wait();
+  }
 }
 
 // ----------------------------------------------------------------------------

@@ -99,6 +99,24 @@ public slots:
 protected:
   explicit VideoSource(VideoProvider* provider, QObject* parent = nullptr);
 
+  /// Clean up the video source.
+  ///
+  /// This method cleans up the video source, in particular, by signaling the
+  /// internal thread to terminate and waiting for it to do so. This method
+  /// should be called from the destructor of classes inheriting #VideoSource.
+  /// This is especially critical if the #VideoProvider is owned by the derived
+  /// class (which is usually the case, and indeed, is recommended), as
+  /// otherwise the provider may be destroyed while its thread is still
+  /// executing.
+  ///
+  /// \note
+  ///   It is safe to call this method more than once. Because failing to call
+  ///   this method is very likely to cause the program to crash or otherwise
+  ///   fall into the Dread Realm of Undefined Behavior, the base class
+  ///   attempts to detect such failure and will issue a fatal program error in
+  ///   such cases.
+  void cleanup();
+
   QTE_DECLARE_PRIVATE(VideoSource)
 
 private:
