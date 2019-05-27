@@ -19,7 +19,6 @@ namespace sealtk
 namespace core
 {
 
-class VideoController;
 class VideoSource;
 
 class FileVideoSourceFactoryPrivate;
@@ -29,7 +28,7 @@ class SEALTK_CORE_EXPORT FileVideoSourceFactory : public VideoSourceFactory
   Q_OBJECT
 
 public:
-  explicit FileVideoSourceFactory(VideoController* parent = nullptr);
+  explicit FileVideoSourceFactory(QObject* parent = nullptr);
   ~FileVideoSourceFactory() override;
 
   virtual bool expectsDirectory() const;

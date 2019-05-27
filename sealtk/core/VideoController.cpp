@@ -5,6 +5,8 @@
 #include <sealtk/core/VideoController.hpp>
 
 #include <sealtk/core/TimeMap.hpp>
+#include <sealtk/core/VideoRequest.hpp>
+#include <sealtk/core/VideoRequestor.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
 #include <QSet>
@@ -19,10 +21,10 @@ namespace core
 class VideoControllerPrivate
 {
 public:
-  QSet<VideoSource*> videoSources;
-  kwiver::vital::timestamp::time_t time;
+  using time_t = kwiver::vital::timestamp::time_t;
 
-  void rebuildTimes();
+  QHash<VideoSource*, std::shared_ptr<VideoRequestor>> videoSources;
+  time_t time = std::numeric_limits<time_t>::min();
 };
 
 // ----------------------------------------------------------------------------
@@ -44,33 +46,60 @@ VideoController::~VideoController()
 QSet<VideoSource*> VideoController::videoSources() const
 {
   QTE_D();
-  return d->videoSources;
+
+  auto out = QSet<VideoSource*>{};
+  out.reserve(d->videoSources.size());
+
+  for (auto const& item : qtEnumerate(d->videoSources))
+  {
+    out.insert(item.key());
+  }
+
+  return out;
 }
 
 // ----------------------------------------------------------------------------
-void VideoController::addVideoSource(VideoSource* videoSource)
+void VideoController::addVideoSource(
+  VideoSource* videoSource, std::shared_ptr<VideoRequestor> const& requestor)
 {
   QTE_D();
 
-  using Time = kwiver::vital::timestamp::time_t;
-
   if (!d->videoSources.contains(videoSource))
   {
-    d->videoSources.insert(videoSource);
-    connect(this, &VideoController::timeSelected,
-            videoSource, &VideoSource::seekTime);
+    connect(videoSource, &QObject::destroyed, this,
+            [this, videoSource]{
+              this->removeVideoSource(videoSource);
+            });
 
-    if (d->videoSources.size() == 1)
+    auto fetch = [d, videoSource](time_t t, qint64 i){
+      auto requestor = d->videoSources.value(videoSource);
+      Q_ASSERT(requestor);
+
+      VideoRequest request;
+      request.requestId = i;
+      request.requestor = std::move(requestor);
+      request.time = t;
+      request.mode = SeekExact;
+
+      videoSource->requestFrame(std::move(request));
+    };
+
+    auto const first = d->videoSources.isEmpty();
+    d->videoSources.insert(videoSource, requestor);
+    connect(this, &VideoController::timeSelected,
+            videoSource, fetch);
+
+    if (first)
     {
       auto const& frames = videoSource->frames();
       if (!frames.empty())
       {
-        seek(frames.begin().key());
+        this->seek(frames.begin().key());
       }
     }
     else
     {
-      videoSource->seekTime(d->time);
+      fetch(d->time, -1);
     }
 
     emit this->videoSourcesChanged();
@@ -92,11 +121,11 @@ void VideoController::removeVideoSource(VideoSource* videoSource)
 QSet<kwiver::vital::timestamp::time_t> VideoController::times() const
 {
   QTE_D();
-  QSet<kwiver::vital::timestamp::time_t> result;
+  QSet<time_t> result;
 
-  for (auto* vs : d->videoSources)
+  for (auto const& vsItem : qtEnumerate(d->videoSources))
   {
-    result.unite(vs->frames().keySet());
+    result.unite(vsItem.key()->frames().keySet());
   }
 
   return result;
@@ -110,18 +139,18 @@ kwiver::vital::timestamp::time_t VideoController::time() const
 }
 
 // ----------------------------------------------------------------------------
-void VideoController::seek(kwiver::vital::timestamp::time_t time)
+void VideoController::seek(time_t time, qint64 requestId)
 {
   QTE_D();
   if (time != d->time)
   {
     d->time = time;
-    emit this->timeSelected(time);
+    emit this->timeSelected(time, requestId);
   }
 }
 
 // ----------------------------------------------------------------------------
-void VideoController::seekNearest(kwiver::vital::timestamp::time_t time)
+void VideoController::seekNearest(time_t time, qint64 requestId)
 {
   QTE_D();
   TimeMap<void*> times;
@@ -137,12 +166,12 @@ void VideoController::seekNearest(kwiver::vital::timestamp::time_t time)
   if (time != d->time)
   {
     d->time = time;
-    emit this->timeSelected(time);
+    emit this->timeSelected(time, requestId);
   }
 }
 
 // ----------------------------------------------------------------------------
-void VideoController::previousFrame()
+void VideoController::previousFrame(qint64 requestId)
 {
   QTE_D();
   TimeMap<void*> times;
@@ -157,13 +186,13 @@ void VideoController::previousFrame()
     if (time != d->time)
     {
       d->time = time;
-      emit this->timeSelected(time);
+      emit this->timeSelected(time, requestId);
     }
   }
 }
 
 // ----------------------------------------------------------------------------
-void VideoController::nextFrame()
+void VideoController::nextFrame(qint64 requestId)
 {
   QTE_D();
   TimeMap<void*> times;
@@ -178,14 +207,9 @@ void VideoController::nextFrame()
     if (time != d->time)
     {
       d->time = time;
-      emit this->timeSelected(time);
+      emit this->timeSelected(time, requestId);
     }
   }
-}
-
-// ----------------------------------------------------------------------------
-void VideoControllerPrivate::rebuildTimes()
-{
 }
 
 }

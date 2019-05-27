@@ -17,7 +17,7 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-FileVideoSourceFactory::FileVideoSourceFactory(VideoController* parent)
+FileVideoSourceFactory::FileVideoSourceFactory(QObject* parent)
   : VideoSourceFactory{parent},
     d_ptr{new FileVideoSourceFactoryPrivate}
 {

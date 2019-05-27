@@ -5,6 +5,7 @@
 #include <sealtk/test/TestCore.hpp>
 
 #include <sealtk/core/test/TestCommon.hpp>
+#include <sealtk/core/test/TestVideo.hpp>
 
 #include <sealtk/core/ImageUtils.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
@@ -13,7 +14,6 @@
 
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
-#include <vital/types/timestamp.h>
 
 #include <arrows/qt/image_container.h>
 
@@ -21,7 +21,6 @@
 
 #include <QImage>
 #include <QSet>
-#include <QVector>
 
 #include <QtTest>
 
@@ -74,8 +73,8 @@ void TestKwiverVideoSource::init()
   videoReader->open(
     stdString(SEALTK_TEST_DATA_PATH("KwiverVideoSource/list.txt")));
 
-  this->videoSource = make_unique<core::KwiverVideoSource>();
-  this->videoSource->setVideoInput(videoReader);
+  this->videoSource = make_unique<core::KwiverVideoSource>(videoReader);
+  this->videoSource->start();
 }
 
 // ----------------------------------------------------------------------------
@@ -95,38 +94,35 @@ void TestKwiverVideoSource::seek()
     QString{},
   };
 
-  QVector<QImage> seekImages;
-  connect(this->videoSource.get(), &VideoSource::imageReady,
-          [&seekImages](kv::image_container_sptr const& image)
-  {
-    if (image)
-    {
-      seekImages.append(sealtk::core::imageContainerToQImage(image));
-    }
-    else
-    {
-      seekImages.append(QImage{});
-    }
-  });
+  auto requestor = std::make_shared<TestVideoRequestor>();
 
   for (auto t : seekTimes)
   {
-    this->videoSource->seekTime(t);
+    requestor->request(this->videoSource.get(), t);
   }
 
-  QCOMPARE(seekImages.size(), seekFiles.size());
+  auto const& seekFrames = requestor->receivedFrames;
+  QCOMPARE(seekFrames.size(), seekFiles.size());
 
   for (int i = 0; i < seekFiles.size(); i++)
   {
+    auto const& frame = seekFrames[i];
+
     if (!seekFiles[i].isEmpty())
     {
-      QImage expected{sealtk::test::testDataPath(
+      auto const& expected = QImage{sealtk::test::testDataPath(
         "KwiverVideoSource/" + seekFiles[i])};
-      QCOMPARE(seekImages[i], expected);
+      auto const& actual =
+        sealtk::core::imageContainerToQImage(frame.image);
+      QCOMPARE(actual, expected);
+
+      QFileInfo fi{qtString(frame.metaData.imageName())};
+      QCOMPARE(fi.fileName(), seekFiles[i]);
     }
     else
     {
-      QCOMPARE(seekImages[i], QImage{});
+      QCOMPARE(frame.image.get(), nullptr);
+      QVERIFY(frame.metaData.imageName().empty());
     }
   }
 }
@@ -142,14 +138,21 @@ void TestKwiverVideoSource::frames()
     {5000, 5}
   };
 
+  // Busy-loop until the source reports readiness; this is hardly the most
+  // efficient way, but it is the safest
+  while (!this->videoSource->isReady())
+  {
+    QApplication::processEvents();
+  }
+
   QCOMPARE(this->videoSource->frames(), frames);
 }
 
-}
+} // namespace test
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 // ----------------------------------------------------------------------------
 QTEST_MAIN(sealtk::core::test::TestKwiverVideoSource)

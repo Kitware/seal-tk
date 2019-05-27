@@ -10,10 +10,12 @@ sealtk_add_library(sealtk::core_test_common
 
   SOURCES
     TestCommon.cpp
+    TestVideo.cpp
 
   PRIVATE_LINK_LIBRARIES
     qtExtensionsHeaders
     Qt5::Core
+    sealtk::core
     kwiver::vital
     kwiver::vital_algo
   )

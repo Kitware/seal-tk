@@ -21,18 +21,17 @@ namespace sealtk
 namespace core
 {
 
-class VideoController;
 class VideoSource;
 
 class KwiverFileVideoSourceFactoryPrivate;
 
-class SEALTK_CORE_EXPORT KwiverFileVideoSourceFactory :
-  public FileVideoSourceFactory
+class SEALTK_CORE_EXPORT KwiverFileVideoSourceFactory
+  : public FileVideoSourceFactory
 {
   Q_OBJECT
 
 public:
-  explicit KwiverFileVideoSourceFactory(VideoController* parent = nullptr);
+  explicit KwiverFileVideoSourceFactory(QObject* parent = nullptr);
   ~KwiverFileVideoSourceFactory() override;
 
 public slots:
