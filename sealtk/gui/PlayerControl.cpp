@@ -185,22 +185,11 @@ void PlayerControl::setParamsFromVideoController()
 
   if (d->videoController)
   {
-    auto times = d->videoController->times();
-    auto it = times.begin();
-    if (it != times.end())
+    auto const& times = d->videoController->times();
+    if (!times.isEmpty())
     {
-      kwiver::vital::timestamp::time_t min = *it, max = *it;
-      while (++it != times.end())
-      {
-        if (*it < min)
-        {
-          min = *it;
-        }
-        if (*it >max)
-        {
-          max = *it;
-        }
-      }
+      auto const min = times.begin().key();
+      auto const max = (--times.end()).key();
 
       this->setMin(min);
       this->setMax(max);

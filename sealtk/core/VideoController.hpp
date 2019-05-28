@@ -6,13 +6,11 @@
 #define sealtk_core_VideoController_hpp
 
 #include <sealtk/core/Export.h>
+#include <sealtk/core/TimeMap.hpp>
 
 #include <qtGlobal.h>
 
 #include <QObject>
-#include <QSet>
-
-#include <vital/types/timestamp.h>
 
 #include <memory>
 
@@ -43,12 +41,13 @@ public:
 
   VideoDistributor* distributor(VideoSource* videoSource) const;
 
-  QSet<time_t> times() const;
+  TimeMap<std::nullptr_t> times();
 
   time_t time() const;
 
 signals:
   void videoSourcesChanged();
+  void timesChanged();
   void timeSelected(time_t time, qint64 requestId);
 
 public slots:

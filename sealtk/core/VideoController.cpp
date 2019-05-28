@@ -10,8 +10,6 @@
 #include <sealtk/core/VideoRequestor.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
-#include <QSet>
-
 namespace sealtk
 {
 
@@ -22,10 +20,16 @@ namespace core
 class VideoControllerPrivate
 {
 public:
+  void updateTimes();
+
   using time_t = kwiver::vital::timestamp::time_t;
 
   QHash<VideoSource*, VideoDistributor*> videoSources;
   time_t time = std::numeric_limits<time_t>::min();
+  bool timeIsValid = false;
+
+  TimeMap<std::nullptr_t> times;
+  bool timesDirty = false;
 };
 
 // ----------------------------------------------------------------------------
@@ -76,6 +80,22 @@ VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
     return existingDistributor;
   }
 
+  connect(videoSource, &VideoSource::framesChanged, this,
+          [this, d]{
+            d->timesDirty = true;
+
+            if (!d->timeIsValid)
+            {
+              d->updateTimes();
+              if (!d->times.isEmpty())
+              {
+                this->seek(d->times.begin().key());
+              }
+            }
+
+            emit this->timesChanged();
+          });
+
   connect(videoSource, &QObject::destroyed, this,
           [this, videoSource]{
             this->removeVideoSource(videoSource);
@@ -95,18 +115,13 @@ VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
   connect(this, &VideoController::timeSelected,
           videoSource, fetch);
 
-  if (first)
-  {
-    auto const& frames = videoSource->frames();
-    if (!frames.empty())
-    {
-      this->seek(frames.begin().key());
-    }
-  }
-  else
+  d->timesDirty = true;
+  if (!first && d->timeIsValid)
   {
     fetch(d->time, -1);
   }
+
+  videoSource->start();
 
   emit this->videoSourcesChanged();
 
@@ -117,27 +132,32 @@ VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
 void VideoController::removeVideoSource(VideoSource* videoSource)
 {
   QTE_D();
+
   if (auto* const distributor = d->videoSources.take(videoSource))
   {
+    disconnect(videoSource, nullptr, this, nullptr);
     disconnect(this, nullptr, videoSource, nullptr);
     delete distributor;
 
+    d->timesDirty = true;
+
     emit this->videoSourcesChanged();
+    emit this->timesChanged();
+
+    if (d->videoSources.isEmpty())
+    {
+      d->timeIsValid = false;
+    }
   }
 }
 
 // ----------------------------------------------------------------------------
-QSet<kwiver::vital::timestamp::time_t> VideoController::times() const
+TimeMap<std::nullptr_t> VideoController::times()
 {
   QTE_D();
-  QSet<time_t> result;
 
-  for (auto const& vsItem : qtEnumerate(d->videoSources))
-  {
-    result.unite(vsItem.key()->frames().keySet());
-  }
-
-  return result;
+  d->updateTimes();
+  return d->times;
 }
 
 // ----------------------------------------------------------------------------
@@ -151,9 +171,11 @@ kwiver::vital::timestamp::time_t VideoController::time() const
 void VideoController::seek(time_t time, qint64 requestId)
 {
   QTE_D();
-  if (time != d->time)
+
+  if (!d->timeIsValid || time != d->time)
   {
     d->time = time;
+    d->timeIsValid = true;
     emit this->timeSelected(time, requestId);
   }
 }
@@ -162,20 +184,13 @@ void VideoController::seek(time_t time, qint64 requestId)
 void VideoController::seekNearest(time_t time, qint64 requestId)
 {
   QTE_D();
-  TimeMap<void*> times;
-  for (auto t : this->times())
+
+  d->updateTimes();
+
+  auto it = d->times.find(time, SeekNearest);
+  if (it != d->times.end())
   {
-    times[t] = nullptr;
-  }
-  auto it = times.find(time, SeekNearest);
-  if (it != times.end())
-  {
-    time = it.key();
-  }
-  if (time != d->time)
-  {
-    d->time = time;
-    emit this->timeSelected(time, requestId);
+    this->seek(it.key(), requestId);
   }
 }
 
@@ -183,20 +198,13 @@ void VideoController::seekNearest(time_t time, qint64 requestId)
 void VideoController::previousFrame(qint64 requestId)
 {
   QTE_D();
-  TimeMap<void*> times;
-  for (auto t : this->times())
+
+  d->updateTimes();
+
+  auto const& it = d->times.find(d->time, SeekPrevious);
+  if (it != d->times.end())
   {
-    times[t] = nullptr;
-  }
-  auto it = times.find(d->time, SeekPrevious);
-  if (it != times.end())
-  {
-    auto time = it.key();
-    if (time != d->time)
-    {
-      d->time = time;
-      emit this->timeSelected(time, requestId);
-    }
+    this->seek(it.key(), requestId);
   }
 }
 
@@ -204,23 +212,30 @@ void VideoController::previousFrame(qint64 requestId)
 void VideoController::nextFrame(qint64 requestId)
 {
   QTE_D();
-  TimeMap<void*> times;
-  for (auto t : this->times())
+
+  d->updateTimes();
+
+  auto const& it = d->times.find(d->time, SeekNext);
+  if (it != d->times.end())
   {
-    times[t] = nullptr;
+    this->seek(it.key(), requestId);
   }
-  auto it = times.find(d->time, SeekNext);
-  if (it != times.end())
+}
+
+// ----------------------------------------------------------------------------
+void VideoControllerPrivate::updateTimes()
+{
+  if (this->timesDirty)
   {
-    auto time = it.key();
-    if (time != d->time)
+    this->times.clear();
+    for (auto const& vsItem : qtEnumerate(this->videoSources))
     {
-      d->time = time;
-      emit this->timeSelected(time, requestId);
+      this->times.unite(vsItem.key()->frames().keyMap());
     }
+    this->timesDirty = false;
   }
 }
 
-}
+} // namespace core
 
-}
+} // namespace sealtk

@@ -289,7 +289,7 @@ void TestVideoController::times()
     }
   }
 
-  QCOMPARE(this->videoController->times(), times);
+  QCOMPARE(this->videoController->times().keySet(), times);
 }
 
 } // namespace test
