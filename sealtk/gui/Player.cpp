@@ -377,7 +377,8 @@ void Player::mouseReleaseEvent(QMouseEvent* event)
 //-----------------------------------------------------------------------------
 void Player::wheelEvent(QWheelEvent* event)
 {
-  this->setZoom(this->zoom() * std::pow(1.001f, event->angleDelta().y()));
+  auto const delta = std::pow(1.001, event->angleDelta().y());
+  this->setZoom(this->zoom() * static_cast<float>(delta));
 }
 
 //-----------------------------------------------------------------------------
@@ -399,7 +400,8 @@ void PlayerPrivate::createTexture()
 
     sealtk::core::imageToTexture(this->imageTexture, this->image);
 
-    float w = this->image->width(), h = this->image->height();
+    auto const w = static_cast<float>(this->image->width());
+    auto const h = static_cast<float>(this->image->height());
     QVector<VertexData> imageVertexData{
       {{w, 0.0f}, {1.0f, 0.0f}},
       {{0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -492,12 +494,12 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
         {maxX, maxY},
         {maxX, minY},
       };
+      auto const bufSize =
+        detectedObjectVertexData.size() * static_cast<int>(sizeof(VertexData));
       auto buf = make_unique<QOpenGLBuffer>(QOpenGLBuffer::VertexBuffer);
       buf->create();
       buf->bind();
-      buf->allocate(
-        detectedObjectVertexData.data(), detectedObjectVertexData.size() *
-          sizeof(VertexData));
+      buf->allocate(detectedObjectVertexData.data(), bufSize);
       this->detectedObjectVertexBuffers.push_back(std::move(buf));
     }
   }
