@@ -63,12 +63,89 @@ enum SeekMode
   SeekPrevious
 };
 
-namespace detail
+// ============================================================================
+template <typename Value>
+class TimeMap : public QMap<kwiver::vital::timestamp::time_t, Value>
 {
+  using Key = kwiver::vital::timestamp::time_t;
 
-template<typename Map, typename Iterator>
-Iterator find(Map& map, kwiver::vital::timestamp::time_t pos,
-              SeekMode direction)
+public:
+  using typename QMap<Key, Value>::iterator;
+  using typename QMap<Key, Value>::const_iterator;
+
+  TimeMap() = default;
+
+  TimeMap(TimeMap&&) = default;
+  TimeMap(TimeMap const&) = default;
+
+  using QMap<Key, Value>::QMap;
+
+  ~TimeMap() = default;
+
+  TimeMap& operator=(TimeMap&&) = default;
+  TimeMap& operator=(TimeMap const&) = default;
+
+  QSet<Key> keySet() const;
+
+  using QMap<Key, Value>::find;
+  using QMap<Key, Value>::constFind;
+
+  iterator find(Key pos, SeekMode direction);
+  const_iterator find(Key pos, SeekMode direction) const;
+  const_iterator constFind(Key pos, SeekMode direction) const;
+
+  using QMap<Key, Value>::insert;
+
+  void insert(TimeMap<Value> const& other);
+
+private:
+  template <typename Iterator, typename Map>
+  static Iterator find(Map& map, Key pos, SeekMode direction);
+};
+
+// ----------------------------------------------------------------------------
+template <typename Value>
+QSet<kwiver::vital::timestamp::time_t> TimeMap<Value>::keySet() const
+{
+  auto out = QSet<Key>{};
+  out.reserve(this->size());
+
+  for (auto const& item : qtEnumerate(*this))
+  {
+    out.insert(item.key());
+  }
+
+  return out;
+}
+
+// ----------------------------------------------------------------------------
+template <typename Value>
+typename TimeMap<Value>::iterator TimeMap<Value>::find(
+  Key pos, SeekMode direction)
+{
+  return TimeMap::find<iterator>(*this, pos, direction);
+}
+
+// ----------------------------------------------------------------------------
+template <typename Value>
+typename TimeMap<Value>::const_iterator TimeMap<Value>::find(
+  Key pos, SeekMode direction) const
+{
+  return TimeMap::find<const_iterator>(*this, pos, direction);
+}
+
+// ----------------------------------------------------------------------------
+template <typename Value>
+typename TimeMap<Value>::const_iterator TimeMap<Value>::constFind(
+  Key pos, SeekMode direction) const
+{
+  return TimeMap::find<const_iterator>(*this, pos, direction);
+}
+
+// ----------------------------------------------------------------------------
+template <typename Value>
+template <typename Iterator, typename Map>
+Iterator TimeMap<Value>::find(Map& map, Key pos, SeekMode direction)
 {
   // Check for empty map
   if (map.count() < 1)
@@ -146,88 +223,8 @@ Iterator find(Map& map, kwiver::vital::timestamp::time_t pos,
   }
 }
 
-}
-
-template<typename Value>
-class TimeMap : public QMap<kwiver::vital::timestamp::time_t, Value>
-{
-public:
-  typedef typename
-    QMap<kwiver::vital::timestamp::time_t, Value>::iterator iterator;
-  typedef typename
-    QMap<kwiver::vital::timestamp::time_t, Value>::const_iterator
-      const_iterator;
-
-  TimeMap()
-  {
-  }
-
-  TimeMap(TimeMap<Value> const& other)
-    : QMap<kwiver::vital::timestamp::time_t, Value>{other}
-  {
-  }
-
-  TimeMap(std::initializer_list<
-    std::pair<kwiver::vital::timestamp::time_t, Value>> list)
-    : QMap<kwiver::vital::timestamp::time_t, Value>{list}
-  {
-  }
-
-  ~TimeMap()
-  {
-  }
-
-  QSet<kwiver::vital::timestamp::time_t> keySet() const
-  {
-    auto out = QSet<kwiver::vital::timestamp::time_t>{};
-    out.reserve(this->size());
-
-    for (auto const& item : qtEnumerate(*this))
-    {
-      out.insert(item.key());
-    }
-
-    return out;
-  }
-
-  using QMap<kwiver::vital::timestamp::time_t, Value>::find;
-  using QMap<kwiver::vital::timestamp::time_t, Value>::constFind;
-
-  iterator find(kwiver::vital::timestamp::time_t pos, SeekMode direction);
-  const_iterator find(kwiver::vital::timestamp::time_t pos,
-                      SeekMode direction) const;
-  const_iterator constFind(kwiver::vital::timestamp::time_t pos,
-                           SeekMode direction) const;
-
-  using QMap<kwiver::vital::timestamp::time_t, Value>::insert;
-
-  void insert(TimeMap<Value> const& other);
-};
-
-template<typename Value>
-typename TimeMap<Value>::const_iterator TimeMap<Value>::constFind(
-  kwiver::vital::timestamp::time_t pos, SeekMode direction) const
-{
-  return detail::find<TimeMap<Value> const, const_iterator>(*this, pos,
-                                                            direction);
-}
-
-template<typename Value>
-typename TimeMap<Value>::const_iterator TimeMap<Value>::find(
-  kwiver::vital::timestamp::time_t pos, SeekMode direction) const
-{
-  return detail::find<TimeMap<Value> const, const_iterator>(*this, pos,
-                                                            direction);
-}
-
-template<typename Value>
-typename TimeMap<Value>::iterator TimeMap<Value>::find(
-  kwiver::vital::timestamp::time_t pos, SeekMode direction)
-{
-  return detail::find<TimeMap<Value>, iterator>(*this, pos, direction);
-}
-
-template<typename Value>
+// ----------------------------------------------------------------------------
+template <typename Value>
 void TimeMap<Value>::insert(TimeMap<Value> const& other)
 {
   const_iterator iter, end = other.constEnd();
@@ -237,8 +234,8 @@ void TimeMap<Value>::insert(TimeMap<Value> const& other)
   }
 }
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif
