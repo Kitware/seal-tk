@@ -22,7 +22,7 @@ namespace sealtk
 namespace core
 {
 
-class VideoRequestor;
+class VideoDistributor;
 class VideoSource;
 
 class VideoControllerPrivate;
@@ -38,9 +38,10 @@ public:
   ~VideoController() override;
 
   QSet<VideoSource*> videoSources() const;
-  void addVideoSource(VideoSource* videoSource,
-                      std::shared_ptr<VideoRequestor> const& requestor);
+  VideoDistributor* addVideoSource(VideoSource* videoSource);
   void removeVideoSource(VideoSource* videoSource);
+
+  VideoDistributor* distributor(VideoSource* videoSource) const;
 
   QSet<time_t> times() const;
 

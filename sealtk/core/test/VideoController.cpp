@@ -5,19 +5,19 @@
 #include <sealtk/test/TestCore.hpp>
 
 #include <sealtk/core/test/TestCommon.hpp>
-#include <sealtk/core/test/TestVideo.hpp>
 
 #include <sealtk/core/ImageUtils.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
+#include <sealtk/core/VideoDistributor.hpp>
+#include <sealtk/core/VideoFrame.hpp>
 
 #include <sealtk/util/unique.hpp>
-
-#include <arrows/qt/image_container.h>
 
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
 
+#include <vital/range/indirect.h>
 #include <vital/range/iota.h>
 
 #include <qtStlUtil.h>
@@ -41,40 +41,26 @@ namespace test
 {
 
 // ============================================================================
-class TestVideoControllerRequestor : public TestVideoRequestor
+struct TestVideoSink
 {
-public:
-  void waitForFrame();
+  void waitForFrame(QEventLoop& eventLoop);
 
-protected:
-  void update(VideoRequestInfo const& requestInfo,
-              VideoFrame&& response) override;
-
+  QVector<VideoFrame> receivedFrames;
   bool frameReceived = false;
 };
 
 // ----------------------------------------------------------------------------
-void TestVideoControllerRequestor::waitForFrame()
+void TestVideoSink::waitForFrame(QEventLoop& eventLoop)
 {
   // If we haven't already received a frame since the last call...
-  if (!this->frameReceived)
+  while (!this->frameReceived)
   {
     // ...then wait for a response now
-    this->eventLoop.exec();
+    eventLoop.exec();
   }
 
   // Reset flag
   this->frameReceived = false;
-}
-
-// ----------------------------------------------------------------------------
-void TestVideoControllerRequestor::update(
-  VideoRequestInfo const& requestInfo, VideoFrame&& response)
-{
-  // Note that a frame has been received (and next call to waitForFrame should
-  // do nothing) and pass along to parent
-  this->frameReceived = true;
-  TestVideoRequestor::update(requestInfo, std::move(response));
 }
 
 // ============================================================================
@@ -91,15 +77,14 @@ private slots:
   void cleanup();
 
 private:
-  using VideoRequestorPtr = std::shared_ptr<TestVideoControllerRequestor>;
-
   kv::config_block_sptr config;
   std::unique_ptr<VideoController> videoController;
-  std::shared_ptr<VideoRequestor> videoRequestor;
-  std::vector<std::pair<VideoSource*, VideoRequestorPtr>> videoSources;
+  QHash<VideoSource*, TestVideoSink> videoSinks;
+  std::vector<VideoSource*> videoSources;
+  QEventLoop eventLoop;
 
   void createVideoSource(QString const& path);
-  void waitForFrames(VideoSource* excludedSource = nullptr) const;
+  void waitForFrames(VideoSource* excludedSource = nullptr);
   void compareFrames(std::array<QVector<QString>, 3> const& seekFiles) const;
 };
 
@@ -114,21 +99,34 @@ void TestVideoController::createVideoSource(QString const& path)
 
   vi->open(stdString(path));
   auto* const vs = new KwiverVideoSource{vi, this->videoController.get()};
-  auto requestor = std::make_shared<TestVideoControllerRequestor>();
-  this->videoController->addVideoSource(vs, requestor);
-  this->videoSources.emplace_back(vs, std::move(requestor));
+  auto* const vd = this->videoController->addVideoSource(vs);
 
+  auto& sink = this->videoSinks[vs];
+  connect(vd, &VideoDistributor::requestDeclined, this,
+          [&sink, this]{
+            sink.receivedFrames.append({nullptr, VideoMetaData{}});
+            sink.frameReceived = true;
+            this->eventLoop.quit();
+          });
+  connect(vd, &VideoDistributor::frameReady, this,
+          [&sink, this](VideoFrame const& frame){
+            sink.receivedFrames.append(frame);
+            sink.frameReceived = true;
+            this->eventLoop.quit();
+          });
+
+  this->videoSources.push_back(vs);
   vs->start();
 }
 
 // ----------------------------------------------------------------------------
-void TestVideoController::waitForFrames(VideoSource* excludedSource) const
+void TestVideoController::waitForFrames(VideoSource* excludedSource)
 {
-  for (auto& source : this->videoSources)
+  for (auto iter : this->videoSinks | kvr::indirect)
   {
-    if (source.first != excludedSource) // for removeVideoSource test
+    if (iter.key() != excludedSource) // for removeVideoSource test
     {
-      source.second->waitForFrame();
+      iter->waitForFrame(this->eventLoop);
     }
   }
 }
@@ -141,8 +139,9 @@ void TestVideoController::compareFrames(
 
   for (auto const i : kvr::iota(this->videoSources.size()))
   {
-    auto const& requestor = this->videoSources[i].second;
-    auto const& seekFrames = requestor->receivedFrames;
+    auto* const source = this->videoSources[i];
+    auto const& sink = this->videoSinks[source];
+    auto const& seekFrames = sink.receivedFrames;
     QCOMPARE(seekFrames.size(), seekFiles[i].size());
 
     for (auto const j : kvr::iota(seekFiles[i].size()))
@@ -198,6 +197,7 @@ void TestVideoController::init()
 // ----------------------------------------------------------------------------
 void TestVideoController::cleanup()
 {
+  this->videoSinks.clear();
   this->videoSources.clear();
   this->videoController.reset();
 }
@@ -260,7 +260,7 @@ void TestVideoController::removeVideoSource()
     this->waitForFrames();
   }
 
-  auto* const testSource = this->videoSources[2].first;
+  auto* const testSource = this->videoSources[2];
   this->videoController->removeVideoSource(testSource);
 
   for (int i = 4; i < seekTimes.size(); i++)
@@ -283,7 +283,7 @@ void TestVideoController::times()
   // efficient way, but it is the safest
   for (auto& source : this->videoSources)
   {
-    while (!source.first->isReady())
+    while (!source->isReady())
     {
       QApplication::processEvents();
     }

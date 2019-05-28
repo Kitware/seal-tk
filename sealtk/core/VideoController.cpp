@@ -5,6 +5,7 @@
 #include <sealtk/core/VideoController.hpp>
 
 #include <sealtk/core/TimeMap.hpp>
+#include <sealtk/core/VideoDistributor.hpp>
 #include <sealtk/core/VideoRequest.hpp>
 #include <sealtk/core/VideoRequestor.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -23,7 +24,7 @@ class VideoControllerPrivate
 public:
   using time_t = kwiver::vital::timestamp::time_t;
 
-  QHash<VideoSource*, std::shared_ptr<VideoRequestor>> videoSources;
+  QHash<VideoSource*, VideoDistributor*> videoSources;
   time_t time = std::numeric_limits<time_t>::min();
 };
 
@@ -59,60 +60,68 @@ QSet<VideoSource*> VideoController::videoSources() const
 }
 
 // ----------------------------------------------------------------------------
-void VideoController::addVideoSource(
-  VideoSource* videoSource, std::shared_ptr<VideoRequestor> const& requestor)
+VideoDistributor* VideoController::distributor(VideoSource* videoSource) const
+{
+  QTE_D();
+  return d->videoSources.value(videoSource);
+}
+
+// ----------------------------------------------------------------------------
+VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
 {
   QTE_D();
 
-  if (!d->videoSources.contains(videoSource))
+  if (auto* const existingDistributor = d->videoSources.value(videoSource))
   {
-    connect(videoSource, &QObject::destroyed, this,
-            [this, videoSource]{
-              this->removeVideoSource(videoSource);
-            });
-
-    auto fetch = [d, videoSource](time_t t, qint64 i){
-      auto requestor = d->videoSources.value(videoSource);
-      Q_ASSERT(requestor);
-
-      VideoRequest request;
-      request.requestId = i;
-      request.requestor = std::move(requestor);
-      request.time = t;
-      request.mode = SeekExact;
-
-      videoSource->requestFrame(std::move(request));
-    };
-
-    auto const first = d->videoSources.isEmpty();
-    d->videoSources.insert(videoSource, requestor);
-    connect(this, &VideoController::timeSelected,
-            videoSource, fetch);
-
-    if (first)
-    {
-      auto const& frames = videoSource->frames();
-      if (!frames.empty())
-      {
-        this->seek(frames.begin().key());
-      }
-    }
-    else
-    {
-      fetch(d->time, -1);
-    }
-
-    emit this->videoSourcesChanged();
+    return existingDistributor;
   }
+
+  connect(videoSource, &QObject::destroyed, this,
+          [this, videoSource]{
+            this->removeVideoSource(videoSource);
+          });
+
+  auto fetch = [d, videoSource](time_t t, qint64 i){
+    auto distributor = d->videoSources.value(videoSource);
+    Q_ASSERT(distributor);
+
+    distributor->requestFrame(videoSource, t, SeekExact, i);
+  };
+
+  auto* const newDistributor = new VideoDistributor{this};
+
+  auto const first = d->videoSources.isEmpty();
+  d->videoSources.insert(videoSource, newDistributor);
+  connect(this, &VideoController::timeSelected,
+          videoSource, fetch);
+
+  if (first)
+  {
+    auto const& frames = videoSource->frames();
+    if (!frames.empty())
+    {
+      this->seek(frames.begin().key());
+    }
+  }
+  else
+  {
+    fetch(d->time, -1);
+  }
+
+  emit this->videoSourcesChanged();
+
+  return newDistributor;
 }
 
 // ----------------------------------------------------------------------------
 void VideoController::removeVideoSource(VideoSource* videoSource)
 {
   QTE_D();
-  if (d->videoSources.remove(videoSource))
+  if (auto* const distributor = d->videoSources.take(videoSource))
   {
     disconnect(this, nullptr, videoSource, nullptr);
+    delete distributor;
+
     emit this->videoSourcesChanged();
   }
 }
