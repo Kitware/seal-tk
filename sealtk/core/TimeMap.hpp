@@ -78,10 +78,7 @@ public:
   TimeMap(TimeMap&&) = default;
   TimeMap(TimeMap const&) = default;
 
-  TimeMap(std::initializer_list<std::pair<Key, Value>> list)
-    : QMap<Key, Value>{list}
-  {
-  }
+  using QMap<Key, Value>::QMap;
 
   ~TimeMap() = default;
 
