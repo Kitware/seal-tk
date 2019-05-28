@@ -38,11 +38,11 @@ namespace gui
 {
 
 //=============================================================================
-class WindowData
+struct WindowData
 {
-public:
-  sealtk::gui::SplitterWindow* window;
-  sealtk::noaa::gui::Player* player;
+  sealtk::core::VideoSource* videoSource = nullptr;
+  sealtk::gui::SplitterWindow* window = nullptr;
+  sealtk::noaa::gui::Player* player = nullptr;
 };
 
 //=============================================================================
@@ -64,8 +64,6 @@ public:
 
   WindowData eoWindow;
   WindowData irWindow;
-
-  bool firstWindow = true;
 
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
@@ -90,11 +88,14 @@ Window::Window(QWidget* parent)
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
-  connect(
-    d->ui.control, &sealtk::gui::PlayerControl::previousFrameTriggered,
-    d->videoController.get(), &sealtk::core::VideoController::previousFrame);
+  connect(d->ui.control, &sealtk::gui::PlayerControl::previousFrameTriggered,
+          this, [d]{
+            d->videoController->previousFrame();
+          });
   connect(d->ui.control, &sealtk::gui::PlayerControl::nextFrameTriggered,
-          d->videoController.get(), &sealtk::core::VideoController::nextFrame);
+          this, [d]{
+            d->videoController->nextFrame();
+          });
 
   d->registerVideoSourceFactory(
     "Image List File...",
@@ -175,34 +176,15 @@ void WindowPrivate::registerVideoSourceFactory(
     [this, q](void* handle, sealtk::core::VideoSource* videoSource)
   {
     auto* data = static_cast<WindowData*>(handle);
-    auto* oldVideoSource = data->player->videoSource();
-    data->player->setVideoSource(videoSource);
-    if (oldVideoSource)
-    {
-      delete oldVideoSource;
-    }
 
-    if (this->firstWindow)
-    {
-      this->firstWindow = false;
-      auto times = this->videoController->times();
-      auto it = times.begin();
-      if (it != times.end())
-      {
-        auto min = *it;
-        while (++it != times.end())
-        {
-          if (*it < min)
-          {
-            min = *it;
-          }
-        }
+    // If this view had a video source previously, delete it
+    delete data->videoSource;
 
-        this->videoController->seek(min);
-      }
-    }
-
-    videoSource->invalidate();
+    // Add the new video source
+    data->videoSource = videoSource;
+    auto* const videoDistributor =
+      this->videoController->addVideoSource(videoSource);
+    data->player->setVideoSource(videoDistributor);
   });
 
   auto* fileFactory =
@@ -211,23 +193,22 @@ void WindowPrivate::registerVideoSourceFactory(
   {
     QObject::connect(
       fileFactory, &sealtk::core::FileVideoSourceFactory::fileRequested,
-      [q, fileFactory](void* handle)
-    {
-      QString filename;
-      if (fileFactory->expectsDirectory())
-      {
-        filename = QFileDialog::getExistingDirectory(q);
-      }
-      else
-      {
-        filename = QFileDialog::getOpenFileName(q);
-      }
+      [q, fileFactory](void* handle){
+        QString filename;
+        if (fileFactory->expectsDirectory())
+        {
+          filename = QFileDialog::getExistingDirectory(q);
+        }
+        else
+        {
+          filename = QFileDialog::getOpenFileName(q);
+        }
 
-      if (!filename.isNull())
-      {
-        fileFactory->loadFile(handle, filename);
-      }
-    });
+        if (!filename.isNull())
+        {
+          fileFactory->loadFile(handle, filename);
+        }
+      });
   }
 }
 
@@ -271,7 +252,9 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title)
         kwiver::vital::algo::detected_object_set_input
           ::set_nested_algo_configuration("input", config, input);
         input->open(stdString(filename));
+        /* TODO
         kwiverVideoSource->setDetectedObjectSetInput(input);
+        */
       }
     }
   });

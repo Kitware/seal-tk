@@ -78,7 +78,7 @@ public:
   QPoint dragStart;
   bool dragging = false;
 
-  core::VideoSource* videoSource = nullptr;
+  core::VideoDistributor* videoSource = nullptr;
 };
 
 //-----------------------------------------------------------------------------
@@ -118,7 +118,7 @@ QPointF Player::center() const
 }
 
 //-----------------------------------------------------------------------------
-core::VideoSource* Player::videoSource() const
+core::VideoDistributor* Player::videoSource() const
 {
   QTE_D();
   return d->videoSource;
@@ -205,7 +205,7 @@ void Player::setCenter(QPointF center)
 }
 
 //-----------------------------------------------------------------------------
-void Player::setVideoSource(core::VideoSource* videoSource)
+void Player::setVideoSource(core::VideoDistributor* videoSource)
 {
   QTE_D();
 
@@ -220,13 +220,15 @@ void Player::setVideoSource(core::VideoSource* videoSource)
 
     if (d->videoSource)
     {
-      connect(videoSource, &core::VideoSource::imageReady,
-              this, &Player::setImage);
+      connect(videoSource, &core::VideoDistributor::frameReady, this,
+              [this](core::VideoFrame const& frame){
+                this->setImage(frame.image);
+              });
+      /* TODO
       connect(videoSource, &core::VideoSource::detectionsReady,
               this, &Player::setDetectedObjectSet);
+      */
     }
-
-    emit this->videoSourceChanged(d->videoSource);
   }
 }
 

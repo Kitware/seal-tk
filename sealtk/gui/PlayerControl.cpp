@@ -78,12 +78,8 @@ void PlayerControl::setVideoController(core::VideoController* videoController)
 
   if (d->videoController)
   {
-    disconnect(d->videoController, &core::VideoController::videoSourcesChanged,
-               this, &PlayerControl::setParamsFromVideoController);
-    disconnect(d->videoController, &core::VideoController::timeSelected,
-               this, &PlayerControl::setTime);
-    disconnect(this, &PlayerControl::timeSet,
-               d->videoController, &core::VideoController::seekNearest);
+    disconnect(d->videoController, nullptr, this, nullptr);
+    disconnect(this, nullptr, d->videoController, nullptr);
 
     d->videoController = nullptr;
   }
@@ -96,8 +92,10 @@ void PlayerControl::setVideoController(core::VideoController* videoController)
             this, &PlayerControl::setParamsFromVideoController);
     connect(d->videoController, &core::VideoController::timeSelected,
             this, &PlayerControl::setTime);
-    connect(this, &PlayerControl::timeSet,
-            d->videoController, &core::VideoController::seekNearest);
+    connect(this, &PlayerControl::timeSet, d->videoController,
+            [d](kwiver::vital::timestamp::time_t time){
+              d->videoController->seekNearest(time);
+            });
   }
 
   this->setParamsFromVideoController();

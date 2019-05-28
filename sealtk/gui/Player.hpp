@@ -7,7 +7,7 @@
 
 #include <sealtk/gui/Export.h>
 
-#include <sealtk/core/VideoSource.hpp>
+#include <sealtk/core/VideoDistributor.hpp>
 
 #include <QMatrix3x3>
 #include <QOpenGLWidget>
@@ -40,12 +40,11 @@ public:
 
   float zoom() const;
   QPointF center() const;
-  core::VideoSource* videoSource() const;
+  core::VideoDistributor* videoSource() const;
 
 signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
-  void videoSourceChanged(core::VideoSource* videoSource) const;
 
 public slots:
   void setImage(kwiver::vital::image_container_sptr const& image);
@@ -54,7 +53,7 @@ public slots:
   void setHomography(QMatrix3x3 const& homography);
   void setZoom(float zoom);
   void setCenter(QPointF center);
-  void setVideoSource(core::VideoSource* videoSource);
+  void setVideoSource(core::VideoDistributor* videoSource);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)

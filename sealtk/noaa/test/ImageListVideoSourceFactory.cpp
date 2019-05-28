@@ -4,17 +4,14 @@
 
 #include <sealtk/test/TestCore.hpp>
 
+#include <sealtk/core/test/TestVideo.hpp>
+
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
 #include <sealtk/core/DateUtils.hpp>
 #include <sealtk/core/ImageUtils.hpp>
-#include <sealtk/core/VideoController.hpp>
-#include <sealtk/core/VideoMetaData.hpp>
-#include <sealtk/core/VideoSource.hpp>
 
 #include <arrows/qt/image_container.h>
-
-#include <sealtk/util/unique.hpp>
 
 #include <vital/plugin_loader/plugin_manager.h>
 
@@ -48,10 +45,8 @@ private slots:
   void initTestCase();
   void init();
   void loadVideoSource();
-  void cleanup();
 
 private:
-  std::unique_ptr<sealtk::core::VideoController> videoController;
   sealtk::noaa::core::ImageListVideoSourceFactory* videoSourceFactory;
 };
 
@@ -64,15 +59,8 @@ void TestImageListVideoSourceFactory::initTestCase()
 // ----------------------------------------------------------------------------
 void TestImageListVideoSourceFactory::init()
 {
-  this->videoController = make_unique<sealtk::core::VideoController>();
   this->videoSourceFactory =
-    new core::ImageListVideoSourceFactory{false, this->videoController.get()};
-}
-
-// ----------------------------------------------------------------------------
-void TestImageListVideoSourceFactory::cleanup()
-{
-  this->videoController.reset();
+    new core::ImageListVideoSourceFactory{false, this};
 }
 
 // ----------------------------------------------------------------------------
@@ -120,53 +108,45 @@ void TestImageListVideoSourceFactory::loadVideoSource()
           &sealtk::core::VideoSourceFactory::videoSourceLoaded,
           [&videoSource](void* handle, sealtk::core::VideoSource* vs)
   {
+    Q_UNUSED(handle);
     videoSource = vs;
   });
   this->videoSourceFactory->loadVideoSource(nullptr);
 
-  QVector<QPair<QImage, sealtk::core::VideoMetaData>> seekFrames;
-
-  connect(videoSource, &sealtk::core::VideoSource::imageReady,
-          [&seekFrames](kv::image_container_sptr const& image,
-                        sealtk::core::VideoMetaData const& metaData)
-  {
-    if (image)
-    {
-      seekFrames.append(
-        {sealtk::core::imageContainerToQImage(image), metaData});
-    }
-    else
-    {
-      seekFrames.append({QImage{}, sealtk::core::VideoMetaData{}});
-    }
-  });
+  auto requestor = std::make_shared<sealtk::core::test::TestVideoRequestor>();
 
   for (auto t : seekTimes)
   {
-    videoSource->seekTime(t);
+    requestor->request(videoSource, t);
   }
 
+  auto const& seekFrames = requestor->receivedFrames;
   QCOMPARE(seekFrames.size(), seekFiles.size());
 
   for (auto const i : kvr::iota(seekFrames.size()))
   {
+    auto const& frame = seekFrames[i];
+
     if (!seekFiles[i].isNull())
     {
-      QImage expected{sealtk::test::testDataPath(
+      auto const& expected = QImage{sealtk::test::testDataPath(
         "ImageListVideoSourceFactory/" + seekFiles[i])};
-      QCOMPARE(seekFrames[i].first, expected);
+      auto const& actual =
+        sealtk::core::imageContainerToQImage(frame.image);
 
-      QFileInfo fi{qtString(seekFrames[i].second.imageName())};
+      QCOMPARE(actual, expected);
+
+      QFileInfo fi{qtString(frame.metaData.imageName())};
       QCOMPARE(fi.fileName(), seekFiles[i]);
 
-      QCOMPARE(seekFrames[i].second.timeStamp().get_time_usec(),
+      QCOMPARE(frame.metaData.timeStamp().get_time_usec(),
                seekTimes[i]);
     }
     else
     {
-      QCOMPARE(seekFrames[i].first, QImage{});
-      QVERIFY(seekFrames[i].second.imageName().empty());
-      QVERIFY(!seekFrames[i].second.timeStamp().is_valid());
+      QCOMPARE(frame.image.get(), nullptr);
+      QVERIFY(frame.metaData.imageName().empty());
+      QVERIFY(!frame.metaData.timeStamp().is_valid());
     }
   }
 }
