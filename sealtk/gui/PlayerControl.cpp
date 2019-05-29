@@ -88,13 +88,13 @@ void PlayerControl::setVideoController(core::VideoController* videoController)
   {
     d->videoController = videoController;
 
-    connect(d->videoController, &core::VideoController::videoSourcesChanged,
+    connect(d->videoController, &core::VideoController::timesChanged,
             this, &PlayerControl::setParamsFromVideoController);
     connect(d->videoController, &core::VideoController::timeSelected,
             this, &PlayerControl::setTime);
     connect(this, &PlayerControl::timeSet, d->videoController,
             [d](kwiver::vital::timestamp::time_t time){
-              d->videoController->seekNearest(time);
+              d->videoController->seekNearest(time, 0);
             });
   }
 

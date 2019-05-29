@@ -90,11 +90,11 @@ Window::Window(QWidget* parent)
           this, &Window::showAbout);
   connect(d->ui.control, &sealtk::gui::PlayerControl::previousFrameTriggered,
           this, [d]{
-            d->videoController->previousFrame();
+            d->videoController->previousFrame(0);
           });
   connect(d->ui.control, &sealtk::gui::PlayerControl::nextFrameTriggered,
           this, [d]{
-            d->videoController->nextFrame();
+            d->videoController->nextFrame(0);
           });
 
   d->registerVideoSourceFactory(

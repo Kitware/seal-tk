@@ -136,6 +136,7 @@ void Player::setImage(kwiver::vital::image_container_sptr const& image)
   this->doneCurrent();
 
   d->updateViewHomography();
+  this->update();
 }
 
 //-----------------------------------------------------------------------------
@@ -223,6 +224,10 @@ void Player::setVideoSource(core::VideoDistributor* videoSource)
       connect(videoSource, &core::VideoDistributor::frameReady, this,
               [this](core::VideoFrame const& frame){
                 this->setImage(frame.image);
+              });
+      connect(videoSource, &core::VideoDistributor::requestDeclined, this,
+              [this](){
+                this->setImage(nullptr);
               });
       /* TODO
       connect(videoSource, &core::VideoSource::detectionsReady,
