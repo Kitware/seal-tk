@@ -9,6 +9,8 @@
 #include <sealtk/core/VideoRequestor.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
+#include <QPointer>
+
 namespace sealtk
 {
 
@@ -19,11 +21,14 @@ namespace core
 class VideoDistributorRequestor : public VideoRequestor
 {
 public:
-  VideoDistributorRequestor(VideoDistributorPrivate* q) : q_ptr{q} {}
+  VideoDistributorRequestor(VideoDistributorPrivate* q, QObject* owner)
+    : owner{owner}, q_ptr{q} {}
 
 protected:
   void update(VideoRequestInfo const& requestInfo,
               VideoFrame&& response) override;
+
+  QPointer<QObject> const owner;
 
 private:
   QTE_DECLARE_PUBLIC_PTR(VideoDistributorPrivate);
@@ -77,7 +82,7 @@ void VideoDistributor::requestFrame(
 
 // ----------------------------------------------------------------------------
 VideoDistributorPrivate::VideoDistributorPrivate(VideoDistributor* q)
-  : requestor{std::make_shared<VideoDistributorRequestor>(this)}, q_ptr{q}
+  : requestor{std::make_shared<VideoDistributorRequestor>(this, q)}, q_ptr{q}
 {
 }
 
@@ -101,8 +106,11 @@ void VideoDistributorPrivate::update(
 void VideoDistributorRequestor::update(
   VideoRequestInfo const& requestInfo, VideoFrame&& response)
 {
-  QTE_Q();
-  q->update(requestInfo.requestId, response);
+  if (owner)
+  {
+    QTE_Q();
+    q->update(requestInfo.requestId, response);
+  }
 }
 
 } // namespace core
