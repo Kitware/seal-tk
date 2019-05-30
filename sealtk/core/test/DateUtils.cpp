@@ -28,6 +28,10 @@ private slots:
   void vitalTimeToQDateTime_data();
   void qDateTimeToVitalTime();
   void qDateTimeToVitalTime_data();
+  void dateString();
+  void dateString_data();
+  void timeString();
+  void timeString_data();
 };
 
 // ----------------------------------------------------------------------------
@@ -76,11 +80,63 @@ void TestDateUtils::qDateTimeToVitalTime_data()
     << 1381481842745000l;
 }
 
+// ----------------------------------------------------------------------------
+void TestDateUtils::dateString()
+{
+  QFETCH(QDateTime, input);
+  QFETCH(QString, expected);
+
+  QCOMPARE(core::dateString(input), expected);
 }
 
+// ----------------------------------------------------------------------------
+void TestDateUtils::dateString_data()
+{
+  QTest::addColumn<QDateTime>("input");
+  QTest::addColumn<QString>("expected");
+
+  QTest::newRow("zero")
+    << QDateTime{{1970, 1, 1}, {0, 0, 0}, Qt::UTC}
+    << QStringLiteral("1970-01-01");
+  QTest::newRow("sample1")
+    << QDateTime{{1987, 4, 14}, {16, 23, 47, 289}, Qt::UTC}
+    << QStringLiteral("1987-04-14");
+  QTest::newRow("sample2")
+    << QDateTime{{2013, 10, 11}, {8, 57, 22, 745}, Qt::UTC}
+    << QStringLiteral("2013-10-11");
 }
 
+// ----------------------------------------------------------------------------
+void TestDateUtils::timeString()
+{
+  QFETCH(QDateTime, input);
+  QFETCH(QString, expected);
+
+  QCOMPARE(core::timeString(input), expected);
 }
+
+// ----------------------------------------------------------------------------
+void TestDateUtils::timeString_data()
+{
+  QTest::addColumn<QDateTime>("input");
+  QTest::addColumn<QString>("expected");
+
+  QTest::newRow("zero")
+    << QDateTime{{1970, 1, 1}, {0, 0, 0}, Qt::UTC}
+    << QStringLiteral("00:00:00.000");
+  QTest::newRow("sample1")
+    << QDateTime{{1987, 4, 14}, {16, 23, 47, 289}, Qt::UTC}
+    << QStringLiteral("16:23:47.289");
+  QTest::newRow("sample2")
+    << QDateTime{{2013, 10, 11}, {8, 57, 22, 745}, Qt::UTC}
+    << QStringLiteral("08:57:22.745");
+}
+
+} // namespace test
+
+} // namespace core
+
+} // namespace sealtk
 
 QTEST_MAIN(sealtk::core::test::TestDateUtils)
 #include "DateUtils.moc"
