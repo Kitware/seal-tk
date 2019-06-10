@@ -58,6 +58,13 @@ class SourceFile:
                 self._contents = f.read()
         return self._contents
 
+    def is_trivial_cpp(self):
+        c = self.contents().strip().split('\n')
+        if len(c) == 1 and c[0].startswith('//'):
+            return True
+        else:
+            return False
+
     def is_cpp_source(self):
         return filename_components(self.filename)[0] == "sealtk" and \
             matches(self.filename, r"\.cpp$")
@@ -103,7 +110,8 @@ class SourceFile:
 
     def test_copyright(self):
         if self.is_cpp_source() or self.is_cpp_header():
-            assert matches(self.contents(), copyright_notice_cpp_re)
+            if not self.is_trivial_cpp():
+                assert matches(self.contents(), copyright_notice_cpp_re)
         elif self.is_cmake():
             assert matches(self.contents(), copyright_notice_cmake_re)
         elif self.is_python():

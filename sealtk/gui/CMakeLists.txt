@@ -6,6 +6,8 @@ include(SEALTKUtils)
 
 sealtk_add_library(sealtk::gui
   SOURCES
+    AbstractItemModel.cpp
+    AbstractItemRepresentation.cpp
     Player.cpp
     PlayerControl.cpp
     Resources.cpp
@@ -14,6 +16,8 @@ sealtk_add_library(sealtk::gui
     resources/Resources.qrc
 
   HEADERS
+    AbstractItemModel.hpp
+    AbstractItemRepresentation.hpp
     Player.hpp
     PlayerControl.hpp
     Resources.hpp
@@ -27,3 +31,5 @@ sealtk_add_library(sealtk::gui
 
   EXPORT_HEADER Export.h
   )
+
+add_subdirectory(test)

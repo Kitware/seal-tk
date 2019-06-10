@@ -12,6 +12,7 @@ set(SEALTK_CORE_VERSION_OUT
 sealtk_add_library(sealtk::core
   SOURCES
     AutoLevelsTask.cpp
+    DataModelTypes.cpp
     DateUtils.cpp
     FileVideoSourceFactory.cpp
     ImageUtils.cpp
@@ -28,6 +29,7 @@ sealtk_add_library(sealtk::core
 
   HEADERS
     AutoLevelsTask.hpp
+    DataModelTypes.hpp
     DateUtils.hpp
     FileVideoSourceFactory.hpp
     ImageUtils.hpp
