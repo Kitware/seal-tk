@@ -18,4 +18,5 @@ sealtk_add_test(ImageListVideoSourceFactory
 
   PRIVATE_LINK_LIBRARIES
     sealtk::noaa_core
+    sealtk::core_test_common
   )

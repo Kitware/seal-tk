@@ -31,26 +31,20 @@ class SEALTK_CORE_EXPORT KwiverVideoSource : public VideoSource
   Q_OBJECT
 
 public:
-  explicit KwiverVideoSource(QObject* parent = nullptr);
+  explicit KwiverVideoSource(
+    kwiver::vital::algo::video_input_sptr const& videoInput,
+    QObject* parent = nullptr);
   ~KwiverVideoSource() override;
 
-  kwiver::vital::algo::video_input_sptr videoInput() const;
-  void setVideoInput(kwiver::vital::algo::video_input_sptr const& videoInput);
-  void setDetectedObjectSetInput(
-    kwiver::vital::algo::detected_object_set_input_sptr const&
-      detectedObjectSetInput);
-
+  bool isReady() const override;
   TimeMap<kwiver::vital::timestamp::frame_t> frames() const override;
-
-public slots:
-  void seek(kwiver::vital::timestamp::time_t time, SeekMode mode) override;
-  void seekFrame(kwiver::vital::timestamp::frame_t frame);
-  void invalidate() const override;
 
 protected:
   QTE_DECLARE_PRIVATE(KwiverVideoSource)
 
 private:
+  explicit KwiverVideoSource(KwiverVideoSourcePrivate* d, QObject* parent);
+
   QTE_DECLARE_PRIVATE_RPTR(KwiverVideoSource)
 };
 

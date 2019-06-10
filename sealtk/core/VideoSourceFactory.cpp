@@ -4,8 +4,6 @@
 
 #include <sealtk/core/VideoSourceFactory.hpp>
 
-#include <sealtk/core/VideoController.hpp>
-
 namespace sealtk
 {
 
@@ -16,37 +14,19 @@ namespace core
 class VideoSourceFactoryPrivate
 {
 public:
-  VideoSourceFactoryPrivate(VideoController* videoController);
-
-  VideoController* videoController;
 };
 
 // ----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(VideoSourceFactory)
 
 // ----------------------------------------------------------------------------
-VideoSourceFactory::VideoSourceFactory(VideoController* parent)
-  : QObject{parent},
-    d_ptr{new VideoSourceFactoryPrivate{parent}}
+VideoSourceFactory::VideoSourceFactory(QObject* parent)
+  : QObject{parent}, d_ptr{new VideoSourceFactoryPrivate}
 {
 }
 
 // ----------------------------------------------------------------------------
 VideoSourceFactory::~VideoSourceFactory()
-{
-}
-
-// ----------------------------------------------------------------------------
-VideoController* VideoSourceFactory::videoController() const
-{
-  QTE_D();
-  return d->videoController;
-}
-
-// ----------------------------------------------------------------------------
-VideoSourceFactoryPrivate::VideoSourceFactoryPrivate(
-  VideoController* videoController)
-  : videoController{videoController}
 {
 }
 
