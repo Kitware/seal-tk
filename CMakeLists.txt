@@ -31,6 +31,7 @@ find_package(qtExtensions REQUIRED)
 find_package(kwiver REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Git)
+find_package(Sphinx)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -98,3 +99,7 @@ configure_file(
   "${PROJECT_BINARY_DIR}/setup_KWIVER.bat"
   @ONLY
   )
+
+if(SPHINX_EXECUTABLE)
+  add_subdirectory(doc)
+endif()
