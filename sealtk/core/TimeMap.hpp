@@ -86,6 +86,7 @@ public:
   TimeMap& operator=(TimeMap const&) = default;
 
   QSet<Key> keySet() const;
+  TimeMap<std::nullptr_t> keyMap() const;
 
   using QMap<Key, Value>::find;
   using QMap<Key, Value>::constFind;
@@ -113,6 +114,20 @@ QSet<kwiver::vital::timestamp::time_t> TimeMap<Value>::keySet() const
   for (auto const& item : qtEnumerate(*this))
   {
     out.insert(item.key());
+  }
+
+  return out;
+}
+
+// ----------------------------------------------------------------------------
+template <typename Value>
+TimeMap<std::nullptr_t> TimeMap<Value>::keyMap() const
+{
+  auto out = TimeMap<std::nullptr_t>{};
+
+  for (auto const& item : qtEnumerate(*this))
+  {
+    out.insert(item.key(), nullptr);
   }
 
   return out;

@@ -5,7 +5,6 @@
 #include <sealtk/core/KwiverFileVideoSourceFactory.hpp>
 
 #include <sealtk/core/KwiverVideoSource.hpp>
-#include <sealtk/core/VideoController.hpp>
 
 #include <vital/algo/video_input.h>
 
@@ -27,8 +26,7 @@ public:
 QTE_IMPLEMENT_D_FUNC(KwiverFileVideoSourceFactory)
 
 // ----------------------------------------------------------------------------
-KwiverFileVideoSourceFactory::KwiverFileVideoSourceFactory(
-  VideoController* parent)
+KwiverFileVideoSourceFactory::KwiverFileVideoSourceFactory(QObject* parent)
   : FileVideoSourceFactory{parent},
     d_ptr{new KwiverFileVideoSourceFactoryPrivate}
 {
@@ -45,12 +43,13 @@ void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
   kwiver::vital::algo::video_input_sptr vi;
   kwiver::vital::algo::video_input::set_nested_algo_configuration(
     "video_reader", this->config(path), vi);
-  vi->open(stdString(path));
+  if (vi)
+  {
+    vi->open(stdString(path));
 
-  auto* vs = new KwiverVideoSource{this->videoController()};
-  vs->setVideoInput(vi);
-  this->videoController()->addVideoSource(vs);
-  emit this->videoSourceLoaded(handle, vs);
+    auto* vs = new KwiverVideoSource{vi, this->parent()};
+    emit this->videoSourceLoaded(handle, vs);
+  }
 }
 
 }

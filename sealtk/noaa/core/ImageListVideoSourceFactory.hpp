@@ -37,7 +37,7 @@ class SEALTK_NOAA_CORE_EXPORT ImageListVideoSourceFactory :
 
 public:
   explicit ImageListVideoSourceFactory(
-    bool directory, sealtk::core::VideoController* parent = nullptr);
+    bool directory, QObject* parent = nullptr);
   ~ImageListVideoSourceFactory() override;
 
   bool expectsDirectory() const override;

@@ -25,7 +25,7 @@ QTE_IMPLEMENT_D_FUNC(ImageListVideoSourceFactory)
 
 // ----------------------------------------------------------------------------
 ImageListVideoSourceFactory::ImageListVideoSourceFactory(
-  bool directory, sealtk::core::VideoController* parent)
+  bool directory, QObject* parent)
   : sealtk::core::KwiverFileVideoSourceFactory{parent},
     d_ptr{new ImageListVideoSourceFactoryPrivate}
 {
