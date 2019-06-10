@@ -10,6 +10,12 @@
 #include <sealtk/core/VideoRequestor.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
+#include <sealtk/util/unique.hpp>
+
+#include <qtGet.h>
+
+#include <unordered_map>
+
 namespace sealtk
 {
 
@@ -23,8 +29,9 @@ public:
   void updateTimes();
 
   using time_t = kwiver::vital::timestamp::time_t;
+  using distributor_ptr_t = std::unique_ptr<VideoDistributor>;
 
-  QHash<VideoSource*, VideoDistributor*> videoSources;
+  std::unordered_map<VideoSource*, distributor_ptr_t> videoSources;
   time_t time = std::numeric_limits<time_t>::min();
   bool timeIsValid = false;
 
@@ -53,11 +60,11 @@ QSet<VideoSource*> VideoController::videoSources() const
   QTE_D();
 
   auto out = QSet<VideoSource*>{};
-  out.reserve(d->videoSources.size());
+  out.reserve(static_cast<int>(d->videoSources.size()));
 
-  for (auto const& item : qtEnumerate(d->videoSources))
+  for (auto const& iter : d->videoSources)
   {
-    out.insert(item.key());
+    out.insert(iter.first);
   }
 
   return out;
@@ -67,7 +74,8 @@ QSet<VideoSource*> VideoController::videoSources() const
 VideoDistributor* VideoController::distributor(VideoSource* videoSource) const
 {
   QTE_D();
-  return d->videoSources.value(videoSource);
+  auto* const item = qtGet(d->videoSources, videoSource);
+  return (item ? item->second.get() : nullptr);
 }
 
 // ----------------------------------------------------------------------------
@@ -75,9 +83,10 @@ VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
 {
   QTE_D();
 
-  if (auto* const existingDistributor = d->videoSources.value(videoSource))
+  auto& distributor = d->videoSources[videoSource];
+  if (distributor)
   {
-    return existingDistributor;
+    return distributor.get();
   }
 
   connect(videoSource, &VideoSource::framesChanged, this,
@@ -102,16 +111,15 @@ VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
           });
 
   auto fetch = [d, videoSource](time_t t, qint64 i){
-    auto distributor = d->videoSources.value(videoSource);
+    auto* const distributor = d->videoSources[videoSource].get();
     Q_ASSERT(distributor);
 
     distributor->requestFrame(videoSource, t, SeekExact, i);
   };
 
-  auto* const newDistributor = new VideoDistributor{this};
+  distributor = make_unique<VideoDistributor>(this);
 
-  auto const first = d->videoSources.isEmpty();
-  d->videoSources.insert(videoSource, newDistributor);
+  auto const first = (d->videoSources.size() == 1);
   connect(this, &VideoController::timeSelected,
           videoSource, fetch);
 
@@ -125,7 +133,7 @@ VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
 
   emit this->videoSourcesChanged();
 
-  return newDistributor;
+  return distributor.get();
 }
 
 // ----------------------------------------------------------------------------
@@ -133,18 +141,21 @@ void VideoController::removeVideoSource(VideoSource* videoSource)
 {
   QTE_D();
 
-  if (auto* const distributor = d->videoSources.take(videoSource))
+  auto iter = d->videoSources.find(videoSource);
+  if (iter != d->videoSources.end())
   {
+    auto distributor = std::move(iter->second);
+    d->videoSources.erase(iter);
+
     disconnect(videoSource, nullptr, this, nullptr);
     disconnect(this, nullptr, videoSource, nullptr);
-    delete distributor;
 
     d->timesDirty = true;
 
     emit this->videoSourcesChanged();
     emit this->timesChanged();
 
-    if (d->videoSources.isEmpty())
+    if (d->videoSources.empty())
     {
       d->timeIsValid = false;
     }
@@ -228,9 +239,9 @@ void VideoControllerPrivate::updateTimes()
   if (this->timesDirty)
   {
     this->times.clear();
-    for (auto const& vsItem : qtEnumerate(this->videoSources))
+    for (auto const& iter : this->videoSources)
     {
-      this->times.unite(vsItem.key()->frames().keyMap());
+      this->times.unite(iter.first->frames().keyMap());
     }
     this->timesDirty = false;
   }
