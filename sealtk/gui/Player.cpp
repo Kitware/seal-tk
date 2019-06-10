@@ -4,6 +4,7 @@
 
 #include <sealtk/gui/Player.hpp>
 
+#include <sealtk/core/AutoLevelsTask.hpp>
 #include <sealtk/core/ImageUtils.hpp>
 
 #include <sealtk/util/unique.hpp>
@@ -20,13 +21,23 @@
 #include <QVector2D>
 #include <QWheelEvent>
 
+#include <QtConcurrentRun>
+
 #include <cmath>
+
+namespace kv = kwiver::vital;
 
 namespace sealtk
 {
 
 namespace gui
 {
+
+struct LevelsPair
+{
+  float low;
+  float high;
+};
 
 struct VertexData
 {
@@ -45,16 +56,21 @@ public:
   void updateViewHomography();
   void updateDetectedObjectVertexBuffers();
 
-  void drawImage(QOpenGLFunctions* functions);
+  void drawImage(float levelShift, float levelScale,
+                 QOpenGLFunctions* functions);
   void drawDetections(QOpenGLFunctions* functions);
+
+  LevelsPair levels();
+  void computeLevels(LevelsPair const& temporaryLevels);
 
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
 
   QMetaObject::Connection destroyResourcesConnection;
 
-  kwiver::vital::image_container_sptr image;
-  kwiver::vital::detected_object_set_sptr detectedObjectSet;
+  kv::timestamp timeStamp;
+  kv::image_container_sptr image;
+  kv::detected_object_set_sptr detectedObjectSet;
   std::vector<std::unique_ptr<QOpenGLBuffer>> detectedObjectVertexBuffers;
   QMatrix3x3 homography;
   QMatrix4x4 homographyGl;
@@ -69,8 +85,17 @@ public:
   int imageViewHomographyLocation;
   int detectionHomographyLocation;
   int detectionViewHomographyLocation;
+  int levelShiftLocation;
+  int levelScaleLocation;
 
   bool initialized = false;
+
+  ContrastMode contrastMode = ContrastMode::Manual;
+  LevelsPair manualLevels{0.0f, 1.0f};
+  double percentileDeviance = 0.0078125;
+  double percentileTolerance = 0.5;
+  core::TimeMap<LevelsPair> percentileLevels;
+  quint64 percentileCookie = 0;
 
   QPointF center{0.0f, 0.0f};
   float zoom = 1.0f;
@@ -125,11 +150,13 @@ core::VideoSource* Player::videoSource() const
 }
 
 //-----------------------------------------------------------------------------
-void Player::setImage(kwiver::vital::image_container_sptr const& image)
+void Player::setImage(kv::image_container_sptr const& image,
+                      core::VideoMetaData const& metaData)
 {
   QTE_D();
 
   d->image = image;
+  d->timeStamp = metaData.timeStamp();
 
   this->makeCurrent();
   d->createTexture();
@@ -140,7 +167,7 @@ void Player::setImage(kwiver::vital::image_container_sptr const& image)
 
 //-----------------------------------------------------------------------------
 void Player::setDetectedObjectSet(
-  kwiver::vital::detected_object_set_sptr const& detectedObjectSet)
+  kv::detected_object_set_sptr const& detectedObjectSet)
 {
   QTE_D();
 
@@ -231,6 +258,61 @@ void Player::setVideoSource(core::VideoSource* videoSource)
 }
 
 //-----------------------------------------------------------------------------
+ContrastMode Player::contrastMode() const
+{
+  QTE_D();
+  return d->contrastMode;
+}
+
+//-----------------------------------------------------------------------------
+void Player::setContrastMode(ContrastMode newMode)
+{
+  QTE_D();
+  if (d->contrastMode != newMode)
+  {
+    d->contrastMode = newMode;
+    this->update();
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Player::setManualLevels(float low, float high)
+{
+  QTE_D();
+
+  if (d->manualLevels.low != low || d->manualLevels.high != high)
+  {
+    d->manualLevels.low = low;
+    d->manualLevels.high = high;
+
+    if (d->contrastMode == ContrastMode::Manual)
+    {
+      this->update();
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Player::setPercentiles(double deviance, double tolerance)
+{
+  QTE_D();
+
+  if (d->percentileDeviance != deviance ||
+      d->percentileTolerance != tolerance)
+  {
+    d->percentileDeviance = deviance;
+    d->percentileTolerance = tolerance;
+    d->percentileLevels.clear();
+    ++d->percentileCookie;
+
+    if (d->contrastMode == ContrastMode::Percentile)
+    {
+      this->update();
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
 void Player::initializeGL()
 {
   QTE_D();
@@ -259,6 +341,10 @@ void Player::initializeGL()
     d->imageShaderProgram.uniformLocation("homography");
   d->imageViewHomographyLocation =
     d->imageShaderProgram.uniformLocation("viewHomography");
+  d->levelShiftLocation =
+    d->imageShaderProgram.uniformLocation("levelShift");
+  d->levelScaleLocation =
+    d->imageShaderProgram.uniformLocation("levelScale");
 
   d->detectionShaderProgram.addShaderFromSourceFile(
     QOpenGLShader::Vertex, ":/DetectionVertex.glsl");
@@ -289,7 +375,11 @@ void Player::paintGL()
     functions->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    d->drawImage(functions);
+    auto const levels = d->levels();
+    auto const levelShift = levels.low;
+    auto const levelScale = 1.0f / (levels.high - levels.low);
+
+    d->drawImage(levelShift, levelScale, functions);
     d->drawDetections(functions);
   }
   else
@@ -506,7 +596,82 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
 }
 
 //-----------------------------------------------------------------------------
-void PlayerPrivate::drawImage(QOpenGLFunctions* functions)
+void PlayerPrivate::computeLevels(LevelsPair const& temporaryLevels)
+{
+  QTE_Q();
+
+  auto const t = this->timeStamp.get_time_usec();
+
+  // Set up task to compute percentile levels
+  auto const pd = this->percentileDeviance;
+  auto const pt = this->percentileTolerance;
+  auto* const task = new core::AutoLevelsTask{this->image, pd, pt};
+
+  // Hook up receipt of results from task
+  QObject::connect(
+    task, &core::AutoLevelsTask::levelsUpdated,
+    q, [t, cookie=this->percentileCookie, this](float low, float high){
+      if (this->percentileCookie == cookie)
+      {
+        // Update the entry in the map
+        this->percentileLevels.insert(t, {low, high});
+
+        // If the image whose levels we are updating is the currently displayed
+        // image, issue a repaint
+        if (this->timeStamp.get_time_usec() == t)
+        {
+          QTE_Q();
+          q->update();
+        }
+      }
+    });
+
+  // Run task
+  QtConcurrent::run(
+    [task]{
+      task->execute();
+      task->deleteLater();
+    });
+
+  // Insert a placeholder entry so we don't fire off the task twice
+  this->percentileLevels.insert(t, temporaryLevels);
+}
+
+//-----------------------------------------------------------------------------
+LevelsPair PlayerPrivate::levels()
+{
+  switch (this->contrastMode)
+  {
+    case ContrastMode::Percentile:
+      if (this->percentileLevels.isEmpty())
+      {
+        // No entries yet; schedule new task to compute levels for this image
+        this->computeLevels(this->manualLevels);
+        return this->manualLevels;
+      }
+      else
+      {
+        // Look up entry in levels map
+        auto const t = this->timeStamp.get_time_usec();
+        auto const i = this->percentileLevels.find(t, core::SeekNearest);
+        Q_ASSERT(i != this->percentileLevels.end());
+
+        if (i.key() != t)
+        {
+          // Inexact match; schedule new task to compute levels for this image
+          this->computeLevels(i.value());
+        }
+
+        return i.value();
+      }
+    default:
+      return this->manualLevels;
+  }
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::drawImage(float levelShift, float levelScale,
+                              QOpenGLFunctions* functions)
 {
   this->imageShaderProgram.bind();
   this->imageTexture.bind();
@@ -524,6 +689,11 @@ void PlayerPrivate::drawImage(QOpenGLFunctions* functions)
                                                 &this->homographyGl, 1);
   this->imageShaderProgram.setUniformValueArray(
     this->imageViewHomographyLocation, &this->viewHomography, 1);
+
+  this->imageShaderProgram.setUniformValue(
+    this->levelShiftLocation, levelShift);
+  this->imageShaderProgram.setUniformValue(
+    this->levelScaleLocation, levelScale);
 
   functions->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 

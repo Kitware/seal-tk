@@ -22,5 +22,8 @@ sealtk_add_library(sealtk::gui
   PUBLIC_LINK_LIBRARIES
     sealtk::core
 
+  PRIVATE_LINK_LIBRARIES
+    Qt5::Concurrent
+
   EXPORT_HEADER Export.h
   )

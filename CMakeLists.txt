@@ -22,6 +22,10 @@ find_package(Qt5 REQUIRED COMPONENTS
   Test
   Widgets
   Xml
+  Concurrent
+  Widgets
+  Gui
+  Core
   )
 find_package(qtExtensions REQUIRED)
 find_package(kwiver REQUIRED)
