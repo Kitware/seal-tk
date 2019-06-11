@@ -9,6 +9,8 @@
 
 #include <QMainWindow>
 #include <QPointF>
+#include <QString>
+
 #include <qtGlobal.h>
 
 namespace sealtk
@@ -27,7 +29,7 @@ class SEALTK_NOAA_GUI_EXPORT Window : public QMainWindow
   Q_OBJECT
 
 public:
-  explicit Window(QWidget* parent = nullptr);
+  explicit Window(QString const& pipelineDirectory, QWidget* parent = nullptr);
   ~Window() override;
 
   Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged);
