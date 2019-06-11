@@ -2,9 +2,14 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include "KwiverPipelineWorker.hpp"
+#include <sealtk/core/KwiverPipelineWorker.hpp>
 
-#include "VideoSource.hpp"
+#include <sealtk/core/VideoFrame.hpp>
+#include <sealtk/core/VideoRequest.hpp>
+#include <sealtk/core/VideoRequestor.hpp>
+#include <sealtk/core/VideoSource.hpp>
+
+#include <sealtk/util/unique.hpp>
 
 #include <sprokit/processes/adapters/adapter_data_set.h>
 #include <sprokit/processes/adapters/embedded_pipeline.h>
@@ -14,7 +19,9 @@
 #include <QApplication>
 #include <QEventLoop>
 #include <QMessageBox>
+#include <QPointer>
 
+namespace ka = kwiver::adapter;
 namespace kv = kwiver::vital;
 namespace kvr = kwiver::vital::range;
 
@@ -29,21 +36,12 @@ namespace core {
 namespace { // anonymous
 
 // ============================================================================
-struct ReadyFrame
-{
-  int sourceIndex;
-  kv::image_container_sptr image;
-  VideoMetaData metaData;
-};
-
-// ============================================================================
 class PortSet
 {
 public:
   PortSet(kwiver::embedded_pipeline& pipeline, int index);
 
-  void addInputs(kwiver::adapter::adapter_data_set_t& dataSet,
-                 ReadyFrame const& frame);
+  void addInputs(ka::adapter_data_set_t& dataSet, VideoFrame const& frame);
 
 private:
   static std::string portName(std::string const& base, int index);
@@ -52,7 +50,7 @@ private:
                    std::string const& in);
 
   template <typename T>
-  static void addInput(kwiver::adapter::adapter_data_set_t& dataSet,
+  static void addInput(ka::adapter_data_set_t& dataSet,
                        std::string const& portName, T const& data);
 
   std::string imagePort;
@@ -76,8 +74,8 @@ PortSet::PortSet(kwiver::embedded_pipeline& pipeline, int index)
 }
 
 // ----------------------------------------------------------------------------
-void PortSet::addInputs(kwiver::adapter::adapter_data_set_t& dataSet,
-                        ReadyFrame const& frame)
+void PortSet::addInputs(ka::adapter_data_set_t& dataSet,
+                        VideoFrame const& frame)
 {
   Q_ASSERT(dataSet);
 
@@ -88,7 +86,7 @@ void PortSet::addInputs(kwiver::adapter::adapter_data_set_t& dataSet,
 
 // ----------------------------------------------------------------------------
 template <typename T>
-void PortSet::addInput(kwiver::adapter::adapter_data_set_t& dataSet,
+void PortSet::addInput(ka::adapter_data_set_t& dataSet,
                        std::string const& portName, T const& data)
 {
   if (!portName.empty())
@@ -115,6 +113,76 @@ void PortSet::bind(std::string& out, std::string const& expected,
   if (in == expected)
   {
     out = expected;
+  }
+}
+
+// ============================================================================
+class PipelineVideoRequestor
+  : public VideoRequestor,
+    public std::enable_shared_from_this<PipelineVideoRequestor>
+{
+public:
+  PipelineVideoRequestor(PortSet* ports, QEventLoop* eventLoop);
+
+  void requestFrame(VideoSource* source, ts_time_t time);
+  void waitForFrame() const;
+  void dispatchFrame(ka::adapter_data_set_t& dataSet);
+
+protected:
+  void update(VideoRequestInfo const& requestInfo,
+              VideoFrame&& response) override;
+
+  PortSet* const ports;
+  QPointer<QEventLoop> const eventLoop;
+  std::unique_ptr<VideoFrame> receivedFrame;
+};
+
+// ----------------------------------------------------------------------------
+PipelineVideoRequestor::PipelineVideoRequestor(
+  PortSet* ports, QEventLoop* eventLoop)
+  : ports{ports}, eventLoop{eventLoop}
+{
+}
+
+// ----------------------------------------------------------------------------
+void PipelineVideoRequestor::requestFrame(VideoSource* source, ts_time_t time)
+{
+  auto request = VideoRequest{};
+  request.requestor = this->shared_from_this();
+  request.requestId = 0;
+  request.time = time;
+  request.mode = SeekExact;
+
+  source->requestFrame(std::move(request));
+}
+
+// ----------------------------------------------------------------------------
+void PipelineVideoRequestor::waitForFrame() const
+{
+  while (!this->receivedFrame)
+  {
+    this->eventLoop->exec();
+  }
+}
+
+// ----------------------------------------------------------------------------
+void PipelineVideoRequestor::dispatchFrame(ka::adapter_data_set_t& dataSet)
+{
+  this->ports->addInputs(dataSet, *this->receivedFrame);
+  this->receivedFrame.reset();
+}
+
+// ----------------------------------------------------------------------------
+void PipelineVideoRequestor::update(
+  VideoRequestInfo const& requestInfo, VideoFrame&& response)
+{
+  Q_UNUSED(requestInfo);
+
+  this->receivedFrame = make_unique<VideoFrame>(std::move(response));
+
+  if (this->eventLoop)
+  {
+    this->eventLoop->quit();
   }
 }
 
@@ -176,11 +244,14 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
 
   auto const sourcesCount = d->sources.count();
 
-  auto lastTime = std::numeric_limits<ts_time_t>::min();
-  auto ports = QList<PortSet>{};
-  auto sourcesToUse = QVector<VideoSource*>{};
-  auto readyFrames = QVector<ReadyFrame>{};
   QEventLoop eventLoop;
+  auto ports = QList<PortSet>{};
+  auto requestors =
+    QHash<VideoSource*, std::shared_ptr<PipelineVideoRequestor>>{};
+
+  auto sourcesToUse = QVector<VideoSource*>{};
+  auto requestorsInUse = QVector<PipelineVideoRequestor*>{};
+  auto lastTime = std::numeric_limits<ts_time_t>::min();
 
   // For each source...
   for (auto const i : kvr::iota(sourcesCount))
@@ -188,11 +259,9 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
     // ...get ports...
     ports.append({pipeline, i});
 
-    // ...and set up slots to add ready frames to the set
-    connect(d->sources[i], &VideoSource::imageReady, &eventLoop,
-            [i, &readyFrames](kv::image_container_sptr const& image,
-                              VideoMetaData const& metaData)
-            { readyFrames.append({i, image, metaData}); });
+    // ...and create a requestor to receive frames from that source
+    requestors[d->sources[i]] =
+      std::make_shared<PipelineVideoRequestor>(&ports[i], &eventLoop);
   }
 
   // Dispatch frames in a loop
@@ -231,27 +300,27 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
     }
 
     // Request frames from sources that will participate this iteration
-    readyFrames.clear();
+    requestorsInUse.clear();
     for (auto* const vs : sourcesToUse)
     {
-      vs->seekTime(nextTime);
+      auto* const requestor = requestors[vs].get();
+      Q_ASSERT(requestor);
+
+      requestor->requestFrame(vs, nextTime);
+      requestorsInUse.append(requestor);
     }
 
     // Wait until all frames are ready
-    while (readyFrames.count() < expectedFrames)
+    for (auto* const requestor : requestorsInUse)
     {
-      eventLoop.exec();
+      requestor->waitForFrame();
     }
 
     // Set up pipeline input...
-    auto inputDataSet = kwiver::adapter::adapter_data_set::create();
-    for (auto const& readyFrame : readyFrames)
+    auto inputDataSet = ka::adapter_data_set::create();
+    for (auto* const requestor : requestorsInUse)
     {
-      Q_ASSERT(readyFrame.sourceIndex >= 0);
-      Q_ASSERT(readyFrame.sourceIndex < ports.count());
-
-      auto& p = ports[readyFrame.sourceIndex];
-      p.addInputs(inputDataSet, readyFrame);
+      requestor->dispatchFrame(inputDataSet);
     }
 
     // ...and send it along
