@@ -248,6 +248,9 @@ void Player::setVideoSource(core::VideoDistributor* videoSource)
 
     if (d->videoSource)
     {
+      connect(videoSource, &QObject::destroyed, this,
+              [this]{ this->setVideoSource(nullptr); });
+
       connect(videoSource, &core::VideoDistributor::frameReady, this,
               [this](core::VideoFrame const& frame){
                 this->setImage(frame.image, frame.metaData);
