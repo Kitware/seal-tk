@@ -245,6 +245,8 @@ void Player::setVideoSource(core::VideoDistributor* videoSource)
     }
 
     d->videoSource = videoSource;
+    d->percentileLevels.clear();
+    ++d->percentileCookie;
 
     if (d->videoSource)
     {
