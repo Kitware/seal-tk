@@ -164,11 +164,26 @@ void TestKwiverPipelineWorker::pipeline()
     worker.addVideoSource(source.get());
   }
 
+  auto progressMax = int{-1};
+  auto progressReports = QVector<int>{};
+  auto totalExpectedFrames = int{0};
+
+  connect(&worker, &KwiverPipelineWorker::progressRangeChanged,
+          this, [&progressMax](int min, int max){
+            QVERIFY(min == 0);
+            progressMax = max;
+          });
+  connect(&worker, &KwiverPipelineWorker::progressValueChanged,
+          this, [&progressReports](int value){
+            progressReports.append(value);
+          });
+
   auto const pipeline =
     SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/test.pipe");
   QVERIFY(worker.initialize(pipeline));
   worker.execute();
 
+  QCOMPARE(progressReports.count(), expectedFrames.count());
   QCOMPARE(worker.outputNames.count(), expectedFrames.count());
   QCOMPARE(worker.outputImages.count(), expectedFrames.count());
   for (auto const i : kvr::iota(expectedFrames.count()))
@@ -195,9 +210,15 @@ void TestKwiverPipelineWorker::pipeline()
 
         QCOMPARE(QFileInfo{actualName}.fileName(), expectedName);
         QCOMPARE(actualImage, expectedImage);
+
+        ++totalExpectedFrames;
       }
     }
+
+    QCOMPARE(progressReports[i], totalExpectedFrames);
   }
+
+  QCOMPARE(progressMax, totalExpectedFrames);
 }
 
 } // namespace test

@@ -303,6 +303,7 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
   auto sourcesToUse = QVector<VideoSource*>{};
   auto requestorsInUse = QVector<PipelineVideoRequestor*>{};
   auto lastTime = std::numeric_limits<ts_time_t>::min();
+  auto framesProcessed = int{0};
 
   // For each source...
   for (auto const i : kvr::iota(sourcesCount))
@@ -384,6 +385,9 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
       }
 
       pipeline.send(inputDataSet);
+
+      framesProcessed += sourcesToUse.count();
+      emit this->progressValueChanged(framesProcessed);
     }
   }
 }
