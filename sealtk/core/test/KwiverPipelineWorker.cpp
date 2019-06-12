@@ -47,6 +47,7 @@ class TestPipelineWorker : public KwiverPipelineWorker
 public:
   TestPipelineWorker() : KwiverPipelineWorker{RequiresInputAndOutput} {}
 
+  QList<QHash<int, QString>> outputNames;
   QList<QHash<int, QImage>> outputImages;
 
 protected:
@@ -57,10 +58,11 @@ protected:
 void TestPipelineWorker::processOutput(ka::adapter_data_set_t const& output)
 {
   static auto const portRegExp =
-    QRegularExpression{QStringLiteral("^image_(\\d+)$")};
+    QRegularExpression{QStringLiteral("^(image|name)_(\\d+)$")};
 
   if (output)
   {
+    auto newNames = QHash<int, QString>{};
     auto newImages = QHash<int, QImage>{};
 
     for (auto const& datum : *output)
@@ -75,17 +77,24 @@ void TestPipelineWorker::processOutput(ka::adapter_data_set_t const& output)
       auto const& p = portRegExp.match(portName);
       if (p.isValid())
       {
-        auto const n = p.captured(1).toInt();
-
-        auto const& image =
-          datum.second->get_datum<kv::image_container_sptr>();
-        if (image)
+        auto const n = p.captured(2).toInt();
+        if (p.captured(1) == QStringLiteral("image"))
         {
-          newImages.insert(n, imageContainerToQImage(image));
+          auto const& image =
+            datum.second->get_datum<kv::image_container_sptr>();
+          if (image)
+          {
+            newImages.insert(n, imageContainerToQImage(image));
+          }
+        }
+        else if (p.captured(1) == QStringLiteral("name"))
+        {
+          newNames.insert(n, qtString(datum.second->get_datum<std::string>()));
         }
       }
     }
 
+    this->outputNames.append(newNames);
     this->outputImages.append(newImages);
   }
 }
@@ -160,19 +169,23 @@ void TestKwiverPipelineWorker::pipeline()
   QVERIFY(worker.initialize(pipeline));
   worker.execute();
 
+  QCOMPARE(worker.outputNames.count(), expectedFrames.count());
   QCOMPARE(worker.outputImages.count(), expectedFrames.count());
   for (auto const i : kvr::iota(expectedFrames.count()))
   {
+    auto const& an = worker.outputNames[i];
     auto const& af = worker.outputImages[i];
-    auto const& ef = expectedFrames[i];
+    auto const& en = expectedFrames[i];
 
-    for (auto const j : kvr::iota(ef.count()))
+    for (auto const j : kvr::iota(en.count()))
     {
-      auto const& expectedName = ef[j];
+      auto const& expectedName = en[j];
+      auto const& actualName = an.value(j);
       auto const& actualImage = af.value(j);
 
       if (expectedName.isEmpty())
       {
+        QVERIFY(actualName.isEmpty());
         QVERIFY(actualImage.isNull());
       }
       else
@@ -180,6 +193,7 @@ void TestKwiverPipelineWorker::pipeline()
         auto const& expectedImage = QImage{
           sealtk::test::testDataPath("KwiverPipelineWorker/" + expectedName)};
 
+        QCOMPARE(QFileInfo{actualName}.fileName(), expectedName);
         QCOMPARE(actualImage, expectedImage);
       }
     }

@@ -6,9 +6,15 @@ process out_adapt
 
 connect from in_adapt.image
         to   out_adapt.image_0
+connect from in_adapt.file_name
+        to   out_adapt.name_0
 
 connect from in_adapt.image2
         to   out_adapt.image_1
+connect from in_adapt.file_name2
+        to   out_adapt.name_1
 
 connect from in_adapt.image3
         to   out_adapt.image_2
+connect from in_adapt.file_name3
+        to   out_adapt.name_2

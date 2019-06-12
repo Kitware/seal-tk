@@ -76,6 +76,8 @@ PortSet::PortSet(kwiver::embedded_pipeline& pipeline, int index)
   for (auto const& p : pipeline.input_port_names())
   {
     this->bind(this->imagePort, imagePortName, p);
+    this->bind(this->namePort, namePortName, p);
+    this->bind(this->timePort, timePortName, p);
   }
 }
 
