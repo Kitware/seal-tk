@@ -41,7 +41,9 @@ class PortSet
 public:
   PortSet(kwiver::embedded_pipeline& pipeline, int index);
 
-  void addInputs(ka::adapter_data_set_t& dataSet, VideoFrame const& frame);
+  void addInputs(ka::adapter_data_set_t const& dataSet,
+                 VideoFrame const& frame);
+  void ensureInputs(ka::adapter_data_set_t const& dataSet);
 
 private:
   static std::string portName(std::string const& base, int index);
@@ -50,8 +52,12 @@ private:
                    std::string const& in);
 
   template <typename T>
-  static void addInput(ka::adapter_data_set_t& dataSet,
+  static void addInput(ka::adapter_data_set_t const& dataSet,
                        std::string const& portName, T const& data);
+
+  template <typename T>
+  static void ensureInput(ka::adapter_data_set_t const& dataSet,
+                          std::string const& portName, T const& data);
 
   std::string imagePort;
   std::string namePort;
@@ -74,7 +80,7 @@ PortSet::PortSet(kwiver::embedded_pipeline& pipeline, int index)
 }
 
 // ----------------------------------------------------------------------------
-void PortSet::addInputs(ka::adapter_data_set_t& dataSet,
+void PortSet::addInputs(ka::adapter_data_set_t const& dataSet,
                         VideoFrame const& frame)
 {
   Q_ASSERT(dataSet);
@@ -85,13 +91,36 @@ void PortSet::addInputs(ka::adapter_data_set_t& dataSet,
 }
 
 // ----------------------------------------------------------------------------
+void PortSet::ensureInputs(ka::adapter_data_set_t const& dataSet)
+{
+  this->ensureInput(dataSet, this->imagePort, kv::image_container_sptr{});
+  this->ensureInput(dataSet, this->namePort, kv::path_t{});
+  this->ensureInput(dataSet, this->timePort, kv::timestamp{});
+}
+
+// ----------------------------------------------------------------------------
 template <typename T>
-void PortSet::addInput(ka::adapter_data_set_t& dataSet,
+void PortSet::addInput(ka::adapter_data_set_t const& dataSet,
                        std::string const& portName, T const& data)
 {
   if (!portName.empty())
   {
     dataSet->add_value(portName, data);
+  }
+}
+
+// ----------------------------------------------------------------------------
+template <typename T>
+void PortSet::ensureInput(ka::adapter_data_set_t const& dataSet,
+                          std::string const& portName, T const& data)
+{
+  if (!portName.empty())
+  {
+    auto const& iter = dataSet->find(portName);
+    if (iter == dataSet->end())
+    {
+      dataSet->add_value(portName, data);
+    }
   }
 }
 
@@ -200,7 +229,14 @@ QTE_IMPLEMENT_D_FUNC(KwiverPipelineWorker)
 
 // ----------------------------------------------------------------------------
 KwiverPipelineWorker::KwiverPipelineWorker(QWidget* parent)
-  : super{RequiresInput, parent}
+  : KwiverPipelineWorker{RequiresInput, parent}
+{
+}
+
+// ----------------------------------------------------------------------------
+KwiverPipelineWorker::KwiverPipelineWorker(
+  RequiredEndcaps endcaps, QWidget* parent)
+  : super{endcaps, parent}, d_ptr{new KwiverPipelineWorkerPrivate}
 {
 }
 
@@ -216,6 +252,19 @@ void KwiverPipelineWorker::addVideoSource(sealtk::core::VideoSource* source)
 
   if (source && !d->sources.contains(source))
   {
+    // Wait until source is ready to report its frames
+    QEventLoop eventLoop;
+
+    connect(source, &VideoSource::framesChanged,
+            &eventLoop, &QEventLoop::quit);
+
+    while (!source->isReady())
+    {
+      source->start();
+      eventLoop.exec();
+    }
+
+    // Get source's frames and append to frame set
     d->sources.append(source);
     d->frames.append(source->frames());
   }
@@ -288,6 +337,7 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
         sourcesToUse.append(d->sources[i]);
       }
     }
+    lastTime = nextTime;
 
     auto const expectedFrames = sourcesToUse.count();
     if (!expectedFrames)
@@ -326,6 +376,11 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
     // ...and send it along
     if (!inputDataSet->empty())
     {
+      for (auto& p : ports)
+      {
+        p.ensureInputs(inputDataSet);
+      }
+
       pipeline.send(inputDataSet);
     }
   }

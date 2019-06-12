@@ -26,6 +26,7 @@ class KwiverPipelineWorker : public kwiver::arrows::qt::EmbeddedPipelineWorker
 
 public:
   explicit KwiverPipelineWorker(QWidget* parent = nullptr);
+  explicit KwiverPipelineWorker(RequiredEndcaps, QWidget* parent = nullptr);
 
   ~KwiverPipelineWorker() override;
 
