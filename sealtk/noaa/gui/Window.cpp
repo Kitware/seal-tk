@@ -54,14 +54,14 @@ struct WindowData
 class WindowPrivate
 {
 public:
-  WindowPrivate(Window* parent);
+  WindowPrivate(Window* q) : q_ptr{q} {}
 
-  void registerVideoSourceFactory(QString const& name,
-                                  sealtk::core::VideoSourceFactory* factory);
+  void registerVideoSourceFactory(
+    QString const& name, sealtk::core::VideoSourceFactory* factory);
+
   void createWindow(WindowData* data, QString const& title);
 
-  QTE_DECLARE_PUBLIC(Window)
-  QTE_DECLARE_PUBLIC_PTR(Window)
+  void executePipeline(QString const& pipelineFile);
 
   Ui::Window ui;
 
@@ -72,6 +72,10 @@ public:
 
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
+
+private:
+  QTE_DECLARE_PUBLIC(Window)
+  QTE_DECLARE_PUBLIC_PTR(Window)
 };
 
 //-----------------------------------------------------------------------------
@@ -124,56 +128,10 @@ Window::Window(QString const& pipelineDirectory, QWidget* parent)
 
   for (auto const& key : keys)
   {
-    auto* action = d->ui.menuPipeline->addAction(key);
-    auto filename = pipelines[key];
-    connect(action, &QAction::triggered, [filename, d, this]()
-    {
-      if (!d->eoWindow.player->videoSource() &&
-          !d->irWindow.player->videoSource())
-      {
-        QMessageBox::warning(
-          this, QStringLiteral("Pipeline Error"),
-          QStringLiteral("Please select EO and IR imagery"));
-        return;
-      }
-      if (!d->eoWindow.player->videoSource())
-      {
-        QMessageBox::warning(
-          this, QStringLiteral("Pipeline Error"),
-          QStringLiteral("Please select EO imagery"));
-        return;
-      }
-      if (!d->irWindow.player->videoSource())
-      {
-        QMessageBox::warning(
-          this, QStringLiteral("Pipeline Error"),
-          QStringLiteral("Please select IR imagery"));
-        return;
-      }
-
-      QProgressDialog progressDialog{QStringLiteral("Executing Pipeline..."),
-                                     QString{}, 0, 0, this};
-      progressDialog.setAutoReset(false);
-      progressDialog.show();
-
-      sealtk::core::KwiverPipelineWorker worker{this};
-      if (!worker.initialize(filename))
-      {
-        return;
-      }
-
-      worker.addVideoSource(d->eoWindow.videoSource);
-      worker.addVideoSource(d->irWindow.videoSource);
-
-      connect(
-        &worker, &sealtk::core::KwiverPipelineWorker::progressRangeChanged,
-        &progressDialog, &QProgressDialog::setRange);
-
-      connect(
-        &worker, &sealtk::core::KwiverPipelineWorker::progressValueChanged,
-        &progressDialog, &QProgressDialog::setValue);
-
-      worker.execute();
+    auto* const action = d->ui.menuPipeline->addAction(key);
+    auto const& filename = pipelines[key];
+    connect(action, &QAction::triggered, this, [filename, d]{
+      d->executePipeline(filename);
     });
   }
 }
@@ -228,12 +186,6 @@ void Window::showAbout()
 }
 
 //-----------------------------------------------------------------------------
-WindowPrivate::WindowPrivate(Window* parent)
-  : q_ptr{parent}
-{
-}
-
-//-----------------------------------------------------------------------------
 void WindowPrivate::registerVideoSourceFactory(
   QString const& name, sealtk::core::VideoSourceFactory* factory)
 {
@@ -258,6 +210,9 @@ void WindowPrivate::registerVideoSourceFactory(
     auto* const videoDistributor =
       this->videoController->addVideoSource(videoSource);
     data->player->setVideoSource(videoDistributor);
+
+    // Enable pipelines
+    this->ui.menuPipeline->setEnabled(true);
   });
 
   auto* fileFactory =
@@ -335,8 +290,44 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title)
   this->ui.centralwidget->addWidget(data->window);
 }
 
+//-----------------------------------------------------------------------------
+void WindowPrivate::executePipeline(QString const& pipelineFile)
+{
+  QTE_Q();
+
+  if (!this->eoWindow.videoSource && !this->irWindow.videoSource)
+  {
+    // This should never happen
+    qDebug() << "Eek! No video sources loaded?!";
+    return;
+  }
+
+  QProgressDialog progressDialog{
+    QStringLiteral("Executing Pipeline..."), QString{}, 0, 0, q};
+  progressDialog.setAutoReset(false);
+  progressDialog.show();
+
+  sealtk::core::KwiverPipelineWorker worker{q};
+
+  worker.addVideoSource(this->eoWindow.videoSource);
+  worker.addVideoSource(this->irWindow.videoSource);
+
+  QObject::connect(
+    &worker, &sealtk::core::KwiverPipelineWorker::progressRangeChanged,
+    &progressDialog, &QProgressDialog::setRange);
+
+  QObject::connect(
+    &worker, &sealtk::core::KwiverPipelineWorker::progressValueChanged,
+    &progressDialog, &QProgressDialog::setValue);
+
+  if (worker.initialize(pipelineFile))
+  {
+    worker.execute();
+  }
 }
 
-}
+} // namespace gui
 
-}
+} // namespace noaa
+
+} // namespace sealtk
