@@ -10,7 +10,9 @@
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
+#include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
+#include <sealtk/core/KwiverPipelineWorker.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -22,8 +24,11 @@
 
 #include <qtStlUtil.h>
 
+#include <QCollator>
 #include <QDockWidget>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QProgressDialog>
 #include <QVector>
 
 #include <memory>
@@ -49,15 +54,15 @@ struct WindowData
 class WindowPrivate
 {
 public:
-  WindowPrivate(Window* parent);
+  WindowPrivate(Window* q) : q_ptr{q} {}
 
-  void registerVideoSourceFactory(QString const& name,
-                                  sealtk::core::VideoSourceFactory* factory);
+  void registerVideoSourceFactory(
+    QString const& name, sealtk::core::VideoSourceFactory* factory);
+
   void createWindow(WindowData* data, QString const& title,
                     sealtk::noaa::gui::Player::Role role);
 
-  QTE_DECLARE_PUBLIC(Window)
-  QTE_DECLARE_PUBLIC_PTR(Window)
+  void executePipeline(QString const& pipelineFile);
 
   Ui::Window ui;
 
@@ -68,13 +73,17 @@ public:
 
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
+
+private:
+  QTE_DECLARE_PUBLIC(Window)
+  QTE_DECLARE_PUBLIC_PTR(Window)
 };
 
 //-----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(Window)
 
 //-----------------------------------------------------------------------------
-Window::Window(QWidget* parent)
+Window::Window(QString const& pipelineDirectory, QWidget* parent)
   : QMainWindow{parent},
     d_ptr{new WindowPrivate{this}}
 {
@@ -111,6 +120,24 @@ Window::Window(QWidget* parent)
   d->registerVideoSourceFactory(
     "Image Directory...",
     new core::ImageListVideoSourceFactory{true, d->videoController.get()});
+
+  sealtk::core::DirectoryListing pdir{{"pipe"}, pipelineDirectory};
+  auto const& pipelines = pdir.files();
+  auto keys = pipelines.keys();
+
+  QCollator collator;
+  collator.setNumericMode(true);
+  collator.setCaseSensitivity(Qt::CaseInsensitive);
+  std::sort(keys.begin(), keys.end(), collator);
+
+  for (auto const& key : keys)
+  {
+    auto* const action = d->ui.menuPipeline->addAction(key);
+    auto const& filename = pipelines[key];
+    connect(action, &QAction::triggered, this, [filename, d]{
+      d->executePipeline(filename);
+    });
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -163,12 +190,6 @@ void Window::showAbout()
 }
 
 //-----------------------------------------------------------------------------
-WindowPrivate::WindowPrivate(Window* parent)
-  : q_ptr{parent}
-{
-}
-
-//-----------------------------------------------------------------------------
 void WindowPrivate::registerVideoSourceFactory(
   QString const& name, sealtk::core::VideoSourceFactory* factory)
 {
@@ -193,6 +214,9 @@ void WindowPrivate::registerVideoSourceFactory(
     auto* const videoDistributor =
       this->videoController->addVideoSource(videoSource);
     data->player->setVideoSource(videoDistributor);
+
+    // Enable pipelines
+    this->ui.menuPipeline->setEnabled(true);
   });
 
   auto* fileFactory =
@@ -271,8 +295,44 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   this->ui.centralwidget->addWidget(data->window);
 }
 
+//-----------------------------------------------------------------------------
+void WindowPrivate::executePipeline(QString const& pipelineFile)
+{
+  QTE_Q();
+
+  if (!this->eoWindow.videoSource && !this->irWindow.videoSource)
+  {
+    // This should never happen
+    qDebug() << "Eek! No video sources loaded?!";
+    return;
+  }
+
+  QProgressDialog progressDialog{
+    QStringLiteral("Executing Pipeline..."), QString{}, 0, 0, q};
+  progressDialog.setAutoReset(false);
+  progressDialog.show();
+
+  sealtk::core::KwiverPipelineWorker worker{q};
+
+  worker.addVideoSource(this->eoWindow.videoSource);
+  worker.addVideoSource(this->irWindow.videoSource);
+
+  QObject::connect(
+    &worker, &sealtk::core::KwiverPipelineWorker::progressRangeChanged,
+    &progressDialog, &QProgressDialog::setRange);
+
+  QObject::connect(
+    &worker, &sealtk::core::KwiverPipelineWorker::progressValueChanged,
+    &progressDialog, &QProgressDialog::setValue);
+
+  if (worker.initialize(pipelineFile))
+  {
+    worker.execute();
+  }
 }
 
-}
+} // namespace gui
 
-}
+} // namespace noaa
+
+} // namespace sealtk

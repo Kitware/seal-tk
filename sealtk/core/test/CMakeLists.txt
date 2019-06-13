@@ -20,6 +20,15 @@ sealtk_add_library(sealtk::core_test_common
     kwiver::vital_algo
   )
 
+sealtk_add_test(KwiverPipelineWorker
+  SOURCES
+    KwiverPipelineWorker.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+    sealtk::core_test_common
+  )
+
 sealtk_add_test(KwiverVideoSource
   SOURCES
     KwiverVideoSource.cpp
@@ -57,6 +66,14 @@ sealtk_add_test(AutoLevelsTask
 sealtk_add_test(DateUtils
   SOURCES
     DateUtils.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+  )
+
+sealtk_add_test(DirectoryListing
+  SOURCES
+    DirectoryListing.cpp
 
   PRIVATE_LINK_LIBRARIES
     sealtk::core

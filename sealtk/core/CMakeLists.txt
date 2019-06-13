@@ -14,9 +14,11 @@ sealtk_add_library(sealtk::core
     AutoLevelsTask.cpp
     DataModelTypes.cpp
     DateUtils.cpp
+    DirectoryListing.cpp
     FileVideoSourceFactory.cpp
     ImageUtils.cpp
     KwiverFileVideoSourceFactory.cpp
+    KwiverPipelineWorker.cpp
     KwiverVideoSource.cpp
     TimeStamp.cpp
     VideoController.cpp
@@ -31,9 +33,11 @@ sealtk_add_library(sealtk::core
     AutoLevelsTask.hpp
     DataModelTypes.hpp
     DateUtils.hpp
+    DirectoryListing.hpp
     FileVideoSourceFactory.hpp
     ImageUtils.hpp
     KwiverFileVideoSourceFactory.hpp
+    KwiverPipelineWorker.hpp
     KwiverVideoSource.hpp
     TimeMap.hpp
     TimeStamp.hpp
