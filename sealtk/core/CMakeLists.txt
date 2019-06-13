@@ -13,6 +13,7 @@ sealtk_add_library(sealtk::core
   SOURCES
     AutoLevelsTask.cpp
     DateUtils.cpp
+    DirectoryListing.cpp
     FileVideoSourceFactory.cpp
     ImageUtils.cpp
     KwiverFileVideoSourceFactory.cpp
@@ -30,6 +31,7 @@ sealtk_add_library(sealtk::core
   HEADERS
     AutoLevelsTask.hpp
     DateUtils.hpp
+    DirectoryListing.hpp
     FileVideoSourceFactory.hpp
     ImageUtils.hpp
     KwiverFileVideoSourceFactory.hpp
