@@ -53,7 +53,8 @@ public:
 
   void registerVideoSourceFactory(QString const& name,
                                   sealtk::core::VideoSourceFactory* factory);
-  void createWindow(WindowData* data, QString const& title);
+  void createWindow(WindowData* data, QString const& title,
+                    sealtk::noaa::gui::Player::Role role);
 
   QTE_DECLARE_PUBLIC(Window)
   QTE_DECLARE_PUBLIC_PTR(Window)
@@ -80,8 +81,11 @@ Window::Window(QWidget* parent)
   QTE_D();
   d->ui.setupUi(this);
 
-  d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
-  d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
+  constexpr auto Master = sealtk::noaa::gui::Player::Role::Master;
+  constexpr auto Slave = sealtk::noaa::gui::Player::Role::Slave;
+
+  d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
+  d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
 
   d->eoWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Manual);
   d->irWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Percentile);
@@ -217,12 +221,13 @@ void WindowPrivate::registerVideoSourceFactory(
 }
 
 //-----------------------------------------------------------------------------
-void WindowPrivate::createWindow(WindowData* data, QString const& title)
+void WindowPrivate::createWindow(WindowData* data, QString const& title,
+                                 sealtk::noaa::gui::Player::Role role)
 {
   QTE_Q();
 
   data->window = new sealtk::gui::SplitterWindow{q};
-  data->player = new sealtk::noaa::gui::Player{data->window};
+  data->player = new sealtk::noaa::gui::Player{role, data->window};
   data->window->setCentralWidget(data->player);
   data->window->setClosable(false);
   data->window->setWindowTitle(title);

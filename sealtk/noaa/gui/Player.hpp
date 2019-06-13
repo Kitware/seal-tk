@@ -29,12 +29,21 @@ class SEALTK_NOAA_GUI_EXPORT Player : public sealtk::gui::Player
   Q_OBJECT
 
 public:
-  explicit Player(QWidget* parent = nullptr);
+  enum class Role
+  {
+    Master,
+    Slave,
+  };
+
+  explicit Player(Role role, QWidget* parent = nullptr);
   ~Player() override;
 
   void registerVideoSourceFactory(QString const& name,
                                   sealtk::core::VideoSourceFactory* factory,
                                   void* handle);
+
+  void setImage(kwiver::vital::image_container_sptr const& image,
+                sealtk::core::VideoMetaData const& metaData) override;
 
 signals:
   void loadDetectionsTriggered() const;
