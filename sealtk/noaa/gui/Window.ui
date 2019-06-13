@@ -51,6 +51,9 @@
      <string>&amp;Tools</string>
     </property>
     <widget class="QMenu" name="menuPipeline">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Execute &amp;Pipeline</string>
      </property>
