@@ -1,0 +1,10 @@
+process in_adapt
+ :: input_adapter
+
+process out_adapt
+ :: output_adapter
+
+connect from in_adapt.image2
+        to   out_adapt.image_0
+connect from in_adapt.file_name2
+        to   out_adapt.name_0
