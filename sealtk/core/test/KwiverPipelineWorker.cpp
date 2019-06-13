@@ -41,6 +41,9 @@ namespace core
 namespace test
 {
 
+using SourceVector = std::vector<std::unique_ptr<core::KwiverVideoSource>>;
+using SourceIndex = SourceVector::size_type;
+
 // ============================================================================
 class TestPipelineWorker : public KwiverPipelineWorker
 {
@@ -108,9 +111,10 @@ private slots:
   void initTestCase();
   void cleanupTestCase();
   void pipeline();
+  void pipeline_data();
 
 private:
-  std::vector<std::unique_ptr<core::KwiverVideoSource>> videoSources;
+  SourceVector videoSources;
 };
 
 // ----------------------------------------------------------------------------
@@ -150,18 +154,24 @@ void TestKwiverPipelineWorker::cleanupTestCase()
 // ----------------------------------------------------------------------------
 void TestKwiverPipelineWorker::pipeline()
 {
-  static QVector<QStringList> const expectedFrames{
-    {"1000.png", "1000.png", QString{}},
-    {QString{},  "2000.png", "2000.png"},
-    {"3000.png", QString{},  "3000.png"},
-    {"4000.png", "4000.png", "4000.png"},
-    {QString{},  QString{},  "5000.png"},
-  };
+  QFETCH(QString, pipeline);
+  QFETCH(QVector<int>, sourceIndices);
+  QFETCH(QVector<QStringList>, expectedFrames);
+  QFETCH(bool, testProgress);
 
   TestPipelineWorker worker;
-  for (auto const& source : this->videoSources)
+  for (auto const si : sourceIndices)
   {
-    worker.addVideoSource(source.get());
+    if (si >= 0)
+    {
+      auto const& source =
+        this->videoSources[static_cast<SourceIndex>(si)];
+      worker.addVideoSource(source.get());
+    }
+    else
+    {
+      worker.addVideoSource(nullptr);
+    }
   }
 
   auto progressMax = int{-1};
@@ -178,8 +188,6 @@ void TestKwiverPipelineWorker::pipeline()
             progressReports.append(value);
           });
 
-  auto const pipeline =
-    SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/test.pipe");
   QVERIFY(worker.initialize(pipeline));
   worker.execute();
 
@@ -215,10 +223,56 @@ void TestKwiverPipelineWorker::pipeline()
       }
     }
 
-    QCOMPARE(progressReports[i], totalExpectedFrames);
+    if (testProgress)
+    {
+      QCOMPARE(progressReports[i], totalExpectedFrames);
+    }
   }
 
-  QCOMPARE(progressMax, totalExpectedFrames);
+  if (testProgress)
+  {
+    QCOMPARE(progressMax, totalExpectedFrames);
+  }
+}
+
+// ----------------------------------------------------------------------------
+void TestKwiverPipelineWorker::pipeline_data()
+{
+  QTest::addColumn<QString>("pipeline");
+  QTest::addColumn<bool>("testProgress");
+  QTest::addColumn<QVector<int>>("sourceIndices");
+  QTest::addColumn<QVector<QStringList>>("expectedFrames");
+
+  QTest::newRow("matching sources")
+    << SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/matching.pipe")
+    << true << QVector<int>{0, 1, 2}
+    << QVector<QStringList>{
+      {"1000.png", "1000.png", QString{}},
+      {QString{},  "2000.png", "2000.png"},
+      {"3000.png", QString{},  "3000.png"},
+      {"4000.png", "4000.png", "4000.png"},
+      {QString{},  QString{},  "5000.png"},
+    };
+
+  QTest::newRow("missing source")
+    << SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/missing.pipe")
+    << true << QVector<int>{0, -1, 2}
+    << QVector<QStringList>{
+      {"1000.png", QString{}, QString{}},
+      {QString{},  QString{}, "2000.png"},
+      {"3000.png", QString{}, "3000.png"},
+      {"4000.png", QString{}, "4000.png"},
+      {QString{},  QString{}, "5000.png"},
+    };
+
+  QTest::newRow("excess sources")
+    << SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/excess.pipe")
+    << false << QVector<int>{0, 1, 2}
+    << QVector<QStringList>{
+      {"1000.png"},
+      {"2000.png"},
+      {"4000.png"},
+    };
 }
 
 } // namespace test
