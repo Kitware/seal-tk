@@ -33,7 +33,7 @@ find_package(Eigen3 REQUIRED)
 find_package(Git)
 find_package(Sphinx)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_AUTOMOC 1)
 set(CMAKE_AUTORCC 1)
