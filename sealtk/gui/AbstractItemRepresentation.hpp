@@ -6,6 +6,7 @@
 #define sealtk_gui_AbstractItemRepresentation_hpp
 
 #include <sealtk/gui/Export.h>
+#include <sealtk/gui/Enums.hpp>
 
 #include <qtGlobal.h>
 
@@ -16,22 +17,6 @@ namespace sealtk
 
 namespace gui
 {
-
-Q_NAMESPACE
-
-/// Item visibility mode.
-///
-/// This enumeration specifies how "hidden" items will be manipulated by the
-/// representation.
-enum ItemVisibilityMode
-{
-  /// "Hidden" items are not shown.
-  OmitHidden,
-  /// "Hidden" items are shown in an alternate ("grayed out") color.
-  ShadowHidden,
-};
-
-Q_ENUM_NS(ItemVisibilityMode)
 
 class AbstractItemRepresentationPrivate;
 

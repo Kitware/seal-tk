@@ -8,6 +8,7 @@ sealtk_add_library(sealtk::gui
   SOURCES
     AbstractItemModel.cpp
     AbstractItemRepresentation.cpp
+    Enums.cpp
     Player.cpp
     PlayerControl.cpp
     Resources.cpp
@@ -18,6 +19,7 @@ sealtk_add_library(sealtk::gui
   HEADERS
     AbstractItemModel.hpp
     AbstractItemRepresentation.hpp
+    Enums.hpp
     Player.hpp
     PlayerControl.hpp
     Resources.hpp
