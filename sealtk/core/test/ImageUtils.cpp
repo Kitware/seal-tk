@@ -39,6 +39,15 @@ namespace // anonymous
 constexpr size_t IMAGE_SIZE = 64;
 constexpr auto FBO_SIZE = static_cast<int>(IMAGE_SIZE);
 
+#if __GNUC__ == 4 && __GNUC_MINOR__ == 8
+// GCC 4.8 chokes on raw string literals passed as arguments to a macro (i.e.
+// the immediately following code). Work around this by instead using the
+// QString-from-literal constructors. This is less efficient, but at least it
+// compiles.
+#undef QStringLiteral
+#define QStringLiteral QString
+#endif
+
 static auto const VERTEX_SHADER_CODE = QStringLiteral(R"(
   #version 130
 
@@ -81,13 +90,13 @@ static auto const PLANE_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(R"(
   })");
 
 // ----------------------------------------------------------------------------
-size_t operator ""_z(unsigned long long x)
+constexpr size_t operator"" _z(unsigned long long x)
 {
   return static_cast<size_t>(x);
 }
 
 // ----------------------------------------------------------------------------
-ptrdiff_t operator ""_t(unsigned long long x)
+constexpr ptrdiff_t operator"" _t(unsigned long long x)
 {
   return static_cast<ptrdiff_t>(x);
 }
