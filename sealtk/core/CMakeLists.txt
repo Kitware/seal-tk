@@ -39,6 +39,7 @@ sealtk_add_library(sealtk::core
     KwiverVideoSource.hpp
     TimeMap.hpp
     TimeStamp.hpp
+    UnsharedPointer.hpp
     VideoController.hpp
     VideoDistributor.hpp
     VideoFrame.hpp

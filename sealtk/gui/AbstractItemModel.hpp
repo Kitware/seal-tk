@@ -41,6 +41,10 @@ public:
   QModelIndex parent(QModelIndex const& child) const override;
 
   QVariant data(QModelIndex const& index, int role) const override;
+
+protected:
+  static constexpr auto IndexIsValid = CheckIndexOption::IndexIsValid;
+  static constexpr auto ParentIsInvalid = CheckIndexOption::ParentIsInvalid;
 };
 
 } // namespace gui

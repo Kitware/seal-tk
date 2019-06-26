@@ -5,13 +5,6 @@
 #include <sealtk/gui/AbstractItemModel.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
-#include <sealtk/core/DateUtils.hpp>
-
-#include <QHash>
-#include <QPalette>
-#include <QUuid>
-
-namespace kv = kwiver::vital;
 
 namespace sealtk
 {

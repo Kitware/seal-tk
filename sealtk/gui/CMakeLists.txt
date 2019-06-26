@@ -9,6 +9,7 @@ sealtk_add_library(sealtk::gui
     AbstractItemModel.cpp
     AbstractItemRepresentation.cpp
     Enums.cpp
+    KwiverTrackModel.cpp
     Player.cpp
     PlayerControl.cpp
     Resources.cpp
@@ -20,6 +21,7 @@ sealtk_add_library(sealtk::gui
     AbstractItemModel.hpp
     AbstractItemRepresentation.hpp
     Enums.hpp
+    KwiverTrackModel.hpp
     Player.hpp
     PlayerControl.hpp
     Resources.hpp
