@@ -2,17 +2,17 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef sealtk_gui_AbstractItemModel_hpp
-#define sealtk_gui_AbstractItemModel_hpp
+#ifndef sealtk_core_AbstractItemModel_hpp
+#define sealtk_core_AbstractItemModel_hpp
 
-#include <sealtk/gui/Export.h>
+#include <sealtk/core/Export.h>
 
 #include <QAbstractItemModel>
 
 namespace sealtk
 {
 
-namespace gui
+namespace core
 {
 
 /// Abstract implementation of an item model.
@@ -27,7 +27,7 @@ namespace gui
 ///
 /// The default implementations of #index and #parent are suitable for "flat"
 /// models. Models that provide tree-structured data should override these.
-class SEALTK_GUI_EXPORT AbstractItemModel : public QAbstractItemModel
+class SEALTK_CORE_EXPORT AbstractItemModel : public QAbstractItemModel
 {
   Q_OBJECT
 
@@ -47,7 +47,7 @@ protected:
   static constexpr auto ParentIsInvalid = CheckIndexOption::ParentIsInvalid;
 };
 
-} // namespace gui
+} // namespace core
 
 } // namespace sealtk
 

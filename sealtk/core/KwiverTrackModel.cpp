@@ -2,7 +2,7 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/gui/KwiverTrackModel.hpp>
+#include <sealtk/core/KwiverTrackModel.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/UnsharedPointer.hpp>
@@ -21,7 +21,7 @@ namespace kvr = kwiver::vital::range;
 namespace sealtk
 {
 
-namespace gui
+namespace core
 {
 
 namespace // anonymous
@@ -231,6 +231,6 @@ KwiverTrack::KwiverTrack(kv::track_sptr&& track)
 {
 }
 
-} // namespace gui
+} // namespace core
 
 } // namespace sealtk

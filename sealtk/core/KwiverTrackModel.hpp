@@ -2,10 +2,10 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#ifndef sealtk_gui_KwiverTrackModel_hpp
-#define sealtk_gui_KwiverTrackModel_hpp
+#ifndef sealtk_core_KwiverTrackModel_hpp
+#define sealtk_core_KwiverTrackModel_hpp
 
-#include <sealtk/gui/AbstractItemModel.hpp>
+#include <sealtk/core/AbstractItemModel.hpp>
 
 #include <vital/types/object_track_set.h>
 
@@ -16,12 +16,12 @@
 namespace sealtk
 {
 
-namespace gui
+namespace core
 {
 
 class KwiverTrackModelData;
 
-class SEALTK_GUI_EXPORT KwiverTrackModel : public AbstractItemModel
+class SEALTK_CORE_EXPORT KwiverTrackModel : public AbstractItemModel
 {
   Q_OBJECT
 
@@ -50,7 +50,7 @@ private:
   QTE_DECLARE_SHARED(KwiverTrackModel);
 };
 
-} // namespace gui
+} // namespace core
 
 } // namespace sealtk
 

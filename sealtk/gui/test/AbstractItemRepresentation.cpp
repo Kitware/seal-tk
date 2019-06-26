@@ -2,9 +2,9 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/gui/AbstractItemModel.hpp>
 #include <sealtk/gui/AbstractItemRepresentation.hpp>
 
+#include <sealtk/core/AbstractItemModel.hpp>
 #include <sealtk/core/DataModelTypes.hpp>
 
 #include <vital/types/timestamp.h>
@@ -57,7 +57,7 @@ bool const visibilityData[ROW_COUNT] = {
 };
 
 // ============================================================================
-class TestModel : public AbstractItemModel
+class TestModel : public core::AbstractItemModel
 {
 public:
   TestModel(QObject* parent) : AbstractItemModel{parent} {}
