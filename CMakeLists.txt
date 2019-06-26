@@ -30,6 +30,7 @@ find_package(Qt5 5.10 REQUIRED COMPONENTS
 find_package(qtExtensions REQUIRED)
 find_package(kwiver REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Threads REQUIRED)
 find_package(Git)
 find_package(Sphinx)
 
