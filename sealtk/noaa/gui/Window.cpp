@@ -37,11 +37,14 @@ namespace noaa
 namespace gui
 {
 
+namespace sc = sealtk::core;
+namespace sg = sealtk::gui;
+
 //=============================================================================
 struct WindowData
 {
-  sealtk::core::VideoSource* videoSource = nullptr;
-  sealtk::gui::SplitterWindow* window = nullptr;
+  sc::VideoSource* videoSource = nullptr;
+  sg::SplitterWindow* window = nullptr;
   sealtk::noaa::gui::Player* player = nullptr;
 };
 
@@ -52,7 +55,7 @@ public:
   WindowPrivate(Window* parent);
 
   void registerVideoSourceFactory(QString const& name,
-                                  sealtk::core::VideoSourceFactory* factory);
+                                  sc::VideoSourceFactory* factory);
   void createWindow(WindowData* data, QString const& title);
 
   QTE_DECLARE_PUBLIC(Window)
@@ -60,7 +63,7 @@ public:
 
   Ui::Window ui;
 
-  std::unique_ptr<sealtk::core::VideoController> videoController;
+  std::unique_ptr<sc::VideoController> videoController;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -83,20 +86,20 @@ Window::Window(QWidget* parent)
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
 
-  d->eoWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Manual);
-  d->irWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Percentile);
+  d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
+  d->irWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->irWindow.player->setPercentiles(0.0, 1.0);
 
-  d->videoController = make_unique<sealtk::core::VideoController>(this);
+  d->videoController = make_unique<sc::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
-  connect(d->ui.control, &sealtk::gui::PlayerControl::previousFrameTriggered,
+  connect(d->ui.control, &sg::PlayerControl::previousFrameTriggered,
           this, [d]{
             d->videoController->previousFrame(0);
           });
-  connect(d->ui.control, &sealtk::gui::PlayerControl::nextFrameTriggered,
+  connect(d->ui.control, &sg::PlayerControl::nextFrameTriggered,
           this, [d]{
             d->videoController->nextFrame(0);
           });
@@ -166,7 +169,7 @@ WindowPrivate::WindowPrivate(Window* parent)
 
 //-----------------------------------------------------------------------------
 void WindowPrivate::registerVideoSourceFactory(
-  QString const& name, sealtk::core::VideoSourceFactory* factory)
+  QString const& name, sc::VideoSourceFactory* factory)
 {
   QTE_Q();
 
@@ -176,8 +179,8 @@ void WindowPrivate::registerVideoSourceFactory(
                                                     &this->irWindow);
 
   QObject::connect(
-    factory, &sealtk::core::VideoSourceFactory::videoSourceLoaded,
-    [this, q](void* handle, sealtk::core::VideoSource* videoSource)
+    factory, &sc::VideoSourceFactory::videoSourceLoaded,
+    [this, q](void* handle, sc::VideoSource* videoSource)
   {
     auto* data = static_cast<WindowData*>(handle);
 
@@ -192,11 +195,11 @@ void WindowPrivate::registerVideoSourceFactory(
   });
 
   auto* fileFactory =
-    dynamic_cast<sealtk::core::FileVideoSourceFactory*>(factory);
+    dynamic_cast<sc::FileVideoSourceFactory*>(factory);
   if (fileFactory)
   {
     QObject::connect(
-      fileFactory, &sealtk::core::FileVideoSourceFactory::fileRequested,
+      fileFactory, &sc::FileVideoSourceFactory::fileRequested,
       [q, fileFactory](void* handle){
         QString filename;
         if (fileFactory->expectsDirectory())
@@ -266,8 +269,8 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title)
   this->ui.centralwidget->addWidget(data->window);
 }
 
-}
+} // namespace gui
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
