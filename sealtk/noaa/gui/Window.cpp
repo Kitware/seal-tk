@@ -43,11 +43,14 @@ namespace noaa
 namespace gui
 {
 
+namespace sc = sealtk::core;
+namespace sg = sealtk::gui;
+
 //=============================================================================
 struct WindowData
 {
-  sealtk::core::VideoSource* videoSource = nullptr;
-  sealtk::gui::SplitterWindow* window = nullptr;
+  sc::VideoSource* videoSource = nullptr;
+  sg::SplitterWindow* window = nullptr;
   sealtk::noaa::gui::Player* player = nullptr;
 };
 
@@ -58,7 +61,7 @@ public:
   WindowPrivate(Window* q) : q_ptr{q} {}
 
   void registerVideoSourceFactory(
-    QString const& name, sealtk::core::VideoSourceFactory* factory);
+    QString const& name, sc::VideoSourceFactory* factory);
 
   void createWindow(WindowData* data, QString const& title,
                     sealtk::noaa::gui::Player::Role role);
@@ -67,7 +70,7 @@ public:
 
   Ui::Window ui;
 
-  std::unique_ptr<sealtk::core::VideoController> videoController;
+  std::unique_ptr<sc::VideoController> videoController;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -97,23 +100,23 @@ Window::Window(QWidget* parent)
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
 
-  d->eoWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Manual);
-  d->irWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Percentile);
+  d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
+  d->irWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->irWindow.player->setPercentiles(0.0, 1.0);
 
-  connect(d->eoWindow.player, &::sealtk::gui::Player::imageSizeChanged,
-          d->irWindow.player, &::sealtk::gui::Player::setHomographyImageSize);
+  connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
+          d->irWindow.player, &sg::Player::setHomographyImageSize);
 
-  d->videoController = make_unique<sealtk::core::VideoController>(this);
+  d->videoController = make_unique<sc::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
-  connect(d->ui.control, &sealtk::gui::PlayerControl::previousFrameTriggered,
+  connect(d->ui.control, &sg::PlayerControl::previousFrameTriggered,
           this, [d]{
             d->videoController->previousFrame(0);
           });
-  connect(d->ui.control, &sealtk::gui::PlayerControl::nextFrameTriggered,
+  connect(d->ui.control, &sg::PlayerControl::nextFrameTriggered,
           this, [d]{
             d->videoController->nextFrame(0);
           });
@@ -138,7 +141,7 @@ void Window::setPipelineDirectory(QString const& directory)
 
   qDeleteAll(d->ui.menuPipeline->actions());
 
-  sealtk::core::DirectoryListing pdir{{"pipe"}, directory};
+  sc::DirectoryListing pdir{{"pipe"}, directory};
   auto const& pipelines = pdir.files();
   auto keys = pipelines.keys();
 
@@ -203,7 +206,7 @@ void Window::showAbout()
 
 //-----------------------------------------------------------------------------
 void WindowPrivate::registerVideoSourceFactory(
-  QString const& name, sealtk::core::VideoSourceFactory* factory)
+  QString const& name, sc::VideoSourceFactory* factory)
 {
   QTE_Q();
 
@@ -213,8 +216,8 @@ void WindowPrivate::registerVideoSourceFactory(
                                                     &this->irWindow);
 
   QObject::connect(
-    factory, &sealtk::core::VideoSourceFactory::videoSourceLoaded,
-    [this, q](void* handle, sealtk::core::VideoSource* videoSource)
+    factory, &sc::VideoSourceFactory::videoSourceLoaded,
+    [this, q](void* handle, sc::VideoSource* videoSource)
   {
     auto* data = static_cast<WindowData*>(handle);
 
@@ -232,11 +235,11 @@ void WindowPrivate::registerVideoSourceFactory(
   });
 
   auto* fileFactory =
-    dynamic_cast<sealtk::core::FileVideoSourceFactory*>(factory);
+    dynamic_cast<sc::FileVideoSourceFactory*>(factory);
   if (fileFactory)
   {
     QObject::connect(
-      fileFactory, &sealtk::core::FileVideoSourceFactory::fileRequested,
+      fileFactory, &sc::FileVideoSourceFactory::fileRequested,
       [q, fileFactory](void* handle){
         QString filename;
         if (fileFactory->expectsDirectory())
@@ -262,21 +265,21 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
 {
   QTE_Q();
 
-  data->window = new sealtk::gui::SplitterWindow{q};
+  data->window = new sg::SplitterWindow{q};
   data->player = new sealtk::noaa::gui::Player{role, data->window};
   data->window->setCentralWidget(data->player);
   data->window->setClosable(false);
   data->window->setWindowTitle(title);
 
   QObject::connect(q, &Window::zoomChanged,
-                   data->player, &sealtk::gui::Player::setZoom);
-  QObject::connect(data->player, &sealtk::gui::Player::zoomChanged,
+                   data->player, &sg::Player::setZoom);
+  QObject::connect(data->player, &sg::Player::zoomChanged,
                    q, &Window::setZoom);
   data->player->setZoom(q->zoom());
 
   QObject::connect(q, &Window::centerChanged,
-                   data->player, &sealtk::gui::Player::setCenter);
-  QObject::connect(data->player, &sealtk::gui::Player::centerChanged,
+                   data->player, &sg::Player::setCenter);
+  QObject::connect(data->player, &sg::Player::centerChanged,
                    q, &Window::setCenter);
   data->player->setCenter(q->center());
 
@@ -284,7 +287,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
     data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,
     [q, data]()
   {
-    auto* kwiverVideoSource = qobject_cast<sealtk::core::KwiverVideoSource*>(
+    auto* kwiverVideoSource = qobject_cast<sc::KwiverVideoSource*>(
       data->player->videoSource());
     if (kwiverVideoSource)
     {
@@ -324,17 +327,17 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
   progressDialog.setAutoReset(false);
   progressDialog.show();
 
-  sealtk::core::KwiverPipelineWorker worker{q};
+  sc::KwiverPipelineWorker worker{q};
 
   worker.addVideoSource(this->eoWindow.videoSource);
   worker.addVideoSource(this->irWindow.videoSource);
 
   QObject::connect(
-    &worker, &sealtk::core::KwiverPipelineWorker::progressRangeChanged,
+    &worker, &sc::KwiverPipelineWorker::progressRangeChanged,
     &progressDialog, &QProgressDialog::setRange);
 
   QObject::connect(
-    &worker, &sealtk::core::KwiverPipelineWorker::progressValueChanged,
+    &worker, &sc::KwiverPipelineWorker::progressValueChanged,
     &progressDialog, &QProgressDialog::setValue);
 
   if (worker.initialize(pipelineFile))
