@@ -13,6 +13,7 @@
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
 #include <sealtk/core/KwiverPipelineWorker.hpp>
+#include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -30,6 +31,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProgressDialog>
+#include <QUrl>
+#include <QUrlQuery>
 #include <QVector>
 
 #include <memory>
@@ -66,11 +69,14 @@ public:
   void createWindow(WindowData* data, QString const& title,
                     sealtk::noaa::gui::Player::Role role);
 
+  void loadDetections();
   void executePipeline(QString const& pipelineFile);
 
   Ui::Window ui;
 
   std::unique_ptr<sc::VideoController> videoController;
+  std::shared_ptr<sc::AbstractDataSource> trackSource;
+  std::shared_ptr<QAbstractItemModel> trackModel;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -285,29 +291,48 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
 
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,
-    [q, data]()
-  {
-    auto* kwiverVideoSource = qobject_cast<sc::KwiverVideoSource*>(
-      data->player->videoSource());
-    if (kwiverVideoSource)
-    {
-      QString filename = QFileDialog::getOpenFileName(q);
-      if (!filename.isNull())
-      {
-        auto config = kwiver::vital::config_block::empty_config();
-        config->set_value("input:type", "csv");
-        kwiver::vital::algo::detected_object_set_input_sptr input;
-        kwiver::vital::algo::detected_object_set_input
-          ::set_nested_algo_configuration("input", config, input);
-        input->open(stdString(filename));
-        /* TODO
-        kwiverVideoSource->setDetectedObjectSetInput(input);
-        */
-      }
-    }
-  });
+    q, [this]{ this->loadDetections(); });
 
   this->ui.centralwidget->addWidget(data->window);
+}
+
+//-----------------------------------------------------------------------------
+void WindowPrivate::loadDetections()
+{
+  QTE_Q();
+
+  auto const& filename = QFileDialog::getOpenFileName(q);
+  if (!filename.isNull())
+  {
+    auto uri = QUrl::fromLocalFile(filename);
+    auto params = QUrlQuery{};
+
+    params.addQueryItem("input:type", "kw18");
+    uri.setQuery(params);
+
+    this->trackSource =
+      std::make_shared<sc::KwiverTrackSource>(q);
+
+    QObject::connect(
+      this->trackSource.get(), &sc::AbstractDataSource::modelReady, q,
+      [this](std::shared_ptr<QAbstractItemModel> const& model){
+        this->trackModel = model;
+        // TODO
+      });
+    QObject::connect(
+      this->trackSource.get(), &sc::AbstractDataSource::failed, q,
+      [q](QString const& message){
+        QMessageBox mb{q};
+        mb.setIcon(QMessageBox::Warning);
+        mb.setWindowTitle(QStringLiteral("Failed to read detections"));
+        mb.setText(
+          QStringLiteral("An exception occurred while reading detections."));
+        mb.setDetailedText(message);
+        mb.exec();
+      });
+
+    this->trackSource->readData(uri);
+  }
 }
 
 //-----------------------------------------------------------------------------
