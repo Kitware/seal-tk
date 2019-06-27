@@ -11,6 +11,7 @@
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
 #include <sealtk/core/FileVideoSourceFactory.hpp>
+#include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -24,6 +25,9 @@
 
 #include <QDockWidget>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QUrl>
+#include <QUrlQuery>
 #include <QVector>
 
 #include <memory>
@@ -57,19 +61,23 @@ public:
   void registerVideoSourceFactory(QString const& name,
                                   sc::VideoSourceFactory* factory);
   void createWindow(WindowData* data, QString const& title);
-
-  QTE_DECLARE_PUBLIC(Window)
-  QTE_DECLARE_PUBLIC_PTR(Window)
+  void loadDetections();
 
   Ui::Window ui;
 
   std::unique_ptr<sc::VideoController> videoController;
+  std::shared_ptr<sc::AbstractDataSource> trackSource;
+  std::shared_ptr<QAbstractItemModel> trackModel;
 
   WindowData eoWindow;
   WindowData irWindow;
 
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
+
+private:
+  QTE_DECLARE_PUBLIC(Window)
+  QTE_DECLARE_PUBLIC_PTR(Window)
 };
 
 //-----------------------------------------------------------------------------
@@ -224,49 +232,68 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title)
 {
   QTE_Q();
 
-  data->window = new sealtk::gui::SplitterWindow{q};
+  data->window = new sg::SplitterWindow{q};
   data->player = new sealtk::noaa::gui::Player{data->window};
   data->window->setCentralWidget(data->player);
   data->window->setClosable(false);
   data->window->setWindowTitle(title);
 
   QObject::connect(q, &Window::zoomChanged,
-                   data->player, &sealtk::gui::Player::setZoom);
-  QObject::connect(data->player, &sealtk::gui::Player::zoomChanged,
+                   data->player, &sg::Player::setZoom);
+  QObject::connect(data->player, &sg::Player::zoomChanged,
                    q, &Window::setZoom);
   data->player->setZoom(q->zoom());
 
   QObject::connect(q, &Window::centerChanged,
-                   data->player, &sealtk::gui::Player::setCenter);
-  QObject::connect(data->player, &sealtk::gui::Player::centerChanged,
+                   data->player, &sg::Player::setCenter);
+  QObject::connect(data->player, &sg::Player::centerChanged,
                    q, &Window::setCenter);
   data->player->setCenter(q->center());
 
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,
-    [q, data]()
-  {
-    auto* kwiverVideoSource = qobject_cast<sealtk::core::KwiverVideoSource*>(
-      data->player->videoSource());
-    if (kwiverVideoSource)
-    {
-      QString filename = QFileDialog::getOpenFileName(q);
-      if (!filename.isNull())
-      {
-        auto config = kwiver::vital::config_block::empty_config();
-        config->set_value("input:type", "csv");
-        kwiver::vital::algo::detected_object_set_input_sptr input;
-        kwiver::vital::algo::detected_object_set_input
-          ::set_nested_algo_configuration("input", config, input);
-        input->open(stdString(filename));
-        /* TODO
-        kwiverVideoSource->setDetectedObjectSetInput(input);
-        */
-      }
-    }
-  });
+    q, [this]{ this->loadDetections(); });
 
   this->ui.centralwidget->addWidget(data->window);
+}
+
+//-----------------------------------------------------------------------------
+void WindowPrivate::loadDetections()
+{
+  QTE_Q();
+
+  auto const& filename = QFileDialog::getOpenFileName(q);
+  if (!filename.isNull())
+  {
+    auto uri = QUrl::fromLocalFile(filename);
+    auto params = QUrlQuery{};
+
+    params.addQueryItem("input:type", "kw18");
+    uri.setQuery(params);
+
+    this->trackSource =
+      std::make_shared<sc::KwiverTrackSource>(q);
+
+    QObject::connect(
+      this->trackSource.get(), &sc::AbstractDataSource::modelReady, q,
+      [this](std::shared_ptr<QAbstractItemModel> const& model){
+        this->trackModel = model;
+        // TODO
+      });
+    QObject::connect(
+      this->trackSource.get(), &sc::AbstractDataSource::failed, q,
+      [q](QString const& message){
+        QMessageBox mb{q};
+        mb.setIcon(QMessageBox::Warning);
+        mb.setWindowTitle(QStringLiteral("Failed to read detections"));
+        mb.setText(
+          QStringLiteral("An exception occurred while reading detections."));
+        mb.setDetailedText(message);
+        mb.exec();
+      });
+
+    this->trackSource->readData(uri);
+  }
 }
 
 } // namespace gui

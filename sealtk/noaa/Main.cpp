@@ -2,14 +2,18 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <QApplication>
-#include <QDir>
-
 #include <sealtk/noaa/gui/Window.hpp>
 
 #include <sealtk/gui/Resources.hpp>
 
+#include <sealtk/core/AbstractDataSource.hpp>
+
 #include <vital/plugin_loader/plugin_manager.h>
+
+#include <QApplication>
+#include <QDir>
+
+#include <memory>
 
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -21,6 +25,8 @@ int main(int argc, char** argv)
 
   QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
   QApplication app{argc, argv};
+
+  qRegisterMetaType<std::shared_ptr<QAbstractItemModel>>();
 
   sealtk::noaa::gui::Window window;
   window.show();
