@@ -10,8 +10,13 @@
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
+#include <sealtk/gui/AbstractItemRepresentation.hpp>
+#include <sealtk/gui/FusionModel.hpp>
+
+#include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
+#include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverPipelineWorker.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
@@ -25,13 +30,19 @@
 #include <qtStlUtil.h>
 
 #include <QCollator>
+#include <QDebug>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProgressDialog>
+#include <QUrl>
+#include <QUrlQuery>
 #include <QVector>
 
 #include <memory>
+
+namespace sc = sealtk::core;
+namespace sg = sealtk::gui;
 
 namespace sealtk
 {
@@ -42,13 +53,51 @@ namespace noaa
 namespace gui
 {
 
+namespace // anonymous
+{
+
 //=============================================================================
 struct WindowData
 {
-  sealtk::core::VideoSource* videoSource = nullptr;
-  sealtk::gui::SplitterWindow* window = nullptr;
+  sc::VideoSource* videoSource = nullptr;
+  sg::SplitterWindow* window = nullptr;
   sealtk::noaa::gui::Player* player = nullptr;
+
+  std::shared_ptr<sc::AbstractDataSource> trackSource;
+  std::shared_ptr<QAbstractItemModel> trackModel;
 };
+
+//=============================================================================
+class TrackRepresentation : public sg::AbstractItemRepresentation
+{
+public:
+  TrackRepresentation()
+  {
+    this->setColumnRoles({sc::NameRole, sc::StartTimeRole});
+  }
+
+  QVariant headerData(int section, Qt::Orientation orientation,
+                      int role = Qt::DisplayRole) const override
+  {
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole &&
+        section >= 0 && section < this->columnCount())
+    {
+      switch (this->roleForColumn(section))
+      {
+        case sc::StartTimeRole:
+        case sc::EndTimeRole:
+          return QStringLiteral("Time");
+        default:
+          break;
+      }
+    }
+
+    return this->AbstractItemRepresentation::headerData(
+      section, orientation, role);
+  }
+};
+
+}
 
 //=============================================================================
 class WindowPrivate
@@ -57,16 +106,21 @@ public:
   WindowPrivate(Window* q) : q_ptr{q} {}
 
   void registerVideoSourceFactory(
-    QString const& name, sealtk::core::VideoSourceFactory* factory);
+    QString const& name, sc::VideoSourceFactory* factory);
 
   void createWindow(WindowData* data, QString const& title,
                     sealtk::noaa::gui::Player::Role role);
+
+  void loadDetections(WindowData* data);
 
   void executePipeline(QString const& pipelineFile);
 
   Ui::Window ui;
 
-  std::unique_ptr<sealtk::core::VideoController> videoController;
+  sg::FusionModel trackModel;
+  TrackRepresentation trackRepresentation;
+
+  std::unique_ptr<sc::VideoController> videoController;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -90,26 +144,29 @@ Window::Window(QString const& pipelineDirectory, QWidget* parent)
   QTE_D();
   d->ui.setupUi(this);
 
+  d->trackRepresentation.setSourceModel(&d->trackModel);
+  d->ui.tracks->setModel(&d->trackRepresentation);
+
   constexpr auto Master = sealtk::noaa::gui::Player::Role::Master;
   constexpr auto Slave = sealtk::noaa::gui::Player::Role::Slave;
 
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
 
-  d->eoWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Manual);
-  d->irWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Percentile);
+  d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
+  d->irWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->irWindow.player->setPercentiles(0.0, 1.0);
 
-  d->videoController = make_unique<sealtk::core::VideoController>(this);
+  d->videoController = make_unique<sc::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
-  connect(d->ui.control, &sealtk::gui::PlayerControl::previousFrameTriggered,
+  connect(d->ui.control, &sg::PlayerControl::previousFrameTriggered,
           this, [d]{
             d->videoController->previousFrame(0);
           });
-  connect(d->ui.control, &sealtk::gui::PlayerControl::nextFrameTriggered,
+  connect(d->ui.control, &sg::PlayerControl::nextFrameTriggered,
           this, [d]{
             d->videoController->nextFrame(0);
           });
@@ -191,7 +248,7 @@ void Window::showAbout()
 
 //-----------------------------------------------------------------------------
 void WindowPrivate::registerVideoSourceFactory(
-  QString const& name, sealtk::core::VideoSourceFactory* factory)
+  QString const& name, sc::VideoSourceFactory* factory)
 {
   QTE_Q();
 
@@ -201,8 +258,8 @@ void WindowPrivate::registerVideoSourceFactory(
                                                     &this->irWindow);
 
   QObject::connect(
-    factory, &sealtk::core::VideoSourceFactory::videoSourceLoaded,
-    [this, q](void* handle, sealtk::core::VideoSource* videoSource)
+    factory, &sc::VideoSourceFactory::videoSourceLoaded,
+    [this, q](void* handle, sc::VideoSource* videoSource)
   {
     auto* data = static_cast<WindowData*>(handle);
 
@@ -220,11 +277,11 @@ void WindowPrivate::registerVideoSourceFactory(
   });
 
   auto* fileFactory =
-    dynamic_cast<sealtk::core::FileVideoSourceFactory*>(factory);
+    dynamic_cast<sc::FileVideoSourceFactory*>(factory);
   if (fileFactory)
   {
     QObject::connect(
-      fileFactory, &sealtk::core::FileVideoSourceFactory::fileRequested,
+      fileFactory, &sc::FileVideoSourceFactory::fileRequested,
       [q, fileFactory](void* handle){
         QString filename;
         if (fileFactory->expectsDirectory())
@@ -250,49 +307,68 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
 {
   QTE_Q();
 
-  data->window = new sealtk::gui::SplitterWindow{q};
+  data->window = new sg::SplitterWindow{q};
   data->player = new sealtk::noaa::gui::Player{role, data->window};
   data->window->setCentralWidget(data->player);
   data->window->setClosable(false);
   data->window->setWindowTitle(title);
 
   QObject::connect(q, &Window::zoomChanged,
-                   data->player, &sealtk::gui::Player::setZoom);
-  QObject::connect(data->player, &sealtk::gui::Player::zoomChanged,
+                   data->player, &sg::Player::setZoom);
+  QObject::connect(data->player, &sg::Player::zoomChanged,
                    q, &Window::setZoom);
   data->player->setZoom(q->zoom());
 
   QObject::connect(q, &Window::centerChanged,
-                   data->player, &sealtk::gui::Player::setCenter);
-  QObject::connect(data->player, &sealtk::gui::Player::centerChanged,
+                   data->player, &sg::Player::setCenter);
+  QObject::connect(data->player, &sg::Player::centerChanged,
                    q, &Window::setCenter);
   data->player->setCenter(q->center());
 
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,
-    [q, data]()
-  {
-    auto* kwiverVideoSource = qobject_cast<sealtk::core::KwiverVideoSource*>(
-      data->player->videoSource());
-    if (kwiverVideoSource)
-    {
-      QString filename = QFileDialog::getOpenFileName(q);
-      if (!filename.isNull())
-      {
-        auto config = kwiver::vital::config_block::empty_config();
-        config->set_value("input:type", "csv");
-        kwiver::vital::algo::detected_object_set_input_sptr input;
-        kwiver::vital::algo::detected_object_set_input
-          ::set_nested_algo_configuration("input", config, input);
-        input->open(stdString(filename));
-        /* TODO
-        kwiverVideoSource->setDetectedObjectSetInput(input);
-        */
-      }
-    }
-  });
+    q, [data, this]{ this->loadDetections(data); });
 
   this->ui.centralwidget->addWidget(data->window);
+}
+
+//-----------------------------------------------------------------------------
+void WindowPrivate::loadDetections(WindowData* data)
+{
+  QTE_Q();
+
+  auto const& filename = QFileDialog::getOpenFileName(q);
+  if (!filename.isNull())
+  {
+    auto uri = QUrl::fromLocalFile(filename);
+    auto params = QUrlQuery{};
+
+    params.addQueryItem("input:type", "kw18");
+    uri.setQuery(params);
+
+    data->trackSource =
+      std::make_shared<sc::KwiverTrackSource>(q);
+
+    QObject::connect(
+      data->trackSource.get(), &sc::AbstractDataSource::modelReady, q,
+      [data, this](std::shared_ptr<QAbstractItemModel> const& model){
+        data->trackModel = model;
+        this->trackModel.addModel(model.get());
+      });
+    QObject::connect(
+      data->trackSource.get(), &sc::AbstractDataSource::failed, q,
+      [q](QString const& message){
+        QMessageBox mb{q};
+        mb.setIcon(QMessageBox::Warning);
+        mb.setWindowTitle(QStringLiteral("Failed to read detections"));
+        mb.setText(
+          QStringLiteral("An exception occurred while reading detections."));
+        mb.setDetailedText(message);
+        mb.exec();
+      });
+
+    data->trackSource->readData(uri);
+  }
 }
 
 //-----------------------------------------------------------------------------

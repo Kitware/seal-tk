@@ -11,6 +11,8 @@ set(SEALTK_CORE_VERSION_OUT
 
 sealtk_add_library(sealtk::core
   SOURCES
+    AbstractDataSource.cpp
+    AbstractItemModel.cpp
     AutoLevelsTask.cpp
     DataModelTypes.cpp
     DateUtils.cpp
@@ -18,7 +20,9 @@ sealtk_add_library(sealtk::core
     FileVideoSourceFactory.cpp
     ImageUtils.cpp
     KwiverFileVideoSourceFactory.cpp
+    KwiverTrackModel.cpp
     KwiverPipelineWorker.cpp
+    KwiverTrackSource.cpp
     KwiverVideoSource.cpp
     TimeStamp.cpp
     VideoController.cpp
@@ -30,6 +34,8 @@ sealtk_add_library(sealtk::core
     VideoSourceFactory.cpp
 
   HEADERS
+    AbstractDataSource.hpp
+    AbstractItemModel.hpp
     AutoLevelsTask.hpp
     DataModelTypes.hpp
     DateUtils.hpp
@@ -37,10 +43,13 @@ sealtk_add_library(sealtk::core
     FileVideoSourceFactory.hpp
     ImageUtils.hpp
     KwiverFileVideoSourceFactory.hpp
+    KwiverTrackModel.hpp
     KwiverPipelineWorker.hpp
+    KwiverTrackSource.hpp
     KwiverVideoSource.hpp
     TimeMap.hpp
     TimeStamp.hpp
+    UnsharedPointer.hpp
     VideoController.hpp
     VideoDistributor.hpp
     VideoFrame.hpp
@@ -57,6 +66,7 @@ sealtk_add_library(sealtk::core
     kwiver::vital
     qtExtensions
     Qt5::Core
+    Threads::Threads
 
   PUBLIC_INCLUDE_DIRECTORIES
     "${EIGEN3_INCLUDE_DIR}"
