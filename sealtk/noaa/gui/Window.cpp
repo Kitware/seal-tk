@@ -172,6 +172,17 @@ Window::Window(QWidget* parent)
           this, [d]{
             d->videoController->nextFrame(0);
           });
+  connect(d->ui.tracks, &QAbstractItemView::doubleClicked,
+          this, [d](QModelIndex const& index){
+            auto const& t =
+              d->trackModel.data(d->trackRepresentation.mapToSource(index),
+                                 sc::StartTimeRole);
+            if (t.isValid())
+            {
+              d->ui.control->setTime(
+                t.value<kwiver::vital::timestamp::time_t>());
+            }
+          });
 
   d->registerVideoSourceFactory(
     "Image List File...",
