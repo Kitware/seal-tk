@@ -392,7 +392,7 @@ void WindowPrivate::loadDetections(WindowData* data)
     auto uri = QUrl::fromLocalFile(filename);
     auto params = QUrlQuery{};
 
-    params.addQueryItem("input:type", "kw18");
+    params.addQueryItem("input:type", "viame_csv");
     uri.setQuery(params);
 
     data->trackSource =
