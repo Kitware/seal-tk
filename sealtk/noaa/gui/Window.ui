@@ -37,7 +37,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>19</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -47,6 +47,21 @@
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QDockWidget" name="trackDock">
+   <property name="windowTitle">
+    <string>Detections</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="trackDockContents">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QTreeView" name="tracks"/>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <action name="actionAbout">
    <property name="text">

@@ -10,6 +10,10 @@
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
+#include <sealtk/gui/AbstractItemRepresentation.hpp>
+#include <sealtk/gui/FusionModel.hpp>
+
+#include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
 #include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
@@ -32,6 +36,9 @@
 
 #include <memory>
 
+namespace sc = sealtk::core;
+namespace sg = sealtk::gui;
+
 namespace sealtk
 {
 
@@ -41,8 +48,8 @@ namespace noaa
 namespace gui
 {
 
-namespace sc = sealtk::core;
-namespace sg = sealtk::gui;
+namespace // anonymous
+{
 
 //=============================================================================
 struct WindowData
@@ -50,7 +57,42 @@ struct WindowData
   sc::VideoSource* videoSource = nullptr;
   sg::SplitterWindow* window = nullptr;
   sealtk::noaa::gui::Player* player = nullptr;
+
+  std::shared_ptr<sc::AbstractDataSource> trackSource;
+  std::shared_ptr<QAbstractItemModel> trackModel;
 };
+
+//=============================================================================
+class TrackRepresentation : public sg::AbstractItemRepresentation
+{
+public:
+  TrackRepresentation()
+  {
+    this->setColumnRoles({sc::NameRole, sc::StartTimeRole});
+  }
+
+  QVariant headerData(int section, Qt::Orientation orientation,
+                      int role = Qt::DisplayRole) const override
+  {
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole &&
+        section >= 0 && section < this->columnCount())
+    {
+      switch (this->roleForColumn(section))
+      {
+        case sc::StartTimeRole:
+        case sc::EndTimeRole:
+          return QStringLiteral("Time");
+        default:
+          break;
+      }
+    }
+
+    return this->AbstractItemRepresentation::headerData(
+      section, orientation, role);
+  }
+};
+
+}
 
 //=============================================================================
 class WindowPrivate
@@ -61,13 +103,14 @@ public:
   void registerVideoSourceFactory(QString const& name,
                                   sc::VideoSourceFactory* factory);
   void createWindow(WindowData* data, QString const& title);
-  void loadDetections();
+  void loadDetections(WindowData* data);
 
   Ui::Window ui;
 
+  sg::FusionModel trackModel;
+  TrackRepresentation trackRepresentation;
+
   std::unique_ptr<sc::VideoController> videoController;
-  std::shared_ptr<sc::AbstractDataSource> trackSource;
-  std::shared_ptr<QAbstractItemModel> trackModel;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -90,6 +133,9 @@ Window::Window(QWidget* parent)
 {
   QTE_D();
   d->ui.setupUi(this);
+
+  d->trackRepresentation.setSourceModel(&d->trackModel);
+  d->ui.tracks->setModel(&d->trackRepresentation);
 
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"));
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"));
@@ -252,13 +298,13 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title)
 
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,
-    q, [this]{ this->loadDetections(); });
+    q, [data, this]{ this->loadDetections(data); });
 
   this->ui.centralwidget->addWidget(data->window);
 }
 
 //-----------------------------------------------------------------------------
-void WindowPrivate::loadDetections()
+void WindowPrivate::loadDetections(WindowData* data)
 {
   QTE_Q();
 
@@ -271,17 +317,17 @@ void WindowPrivate::loadDetections()
     params.addQueryItem("input:type", "kw18");
     uri.setQuery(params);
 
-    this->trackSource =
+    data->trackSource =
       std::make_shared<sc::KwiverTrackSource>(q);
 
     QObject::connect(
-      this->trackSource.get(), &sc::AbstractDataSource::modelReady, q,
-      [this](std::shared_ptr<QAbstractItemModel> const& model){
-        this->trackModel = model;
-        // TODO
+      data->trackSource.get(), &sc::AbstractDataSource::modelReady, q,
+      [data, this](std::shared_ptr<QAbstractItemModel> const& model){
+        data->trackModel = model;
+        this->trackModel.addModel(model.get());
       });
     QObject::connect(
-      this->trackSource.get(), &sc::AbstractDataSource::failed, q,
+      data->trackSource.get(), &sc::AbstractDataSource::failed, q,
       [q](QString const& message){
         QMessageBox mb{q};
         mb.setIcon(QMessageBox::Warning);
@@ -292,7 +338,7 @@ void WindowPrivate::loadDetections()
         mb.exec();
       });
 
-    this->trackSource->readData(uri);
+    data->trackSource->readData(uri);
   }
 }
 
