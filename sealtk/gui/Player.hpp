@@ -10,15 +10,16 @@
 
 #include <sealtk/core/VideoDistributor.hpp>
 
-#include <QMatrix3x3>
-#include <QOpenGLWidget>
-#include <QPointF>
-#include <qtGlobal.h>
-
 #include <vital/types/detected_object_set.h>
 #include <vital/types/image_container.h>
 
+#include <qtGlobal.h>
+
+#include <QOpenGLWidget>
+#include <QPointF>
+
 class QImage;
+class QMatrix4x4;
 
 namespace sealtk
 {
@@ -50,11 +51,11 @@ signals:
   void centerChanged(QPointF center) const;
 
 public slots:
-  void setImage(kwiver::vital::image_container_sptr const& image,
-                sealtk::core::VideoMetaData const& metaData);
-  void setDetectedObjectSet(
+  virtual void setImage(kwiver::vital::image_container_sptr const& image,
+                        sealtk::core::VideoMetaData const& metaData);
+  virtual void setDetectedObjectSet(
     kwiver::vital::detected_object_set_sptr const& detectedObjectSet);
-  void setHomography(QMatrix3x3 const& homography);
+  void setHomography(QMatrix4x4 const& homography);
   void setZoom(float zoom);
   void setCenter(QPointF center);
   void setVideoSource(core::VideoDistributor* videoSource);
