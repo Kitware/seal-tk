@@ -17,6 +17,7 @@
 #include <vital/range/iota.h>
 
 #include <QApplication>
+#include <QDebug>
 #include <QEventLoop>
 #include <QMessageBox>
 #include <QPointer>
@@ -252,23 +253,37 @@ void KwiverPipelineWorker::addVideoSource(sealtk::core::VideoSource* source)
 {
   QTE_D();
 
-  if (source && !d->sources.contains(source))
+  if (source)
   {
-    // Wait until source is ready to report its frames
-    QEventLoop eventLoop;
-
-    connect(source, &VideoSource::framesChanged,
-            &eventLoop, &QEventLoop::quit);
-
-    while (!source->isReady())
+    // Don't add the same source more than once
+    if (!d->sources.contains(source))
     {
-      source->start();
-      eventLoop.exec();
-    }
+      // Wait until source is ready to report its frames
+      QEventLoop eventLoop;
 
-    // Get source's frames and append to frame set
-    d->sources.append(source);
-    d->frames.append(source->frames());
+      connect(source, &VideoSource::framesChanged,
+              &eventLoop, &QEventLoop::quit);
+
+      while (!source->isReady())
+      {
+        source->start();
+        eventLoop.exec();
+      }
+
+      // Get source's frames and append to frame set
+      d->sources.append(source);
+      d->frames.append(source->frames());
+    }
+    else
+    {
+      qWarning() << __func__ << "refusing to add video source" << source
+                 << "which has already been added";
+    }
+  }
+  else
+  {
+    d->sources.append(nullptr);
+    d->frames.append(TimeMap<kv::timestamp::frame_t>{});
   }
 }
 
@@ -312,8 +327,11 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
     ports.append({pipeline, i});
 
     // ...and create a requestor to receive frames from that source
-    requestors[d->sources[i]] =
-      std::make_shared<PipelineVideoRequestor>(&ports[i], &eventLoop);
+    if (auto* const source = d->sources[i])
+    {
+      requestors[source] =
+        std::make_shared<PipelineVideoRequestor>(&ports[i], &eventLoop);
+    }
   }
 
   // Dispatch frames in a loop
@@ -337,6 +355,7 @@ void KwiverPipelineWorker::sendInput(kwiver::embedded_pipeline& pipeline)
           nextTime = ti.key();
         }
 
+        Q_ASSERT(d->sources[i]);
         sourcesToUse.append(d->sources[i]);
       }
     }
