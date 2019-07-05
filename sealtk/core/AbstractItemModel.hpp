@@ -42,6 +42,20 @@ public:
 
   QVariant data(QModelIndex const& index, int role) const override;
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
+  enum class CheckIndexOption {
+      NoOption         = 0x0000,
+      IndexIsValid     = 0x0001,
+      ParentIsInvalid  = 0x0004,
+  };
+  Q_ENUM(CheckIndexOption)
+  Q_DECLARE_FLAGS(CheckIndexOptions, CheckIndexOption)
+
+  Q_REQUIRED_RESULT bool checkIndex(
+    QModelIndex const& index,
+    CheckIndexOptions options = CheckIndexOption::NoOption) const;
+#endif
+
 protected:
   static constexpr auto IndexIsValid = CheckIndexOption::IndexIsValid;
   static constexpr auto ParentIsInvalid = CheckIndexOption::ParentIsInvalid;
@@ -50,5 +64,10 @@ protected:
 } // namespace core
 
 } // namespace sealtk
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
+Q_DECLARE_OPERATORS_FOR_FLAGS(
+  sealtk::core::AbstractItemModel::CheckIndexOptions)
+#endif
 
 #endif

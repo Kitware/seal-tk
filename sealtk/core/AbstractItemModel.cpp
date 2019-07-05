@@ -28,6 +28,27 @@ int AbstractItemModel::columnCount(QModelIndex const& parent) const
   return 64;
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
+// ----------------------------------------------------------------------------
+bool AbstractItemModel::checkIndex(
+  QModelIndex const& i, CheckIndexOptions options) const
+{
+  if (!i.isValid())
+  {
+    return !options.testFlag(IndexIsValid);
+  }
+  if (i.model() != this || i.row() < 0 || i.column() < 0)
+  {
+    return false;
+  }
+  if (options.testFlag(ParentIsInvalid) && i.parent().isValid())
+  {
+    return false;
+  }
+  return (i.row() < this->rowCount(i.parent()));
+}
+#endif
+
 // ----------------------------------------------------------------------------
 QModelIndex AbstractItemModel::index(
   int row, int column, QModelIndex const& parent) const
