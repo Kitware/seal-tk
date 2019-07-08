@@ -18,7 +18,7 @@ list(APPEND CMAKE_MODULE_PATH
   "${PROJECT_SOURCE_DIR}/cmake/thirdparty"
   )
 
-find_package(Qt5 REQUIRED COMPONENTS
+find_package(Qt5 5.10 REQUIRED COMPONENTS
   Test
   Widgets
   Xml
