@@ -10,7 +10,9 @@
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
+#include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
+#include <sealtk/core/KwiverPipelineWorker.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -22,8 +24,11 @@
 
 #include <qtStlUtil.h>
 
+#include <QCollator>
 #include <QDockWidget>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QProgressDialog>
 #include <QVector>
 
 #include <memory>
@@ -112,6 +117,78 @@ Window::Window(QWidget* parent)
 //-----------------------------------------------------------------------------
 Window::~Window()
 {
+}
+
+//-----------------------------------------------------------------------------
+void Window::setPipelineDirectory(QString const& directory)
+{
+  QTE_D();
+
+  qDeleteAll(d->ui.menuPipeline->actions());
+
+  sealtk::core::DirectoryListing pdir{{"pipe"}, directory};
+  auto const& pipelines = pdir.files();
+  auto keys = pipelines.keys();
+
+  QCollator collator;
+  collator.setNumericMode(true);
+  collator.setCaseSensitivity(Qt::CaseInsensitive);
+  std::sort(keys.begin(), keys.end(), collator);
+
+  for (auto const& key : keys)
+  {
+    auto* action = d->ui.menuPipeline->addAction(key);
+    auto filename = pipelines[key];
+    connect(action, &QAction::triggered, [filename, d, this]()
+    {
+      if (!d->eoWindow.player->videoSource() &&
+          !d->irWindow.player->videoSource())
+      {
+        QMessageBox::warning(
+          this, QStringLiteral("Pipeline Error"),
+          QStringLiteral("Please select EO and IR imagery"));
+        return;
+      }
+      if (!d->eoWindow.player->videoSource())
+      {
+        QMessageBox::warning(
+          this, QStringLiteral("Pipeline Error"),
+          QStringLiteral("Please select EO imagery"));
+        return;
+      }
+      if (!d->irWindow.player->videoSource())
+      {
+        QMessageBox::warning(
+          this, QStringLiteral("Pipeline Error"),
+          QStringLiteral("Please select IR imagery"));
+        return;
+      }
+
+      QProgressDialog progressDialog{QStringLiteral("Executing Pipeline..."),
+                                     QString{}, 0, 0, this};
+      progressDialog.setAutoReset(false);
+      progressDialog.show();
+
+      sealtk::core::KwiverPipelineWorker worker{this};
+      if (!worker.initialize(filename))
+      {
+        return;
+      }
+
+      worker.addVideoSource(d->eoWindow.videoSource);
+      worker.addVideoSource(d->irWindow.videoSource);
+
+      connect(
+        &worker, &sealtk::core::KwiverPipelineWorker::progressRangeChanged,
+        &progressDialog, &QProgressDialog::setRange);
+
+      connect(
+        &worker, &sealtk::core::KwiverPipelineWorker::progressValueChanged,
+        &progressDialog, &QProgressDialog::setValue);
+
+      worker.execute();
+    });
+  }
 }
 
 //-----------------------------------------------------------------------------

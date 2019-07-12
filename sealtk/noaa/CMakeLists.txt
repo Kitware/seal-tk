@@ -21,4 +21,12 @@ sealtk_add_executable(sealtk::noaa_app
 
 set_property(TARGET ${name} PROPERTY OUTPUT_NAME sealtk)
 
+sealtk_add_data(noaa_data_files
+  FILES
+    seal-tk/pipelines/test.pipe
+
+  FROM share
+  )
+add_dependencies(${name} noaa_data_files)
+
 add_subdirectory(test)
