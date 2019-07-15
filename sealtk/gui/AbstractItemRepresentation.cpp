@@ -19,6 +19,8 @@ namespace sealtk
 namespace gui
 {
 
+using sealtk::core::AbstractProxyModel;
+
 // ============================================================================
 class AbstractItemRepresentationPrivate
 {
@@ -34,7 +36,7 @@ QTE_IMPLEMENT_D_FUNC(AbstractItemRepresentation)
 
 // ----------------------------------------------------------------------------
 AbstractItemRepresentation::AbstractItemRepresentation(QObject* parent)
-  : QSortFilterProxyModel{parent}, d_ptr{new AbstractItemRepresentationPrivate}
+  : AbstractProxyModel{parent}, d_ptr{new AbstractItemRepresentationPrivate}
 {
   // Our filtering (and likely that of our subclasses) is dependent on the
   // logical data model's data; therefore, we need to re-filter and/or re-sort
@@ -131,7 +133,7 @@ QVariant AbstractItemRepresentation::data(
     }
   }
 
-  return QSortFilterProxyModel::data(index, role);
+  return AbstractProxyModel::data(index, role);
 }
 
 // ----------------------------------------------------------------------------
@@ -247,7 +249,7 @@ QVariant AbstractItemRepresentation::headerData(
     }
   }
 
-  return QSortFilterProxyModel::headerData(section, orientation, role);
+  return AbstractProxyModel::headerData(section, orientation, role);
 }
 
 // ----------------------------------------------------------------------------
@@ -266,7 +268,7 @@ bool AbstractItemRepresentation::lessThan(
     return this->lessThan(left, right, dataRole);
   }
 
-  return QSortFilterProxyModel::lessThan(left, right);
+  return AbstractProxyModel::lessThan(left, right);
 }
 
 // ----------------------------------------------------------------------------
@@ -281,43 +283,7 @@ bool AbstractItemRepresentation::lessThan(
   Q_ASSERT(left.column() == right.column());
 
   auto* const sm = this->sourceModel();
-  auto const& leftData = sm->data(left, role);
-  auto const& rightData = sm->data(right, role);
-
-  switch (role)
-  {
-    // String comparisons
-    case core::NameRole:
-    case core::UniqueIdentityRole:
-      return QString::localeAwareCompare(leftData.toString(),
-                                         rightData.toString());
-
-    // Boolean comparisons
-    case core::VisibilityRole:
-    case core::UserVisibilityRole:
-      return leftData.toBool() < rightData.toBool();
-
-    // Integer comparisons
-    // TODO classification
-    case core::ItemTypeRole:
-      return leftData.toInt() < rightData.toInt();
-
-    // Floating-point comparisons
-    // TODO confidence
-    //   return leftData.toDouble() < rightData.toDouble();
-
-    // Timestamp comparisons
-    case core::StartTimeRole:
-    case core::EndTimeRole:
-    {
-      auto const lt = leftData.value<kv::timestamp::time_t>();
-      auto const rt = rightData.value<kv::timestamp::time_t>();
-      return lt < rt;
-    }
-
-    default:
-      return false;
-  }
+  return this->lessThan(sm->data(left, role), sm->data(right, role), role);
 }
 
 // ----------------------------------------------------------------------------
@@ -337,7 +303,7 @@ bool AbstractItemRepresentation::filterAcceptsRow(
     }
   }
 
-  return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+  return AbstractProxyModel::filterAcceptsRow(sourceRow, sourceParent);
 }
 
 // ----------------------------------------------------------------------------
@@ -356,7 +322,7 @@ bool AbstractItemRepresentation::filterAcceptsColumn(
     return false;
   }
 
-  return QSortFilterProxyModel::filterAcceptsColumn(
+  return AbstractProxyModel::filterAcceptsColumn(
     sourceColumn, sourceParent);
 }
 
@@ -365,7 +331,7 @@ void AbstractItemRepresentation::sort(int column, Qt::SortOrder order)
 {
   QTE_D();
 
-  QSortFilterProxyModel::sort(column, order);
+  AbstractProxyModel::sort(column, order);
 
   // Determine, if we are sorting (column >= 0), if QSortFilterProxyModel
   // figured out what column to sort; if not, we may need to force a sort later

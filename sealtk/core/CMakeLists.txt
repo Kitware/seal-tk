@@ -13,6 +13,7 @@ sealtk_add_library(sealtk::core
   SOURCES
     AbstractDataSource.cpp
     AbstractItemModel.cpp
+    AbstractProxyModel.cpp
     AutoLevelsTask.cpp
     DataModelTypes.cpp
     DateUtils.cpp
@@ -36,6 +37,7 @@ sealtk_add_library(sealtk::core
   HEADERS
     AbstractDataSource.hpp
     AbstractItemModel.hpp
+    AbstractProxyModel.hpp
     AutoLevelsTask.hpp
     DataModelTypes.hpp
     DateUtils.hpp
