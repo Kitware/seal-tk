@@ -73,6 +73,16 @@ enum ItemDataRole
   /// (timestamp::time_t) Scene time at which the item leaves scope.
   EndTimeRole,
 
+  /// (QRectF) Image area location of an entity.
+  ///
+  /// This provides the area location (i.e. an axis-aligned bounding box) of an
+  /// item. The coordinates are in the image space of the imagery corresponding
+  /// to the item's time. (This datum is normally only available for items
+  /// which have a specific, distinct time point, i.e. which have the same
+  /// value for both StartTimeRole and EndTimeRole. Such items are often
+  /// children of higher-level items.)
+  AreaLocationRole,
+
   /// First role that can be used for model-specific purposes.
   UserRole = Qt::UserRole + 224
 };
