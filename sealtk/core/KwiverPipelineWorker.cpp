@@ -423,6 +423,6 @@ void KwiverPipelineWorker::reportError(
   QMessageBox::warning(w, subject, message);
 }
 
-} // namespace tools
+} // namespace core
 
-} // namespace kwiver
+} // namespace sealtk
