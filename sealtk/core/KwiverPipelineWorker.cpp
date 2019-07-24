@@ -30,11 +30,14 @@ using ts_time_t = kv::timestamp::time_t;
 
 using super = kwiver::arrows::qt::EmbeddedPipelineWorker;
 
-namespace sealtk {
+namespace sealtk
+{
 
-namespace core {
+namespace core
+{
 
-namespace { // anonymous
+namespace // anonymous
+{
 
 // ============================================================================
 class PortSet
@@ -420,6 +423,6 @@ void KwiverPipelineWorker::reportError(
   QMessageBox::warning(w, subject, message);
 }
 
-} // namespace tools
+} // namespace core
 
-} // namespace kwiver
+} // namespace sealtk
