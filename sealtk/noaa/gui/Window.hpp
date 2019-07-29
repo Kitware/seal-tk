@@ -9,6 +9,8 @@
 
 #include <QMainWindow>
 #include <QPointF>
+#include <QString>
+
 #include <qtGlobal.h>
 
 namespace sealtk
@@ -41,7 +43,10 @@ signals:
   void centerChanged(QPointF center) const;
 
 public slots:
+  void setPipelineDirectory(QString const& directory);
+
   void showAbout();
+
   void setZoom(float zoom);
   void setCenter(QPointF center);
 

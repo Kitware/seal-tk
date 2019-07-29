@@ -310,3 +310,45 @@ function(sealtk_add_test name)
 
   qt5_discover_tests(${name} test_${name})
 endfunction()
+
+function(sealtk_add_data target)
+  cmake_parse_arguments(sad "" "FROM" "FILES" ${ARGN})
+
+  if (NOT sad_FROM STREQUAL "")
+    set(from "${sad_FROM}/")
+  else()
+    set(from "")
+  endif()
+
+  set(all_files "")
+  foreach(file IN LISTS sad_FILES)
+    get_filename_component(dir "${file}" DIRECTORY)
+
+    if (IS_ABSOLUTE "${from}")
+      set(in "${from}${file}")
+    else()
+      set(in "${CMAKE_CURRENT_SOURCE_DIR}/${from}${file}")
+    endif()
+    set(out "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/${file}")
+    set(outdir "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/${dir}")
+
+    add_custom_command(
+      OUTPUT "${out}"
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "${outdir}"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${in}" "${out}"
+      DEPENDS "${in}"
+      )
+    list(APPEND all_files "${out}")
+
+    install(
+      FILES "${from}${file}"
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/${dir}")
+  endforeach()
+
+  add_custom_target(${target} DEPENDS ${all_files})
+endfunction()
+
+# Clean out old data files; this will cause slightly more work after a
+# reconfigure, but ensures that no stale files will linger when something is
+# removed from the source tree
+file(REMOVE_RECURSE "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}")

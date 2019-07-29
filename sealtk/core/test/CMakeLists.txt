@@ -71,6 +71,14 @@ sealtk_add_test(DateUtils
     sealtk::core
   )
 
+sealtk_add_test(DirectoryListing
+  SOURCES
+    DirectoryListing.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+  )
+
 sealtk_add_test(TimeMap
   SOURCES
     TimeMap.cpp

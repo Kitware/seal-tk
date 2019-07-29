@@ -1,0 +1,36 @@
+config _pipeline:_edge
+  :capacity 1
+
+process input
+  :: input_adapter
+
+process image
+  :: sink
+
+process file_name
+  :: sink
+
+process timestamp
+  :: sink
+
+process image2
+  :: sink
+
+process file_name2
+  :: sink
+
+process timestamp2
+  :: sink
+
+connect from input.image
+        to   image.sink
+connect from input.file_name
+        to   file_name.sink
+connect from input.timestamp
+        to   timestamp.sink
+connect from input.image2
+        to   image2.sink
+connect from input.file_name2
+        to   file_name2.sink
+connect from input.timestamp2
+        to   timestamp2.sink
