@@ -30,7 +30,7 @@ public:
   ~KwiverTrackModel();
 
   // Reimplemented from QAbstractItemModel
-  int rowCount(QModelIndex const& parent) const override;
+  int rowCount(QModelIndex const& parent = {}) const override;
   QVariant data(QModelIndex const& index, int role) const override;
 
 public slots:
