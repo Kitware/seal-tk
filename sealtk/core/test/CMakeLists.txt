@@ -29,6 +29,15 @@ sealtk_add_test(KwiverPipelineWorker
     sealtk::core_test_common
   )
 
+sealtk_add_test(KwiverTrackModel
+  SOURCES
+    KwiverTrackModel.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+    sealtk::core_test_common
+  )
+
 sealtk_add_test(KwiverVideoSource
   SOURCES
     KwiverVideoSource.cpp
