@@ -4,11 +4,9 @@
 
 #include <sealtk/test/TestCore.hpp>
 
-#include <sealtk/core/test/TestCommon.hpp>
+#include <sealtk/core/test/TestTracks.hpp>
 
-#include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/KwiverTrackModel.hpp>
-#include <sealtk/core/TimeMap.hpp>
 
 #include <vital/types/object_track_set.h>
 
@@ -18,8 +16,6 @@
 
 namespace kv = kwiver::vital;
 namespace kvr = kwiver::vital::range;
-
-using time_us_t = kv::timestamp::time_t;
 
 namespace sealtk
 {
@@ -32,31 +28,6 @@ namespace test
 
 namespace // anonymous
 {
-
-auto const track1 = TimeMap<QRectF>{
-  {100, {0, 0, 10, 10}},
-};
-
-auto const track2 = TimeMap<QRectF>{
-  {300, {420, 130, 30, 20}},
-  {400, {440, 160, 40, 50}},
-};
-
-auto const track3 = TimeMap<QRectF>{
-  {700, {160, 190, 50, 70}},
-};
-
-auto const track4 = TimeMap<QRectF>{
-  {1800, {460, 410, 60, 30}},
-  {1900, {450, 380, 65, 35}},
-  {2000, {480, 370, 55, 35}},
-  {2200, {440, 390, 50, 30}},
-};
-
-auto const track5 = TimeMap<QRectF>{
-  {1100, {120, 560, 50, 20}},
-  {1300, {140, 570, 40, 30}},
-};
 
 // ----------------------------------------------------------------------------
 kv::track_sptr createTrack(kv::track_id_t id, TimeMap<QRectF> const& boxes)
@@ -82,24 +53,6 @@ kv::track_sptr createTrack(kv::track_id_t id, TimeMap<QRectF> const& boxes)
   return track;
 }
 
-// ----------------------------------------------------------------------------
-void testTrackData(QAbstractItemModel const& model, int row,
-                   kv::track_id_t id, TimeMap<QRectF> const& boxes)
-{
-  auto const& index = model.index(row, 0);
-
-  QVERIFY(model.data(index, LogicalIdentityRole).canConvert<kv::track_id_t>());
-  QCOMPARE(model.data(index, LogicalIdentityRole).value<kv::track_id_t>(), id);
-
-  QVERIFY(model.data(index, StartTimeRole).canConvert<time_us_t>());
-  QCOMPARE(model.data(model.index(row, 0), StartTimeRole).value<time_us_t>(),
-           boxes.firstKey());
-
-  QVERIFY(model.data(index, EndTimeRole).canConvert<time_us_t>());
-  QCOMPARE(model.data(model.index(row, 0), EndTimeRole).value<time_us_t>(),
-           boxes.lastKey());
-}
-
 } // namespace <anonymous>
 
 // ============================================================================
@@ -121,7 +74,7 @@ void TestKwiverTrackModel::operations()
 
   auto const ts1 = std::make_shared<kv::object_track_set>(
     std::vector<kv::track_sptr>{
-      createTrack(1, track1),
+      createTrack(1, data::track1),
     });
 
   model.addTracks(ts1);
@@ -129,8 +82,8 @@ void TestKwiverTrackModel::operations()
 
   auto const ts2 = std::make_shared<kv::object_track_set>(
     std::vector<kv::track_sptr>{
-      createTrack(2, track2),
-      createTrack(3, track3),
+      createTrack(2, data::track2),
+      createTrack(3, data::track3),
     });
 
   model.addTracks(ts2);
@@ -138,8 +91,8 @@ void TestKwiverTrackModel::operations()
 
   auto const ts3 = std::make_shared<kv::object_track_set>(
     std::vector<kv::track_sptr>{
-      createTrack(4, track4),
-      createTrack(5, track5),
+      createTrack(4, data::track4),
+      createTrack(5, data::track5),
     });
 
   model.setTracks(ts3);
@@ -156,19 +109,19 @@ void TestKwiverTrackModel::data()
   model.setTracks(
     std::make_shared<kv::object_track_set>(
       std::vector<kv::track_sptr>{
-        createTrack(1, track1),
-        createTrack(2, track2),
-        createTrack(3, track3),
-        createTrack(4, track4),
-        createTrack(5, track5),
+        createTrack(1, data::track1),
+        createTrack(2, data::track2),
+        createTrack(3, data::track3),
+        createTrack(4, data::track4),
+        createTrack(5, data::track5),
       }));
   QCOMPARE(model.rowCount(), 5);
 
-  testTrackData(model, 0, 1, track1);
-  testTrackData(model, 1, 2, track2);
-  testTrackData(model, 2, 3, track3);
-  testTrackData(model, 3, 4, track4);
-  testTrackData(model, 4, 5, track5);
+  testTrackData(model, 0, 1, data::track1);
+  testTrackData(model, 1, 2, data::track2);
+  testTrackData(model, 2, 3, data::track3);
+  testTrackData(model, 3, 4, data::track4);
+  testTrackData(model, 4, 5, data::track5);
 }
 
 } // namespace test
