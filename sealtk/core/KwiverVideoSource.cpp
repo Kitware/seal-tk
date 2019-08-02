@@ -59,9 +59,11 @@ public:
 
   kv::algo::video_input_sptr videoInput;
   TimeMap<frame_t> timestampMap;
+  TimeMap<VideoMetaData> metaDataMap;
 
   // CAUTION: Members below this line are owned by the UI thread!
   TimeMap<frame_t> externalTimestampMap;
+  TimeMap<VideoMetaData> externalMetaDataMap;
   bool ready = false;
 
 private:
@@ -109,6 +111,13 @@ TimeMap<frame_t> KwiverVideoSource::frames() const
 }
 
 // ----------------------------------------------------------------------------
+TimeMap<VideoMetaData> KwiverVideoSource::metaData() const
+{
+  QTE_D();
+  return d->externalMetaDataMap;
+}
+
+// ----------------------------------------------------------------------------
 void KwiverVideoSourcePrivate::initialize()
 {
   if (this->videoInput)
@@ -125,15 +134,22 @@ void KwiverVideoSourcePrivate::initialize()
         Q_ASSERT(ts.has_valid_frame());
         Q_ASSERT(ts.get_frame() == frame);
 
+        auto const& frameName =
+          getImageName(this->videoInput->frame_metadata());
+        auto md = VideoMetaData{ts, frameName};
+
         this->timestampMap.insert(ts.get_time_usec(), ts.get_frame());
+        this->metaDataMap.insert(ts.get_time_usec(), md);
       }
     }
 
-    QMetaObject::invokeMethod(q, [this, q, map = this->timestampMap]{
-      this->externalTimestampMap = map;
-      this->ready = true;
-      emit q->framesChanged();
-    });
+    QMetaObject::invokeMethod(
+      q, [this, q, tsMap = this->timestampMap, mdMap = this->metaDataMap]{
+        this->externalTimestampMap = tsMap;
+        this->externalMetaDataMap = mdMap;
+        this->ready = true;
+        emit q->framesChanged();
+      });
   }
 }
 
@@ -159,7 +175,7 @@ kv::timestamp KwiverVideoSourcePrivate::processRequest(
       Q_ASSERT(ts.get_frame() == iter.value());
 
       VideoFrame response;
-      response.image =this->videoInput->frame_image();
+      response.image = this->videoInput->frame_image();
       response.metaData.setTimeStamp(ts);
       response.metaData.setImageName(
         getImageName(this->videoInput->frame_metadata()));
