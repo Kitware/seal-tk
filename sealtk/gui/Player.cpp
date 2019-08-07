@@ -568,21 +568,9 @@ void PlayerPrivate::updateViewHomography()
   auto const bottom =
     static_cast<float>(this->center.y() + (0.5 * (ih + (vh / zoom))));
 
-  // Compute matrix scale and translation coefficients for x and y
-  auto const invX = 1.0f / (right - left);
-  auto const invY = 1.0f / (top - bottom);
-
-  auto const mxs = 2.0f * invX;
-  auto const mys = 2.0f * invY;
-  auto const mxt = -(right + left) * invX;
-  auto const myt = -(top + bottom) * invY;
-
-  this->viewHomography = QMatrix4x4{
-    mxs,  0.0f, 0.0f, mxt,
-    0.0f, mys,  0.0f, myt,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f,
-  };
+  // Compute transform
+  this->viewHomography.setToIdentity();
+  this->viewHomography.ortho(left, right, bottom, top, 1.0, -1.0);
 
   q->update();
 }
