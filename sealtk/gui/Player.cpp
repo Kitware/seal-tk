@@ -72,8 +72,9 @@ public:
   kv::image_container_sptr image;
   kv::detected_object_set_sptr detectedObjectSet;
   std::vector<std::unique_ptr<QOpenGLBuffer>> detectedObjectVertexBuffers;
-  QMatrix4x4 homography;
   QMatrix4x4 viewHomography;
+  QMatrix4x4 homography;
+  QSize homographyImageSize;
 
   QOpenGLTexture imageTexture{QOpenGLTexture::Target2DArray};
   QOpenGLBuffer imageVertexBuffer{QOpenGLBuffer::VertexBuffer};
@@ -163,6 +164,12 @@ void Player::setImage(kv::image_container_sptr const& image,
 
   d->updateViewHomography();
   this->update();
+
+  if (d->image)
+  {
+    emit this->imageSizeChanged({static_cast<int>(d->image->width()),
+                                 static_cast<int>(d->image->height())});
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -303,6 +310,26 @@ void Player::setPercentiles(double deviance, double tolerance)
     {
       this->update();
     }
+  }
+}
+
+//-----------------------------------------------------------------------------
+QSize Player::homographyImageSize() const
+{
+  QTE_D();
+
+  return d->homographyImageSize;
+}
+
+//-----------------------------------------------------------------------------
+void Player::setHomographyImageSize(QSize size)
+{
+  QTE_D();
+
+  if (d->homographyImageSize != size)
+  {
+    d->homographyImageSize = size;
+    d->updateViewHomography();
   }
 }
 
@@ -521,8 +548,13 @@ void PlayerPrivate::updateViewHomography()
   QTE_Q();
 
   // Get image and view sizes
-  auto const iw = static_cast<float>(image->width());
-  auto const ih = static_cast<float>(image->height());
+  auto const useHomography = !this->homography.isIdentity();
+  auto const iw = (useHomography
+    ? static_cast<float>(this->homographyImageSize.width())
+    : static_cast<float>(image->width()));
+  auto const ih = (useHomography
+    ? static_cast<float>(this->homographyImageSize.height())
+    : static_cast<float>(image->height()));
   auto const vw = static_cast<float>(q->width());
   auto const vh = static_cast<float>(q->height());
 

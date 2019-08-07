@@ -37,18 +37,23 @@ public:
   explicit Player(QWidget* parent = nullptr);
   ~Player() override;
 
-  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged);
-  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged);
+  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged)
+  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged)
+  Q_PROPERTY(QSize homographyImageSize
+             READ homographyImageSize
+             WRITE setHomographyImageSize)
   Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
 
   float zoom() const;
   QPointF center() const;
   core::VideoDistributor* videoSource() const;
   ContrastMode contrastMode() const;
+  QSize homographyImageSize() const;
 
 signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
+  void imageSizeChanged(QSize imageSize) const;
 
 public slots:
   virtual void setImage(kwiver::vital::image_container_sptr const& image,
@@ -56,6 +61,7 @@ public slots:
   virtual void setDetectedObjectSet(
     kwiver::vital::detected_object_set_sptr const& detectedObjectSet);
   void setHomography(QMatrix4x4 const& homography);
+  void setHomographyImageSize(QSize size);
   void setZoom(float zoom);
   void setCenter(QPointF center);
   void setVideoSource(core::VideoDistributor* videoSource);

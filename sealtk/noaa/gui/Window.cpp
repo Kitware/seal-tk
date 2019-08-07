@@ -101,6 +101,9 @@ Window::Window(QWidget* parent)
   d->irWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Percentile);
   d->irWindow.player->setPercentiles(0.0, 1.0);
 
+  connect(d->eoWindow.player, &::sealtk::gui::Player::imageSizeChanged,
+          d->irWindow.player, &::sealtk::gui::Player::setHomographyImageSize);
+
   d->videoController = make_unique<sealtk::core::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
