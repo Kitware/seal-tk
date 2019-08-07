@@ -96,6 +96,7 @@ Window::Window(QWidget* parent)
 
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
+  d->irWindow.player->setMasterPlayer(d->eoWindow.player);
 
   d->eoWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Manual);
   d->irWindow.player->setContrastMode(::sealtk::gui::ContrastMode::Percentile);

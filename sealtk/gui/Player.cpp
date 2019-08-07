@@ -95,6 +95,8 @@ public:
   double percentileTolerance = 0.5;
   core::TimeMap<LevelsPair> percentileLevels;
   quint64 percentileCookie = 0;
+  bool useExternalImageSize = false;
+  QSizeF externalImageSize;
 
   QPointF center{0.0f, 0.0f};
   float zoom = 1.0f;
@@ -154,6 +156,8 @@ void Player::setImage(kv::image_container_sptr const& image,
 {
   QTE_D();
 
+  bool emitSignal = d->image != image;
+
   d->image = image;
   d->timeStamp = metaData.timeStamp();
 
@@ -163,6 +167,11 @@ void Player::setImage(kv::image_container_sptr const& image,
 
   d->updateViewHomography();
   this->update();
+
+  if (emitSignal)
+  {
+    emit this->imageChanged(d->image);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -303,6 +312,50 @@ void Player::setPercentiles(double deviance, double tolerance)
     {
       this->update();
     }
+  }
+}
+
+//-----------------------------------------------------------------------------
+bool Player::useExternalImageSize() const
+{
+  QTE_D();
+
+  return d->useExternalImageSize;
+}
+
+//-----------------------------------------------------------------------------
+void Player::setUseExternalImageSize(bool use)
+{
+  QTE_D();
+
+  if (d->useExternalImageSize != use)
+  {
+    d->useExternalImageSize = use;
+    d->updateViewHomography();
+
+    emit this->useExternalImageSizeChanged(use);
+  }
+}
+
+//-----------------------------------------------------------------------------
+QSizeF Player::externalImageSize() const
+{
+  QTE_D();
+
+  return d->externalImageSize;
+}
+
+//-----------------------------------------------------------------------------
+void Player::setExternalImageSize(QSizeF size)
+{
+  QTE_D();
+
+  if (!(qFuzzyCompare(size.width(), d->externalImageSize.width()) &&
+        qFuzzyCompare(size.height(), d->externalImageSize.height()))) {
+    d->externalImageSize = size;
+    d->updateViewHomography();
+
+    emit this->externalImageSizeChanged(size);
   }
 }
 
@@ -521,8 +574,18 @@ void PlayerPrivate::updateViewHomography()
   QTE_Q();
 
   // Get image and view sizes
-  auto const iw = static_cast<float>(image->width());
-  auto const ih = static_cast<float>(image->height());
+  float iw;
+  float ih;
+  if (this->useExternalImageSize)
+  {
+    iw = static_cast<float>(this->externalImageSize.width());
+    ih = static_cast<float>(this->externalImageSize.height());
+  }
+  else
+  {
+    iw = static_cast<float>(image->width());
+    ih = static_cast<float>(image->height());
+  }
   auto const vw = static_cast<float>(q->width());
   auto const vh = static_cast<float>(q->height());
 

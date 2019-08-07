@@ -45,6 +45,8 @@ public:
   void setImage(kwiver::vital::image_container_sptr const& image,
                 sealtk::core::VideoMetaData const& metaData) override;
 
+  void setMasterPlayer(Player* master);
+
 signals:
   void loadDetectionsTriggered() const;
 

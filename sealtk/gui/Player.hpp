@@ -37,18 +37,27 @@ public:
   explicit Player(QWidget* parent = nullptr);
   ~Player() override;
 
-  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged);
-  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged);
+  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged)
+  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged)
   Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
+  Q_PROPERTY(bool useExternalImageSize READ useExternalImageSize WRITE
+    setUseExternalImageSize NOTIFY useExternalImageSizeChanged)
+  Q_PROPERTY(QSizeF externalImageSize READ externalImageSize WRITE
+    setExternalImageSize NOTIFY externalImageSizeChanged)
 
   float zoom() const;
   QPointF center() const;
   core::VideoDistributor* videoSource() const;
   ContrastMode contrastMode() const;
+  bool useExternalImageSize() const;
+  QSizeF externalImageSize() const;
 
 signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
+  void useExternalImageSizeChanged(bool use) const;
+  void externalImageSizeChanged(QSizeF size) const;
+  void imageChanged(kwiver::vital::image_container_sptr const& image) const;
 
 public slots:
   virtual void setImage(kwiver::vital::image_container_sptr const& image,
@@ -62,6 +71,8 @@ public slots:
   void setContrastMode(ContrastMode mode);
   void setManualLevels(float low, float high);
   void setPercentiles(double deviance, double tolerance);
+  void setUseExternalImageSize(bool use);
+  void setExternalImageSize(QSizeF size);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)

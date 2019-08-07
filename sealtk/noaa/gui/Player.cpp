@@ -44,6 +44,8 @@ public:
 
   kv::transform_2d_sptr transform;
   QSizeF imageSize;
+  Player* master = nullptr;
+  QMetaObject::Connection masterImageChangedConnection;
 
   void loadTransform(Player* q);
   void updateTransform(Player* q);
@@ -120,6 +122,34 @@ void Player::setImage(kv::image_container_sptr const& image,
   else
   {
     d->imageSize = QSizeF{};
+  }
+}
+
+// ----------------------------------------------------------------------------
+void Player::setMasterPlayer(Player* master)
+{
+  QTE_D();
+
+  if (d->master)
+  {
+    disconnect(d->masterImageChangedConnection);
+  }
+
+  d->master = master;
+
+  if (d->master)
+  {
+    d->masterImageChangedConnection = connect(
+      d->master, &Player::imageChanged,
+      [this](kv::image_container_sptr const& image)
+      {
+        if (image)
+        {
+          this->setExternalImageSize(QSizeF{
+            static_cast<float>(image->width()),
+            static_cast<float>(image->height())});
+        }
+      });
   }
 }
 
@@ -207,12 +237,14 @@ void PlayerPrivate::updateTransform(Player* q)
     if (QTransform::quadToQuad(in, out, xf))
     {
       q->setHomography(xf);
+      q->setUseExternalImageSize(!!this->master);
       return;
     }
   }
 
   // Did not successfully set homography; use identity
   q->setHomography({});
+  q->setUseExternalImageSize(false);
 }
 
 } // namespace gui
