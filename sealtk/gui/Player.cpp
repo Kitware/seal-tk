@@ -72,9 +72,9 @@ public:
   kv::image_container_sptr image;
   kv::detected_object_set_sptr detectedObjectSet;
   std::vector<std::unique_ptr<QOpenGLBuffer>> detectedObjectVertexBuffers;
-  QMatrix3x3 homography;
-  QMatrix4x4 homographyGl;
   QMatrix4x4 viewHomography;
+  QMatrix4x4 homography;
+  QSize homographyImageSize;
 
   QOpenGLTexture imageTexture{QOpenGLTexture::Target2DArray};
   QOpenGLBuffer imageVertexBuffer{QOpenGLBuffer::VertexBuffer};
@@ -164,6 +164,12 @@ void Player::setImage(kv::image_container_sptr const& image,
 
   d->updateViewHomography();
   this->update();
+
+  if (d->image)
+  {
+    emit this->imageSizeChanged({static_cast<int>(d->image->width()),
+                                 static_cast<int>(d->image->height())});
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -180,28 +186,11 @@ void Player::setDetectedObjectSet(
 }
 
 //-----------------------------------------------------------------------------
-void Player::setHomography(QMatrix3x3 const& homography)
+void Player::setHomography(QMatrix4x4 const& homography)
 {
   QTE_D();
 
   d->homography = homography;
-  for (int row = 0; row < 3; row++)
-  {
-    for (int column = 0; column < 3; column++)
-    {
-      int glRow = row;
-      if (glRow >= 2)
-      {
-        glRow++;
-      }
-      int glColumn = column;
-      if (glColumn >= 2)
-      {
-        glColumn++;
-      }
-      d->homographyGl(glRow, glColumn) = d->homography(row, column);
-    }
-  }
   this->update();
 }
 
@@ -321,6 +310,26 @@ void Player::setPercentiles(double deviance, double tolerance)
     {
       this->update();
     }
+  }
+}
+
+//-----------------------------------------------------------------------------
+QSize Player::homographyImageSize() const
+{
+  QTE_D();
+
+  return d->homographyImageSize;
+}
+
+//-----------------------------------------------------------------------------
+void Player::setHomographyImageSize(QSize size)
+{
+  QTE_D();
+
+  if (d->homographyImageSize != size)
+  {
+    d->homographyImageSize = size;
+    d->updateViewHomography();
   }
 }
 
@@ -488,7 +497,6 @@ PlayerPrivate::PlayerPrivate(Player* parent)
   : q_ptr{parent}
 {
   this->homography.setToIdentity();
-  this->homographyGl.setToIdentity();
   this->viewHomography.setToIdentity();
 }
 
@@ -540,8 +548,13 @@ void PlayerPrivate::updateViewHomography()
   QTE_Q();
 
   // Get image and view sizes
-  auto const iw = static_cast<float>(image->width());
-  auto const ih = static_cast<float>(image->height());
+  auto const useHomography = !this->homography.isIdentity();
+  auto const iw = (useHomography
+    ? static_cast<float>(this->homographyImageSize.width())
+    : static_cast<float>(image->width()));
+  auto const ih = (useHomography
+    ? static_cast<float>(this->homographyImageSize.height())
+    : static_cast<float>(image->height()));
   auto const vw = static_cast<float>(q->width());
   auto const vh = static_cast<float>(q->height());
 
@@ -555,21 +568,9 @@ void PlayerPrivate::updateViewHomography()
   auto const bottom =
     static_cast<float>(this->center.y() + (0.5 * (ih + (vh / zoom))));
 
-  // Compute matrix scale and translation coefficients for x and y
-  auto const invX = 1.0f / (right - left);
-  auto const invY = 1.0f / (top - bottom);
-
-  auto const mxs = 2.0f * invX;
-  auto const mys = 2.0f * invY;
-  auto const mxt = -(right + left) * invX;
-  auto const myt = -(top + bottom) * invY;
-
-  this->viewHomography = QMatrix4x4{
-    mxs,  0.0f, 0.0f, mxt,
-    0.0f, mys,  0.0f, myt,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f,
-  };
+  // Compute transform
+  this->viewHomography.setToIdentity();
+  this->viewHomography.ortho(left, right, bottom, top, 1.0, -1.0);
 
   q->update();
 }
@@ -698,7 +699,7 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
   this->imageShaderProgram.enableAttributeArray(1);
 
   this->imageShaderProgram.setUniformValueArray(this->imageHomographyLocation,
-                                                &this->homographyGl, 1);
+                                                &this->homography, 1);
   this->imageShaderProgram.setUniformValueArray(
     this->imageViewHomographyLocation, &this->viewHomography, 1);
 
@@ -727,7 +728,7 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
     this->detectionShaderProgram.enableAttributeArray(0);
 
     this->detectionShaderProgram.setUniformValueArray(
-      this->detectionHomographyLocation, &this->homographyGl, 1);
+      this->detectionHomographyLocation, &this->homography, 1);
     this->detectionShaderProgram.setUniformValueArray(
       this->detectionViewHomographyLocation, &this->viewHomography, 1);
 

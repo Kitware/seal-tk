@@ -10,15 +10,16 @@
 
 #include <sealtk/core/VideoDistributor.hpp>
 
-#include <QMatrix3x3>
-#include <QOpenGLWidget>
-#include <QPointF>
-#include <qtGlobal.h>
-
 #include <vital/types/detected_object_set.h>
 #include <vital/types/image_container.h>
 
+#include <qtGlobal.h>
+
+#include <QOpenGLWidget>
+#include <QPointF>
+
 class QImage;
+class QMatrix4x4;
 
 namespace sealtk
 {
@@ -36,25 +37,31 @@ public:
   explicit Player(QWidget* parent = nullptr);
   ~Player() override;
 
-  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged);
-  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged);
+  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged)
+  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged)
+  Q_PROPERTY(QSize homographyImageSize
+             READ homographyImageSize
+             WRITE setHomographyImageSize)
   Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
 
   float zoom() const;
   QPointF center() const;
   core::VideoDistributor* videoSource() const;
   ContrastMode contrastMode() const;
+  QSize homographyImageSize() const;
 
 signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
+  void imageSizeChanged(QSize imageSize) const;
 
 public slots:
-  void setImage(kwiver::vital::image_container_sptr const& image,
-                sealtk::core::VideoMetaData const& metaData);
-  void setDetectedObjectSet(
+  virtual void setImage(kwiver::vital::image_container_sptr const& image,
+                        sealtk::core::VideoMetaData const& metaData);
+  virtual void setDetectedObjectSet(
     kwiver::vital::detected_object_set_sptr const& detectedObjectSet);
-  void setHomography(QMatrix3x3 const& homography);
+  void setHomography(QMatrix4x4 const& homography);
+  void setHomographyImageSize(QSize size);
   void setZoom(float zoom);
   void setCenter(QPointF center);
   void setVideoSource(core::VideoDistributor* videoSource);
