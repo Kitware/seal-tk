@@ -12,3 +12,12 @@ sealtk_add_test(AbstractItemRepresentation
     sealtk::gui
     sealtk::core
   )
+
+sealtk_add_test(FusionModel
+  SOURCES
+    FusionModel.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::gui
+    sealtk::core
+  )
