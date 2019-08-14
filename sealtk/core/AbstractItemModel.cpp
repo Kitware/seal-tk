@@ -2,21 +2,14 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <sealtk/gui/AbstractItemModel.hpp>
+#include <sealtk/core/AbstractItemModel.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
-#include <sealtk/core/DateUtils.hpp>
-
-#include <QHash>
-#include <QPalette>
-#include <QUuid>
-
-namespace kv = kwiver::vital;
 
 namespace sealtk
 {
 
-namespace gui
+namespace core
 {
 
 // ----------------------------------------------------------------------------
@@ -64,6 +57,6 @@ QVariant AbstractItemModel::data(QModelIndex const& index, int role) const
   return {};
 }
 
-} // namespace gui
+} // namespace core
 
 } // namespace sealtk
