@@ -23,6 +23,11 @@ namespace test
 {
 
 void testTrackData(
+  QAbstractItemModel const& model,
+  kwiver::vital::track_id_t id,
+  TimeMap<QRectF> const& boxes);
+
+void testTrackData(
   QAbstractItemModel const& model, int row,
   kwiver::vital::track_id_t id,
   TimeMap<QRectF> const& boxes);
