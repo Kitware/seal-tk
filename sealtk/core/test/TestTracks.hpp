@@ -12,6 +12,7 @@
 #include <QRectF>
 
 class QAbstractItemModel;
+class QModelIndex;
 
 namespace sealtk
 {
@@ -31,6 +32,12 @@ void testTrackData(
   QAbstractItemModel const& model, int row,
   kwiver::vital::track_id_t id,
   TimeMap<QRectF> const& boxes);
+
+void testTrackData(
+  QAbstractItemModel const& model,
+  QModelIndex const& parent,
+  kwiver::vital::timestamp::time_t time,
+  QRectF const& box);
 
 namespace data
 {
