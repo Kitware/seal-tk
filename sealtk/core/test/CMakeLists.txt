@@ -10,11 +10,13 @@ sealtk_add_library(sealtk::core_test_common
 
   SOURCES
     TestCommon.cpp
+    TestTracks.cpp
     TestVideo.cpp
 
   PRIVATE_LINK_LIBRARIES
     qtExtensionsHeaders
     Qt5::Core
+    Qt5::Test
     sealtk::core
     kwiver::vital
     kwiver::vital_algo
@@ -32,6 +34,15 @@ sealtk_add_test(KwiverPipelineWorker
 sealtk_add_test(KwiverTrackModel
   SOURCES
     KwiverTrackModel.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+    sealtk::core_test_common
+  )
+
+sealtk_add_test(KwiverTrackSource
+  SOURCES
+    KwiverTrackSource.cpp
 
   PRIVATE_LINK_LIBRARIES
     sealtk::core
