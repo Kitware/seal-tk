@@ -71,17 +71,6 @@ Player::Player(Role role, QWidget* parent)
 
   connect(d->loadDetectionsAction, &QAction::triggered,
           this, &Player::loadDetectionsTriggered);
-
-  /* TODO
-  connect(this, &sealtk::gui::Player::videoSourceChanged, this,
-          [d](sealtk::core::VideoSource* videoSource){
-            d->loadDetectionsAction->setEnabled(
-              videoSource &&
-              qobject_cast<sealtk::core::KwiverVideoSource*>(videoSource));
-          });
-  */
-
-  d->loadDetectionsAction->setEnabled(false);
 }
 
 // ----------------------------------------------------------------------------

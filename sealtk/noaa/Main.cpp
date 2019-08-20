@@ -2,19 +2,22 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#include <QApplication>
-#include <QCommandLineParser>
-#include <QDir>
-
 #include <sealtk/noaa/gui/Window.hpp>
 
 #include <sealtk/noaa/core/Config.h>
 
-#include <sealtk/core/Version.h>
-
 #include <sealtk/gui/Resources.hpp>
 
+#include <sealtk/core/AbstractDataSource.hpp>
+#include <sealtk/core/Version.h>
+
 #include <vital/plugin_loader/plugin_manager.h>
+
+#include <QApplication>
+#include <QCommandLineParser>
+#include <QDir>
+
+#include <memory>
 
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -56,6 +59,8 @@ int main(int argc, char** argv)
   }
 
   kwiver::vital::plugin_manager::instance().load_all_plugins();
+
+  qRegisterMetaType<std::shared_ptr<QAbstractItemModel>>();
 
   sealtk::noaa::gui::Window window;
   window.setPipelineDirectory(pipelineDirectory);
