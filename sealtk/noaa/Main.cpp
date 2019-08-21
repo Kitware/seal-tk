@@ -30,6 +30,7 @@ int main(int argc, char** argv)
   QApplication app{argc, argv};
   QApplication::setApplicationName("SEAL-TK");
   QApplication::setApplicationVersion(QStringLiteral(SEALTK_VERSION));
+  QApplication::setOrganizationName("Kitware");
 
   QCommandLineParser parser;
   parser.setApplicationDescription(

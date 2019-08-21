@@ -28,6 +28,7 @@
 #include <sealtk/gui/SplitterWindow.hpp>
 
 #include <qtStlUtil.h>
+#include <qtUiState.h>
 
 #include <QCollator>
 #include <QDebug>
@@ -115,6 +116,7 @@ public:
   void executePipeline(QString const& pipelineFile);
 
   Ui::Window ui;
+  qtUiState uiState;
 
   sg::FusionModel trackModel;
   TrackRepresentation trackRepresentation;
@@ -190,11 +192,28 @@ Window::Window(QWidget* parent)
   d->registerVideoSourceFactory(
     "Image Directory...",
     new core::ImageListVideoSourceFactory{true, d->videoController.get()});
+
+  d->uiState.mapState("Window/state", this);
+  d->uiState.mapGeometry("Window/geometry", this);
+  d->uiState.mapState("Window/splitter", d->ui.centralwidget);
+  d->uiState.mapState("Tracks/state", d->ui.tracks->header());
+
+  d->uiState.restore();
 }
 
 //-----------------------------------------------------------------------------
 Window::~Window()
 {
+}
+
+//-----------------------------------------------------------------------------
+void Window::closeEvent(QCloseEvent* e)
+{
+  QTE_D();
+
+  d->uiState.save();
+
+  QMainWindow::closeEvent(e);
 }
 
 //-----------------------------------------------------------------------------
