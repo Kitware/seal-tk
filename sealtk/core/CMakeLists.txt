@@ -25,6 +25,7 @@ sealtk_add_library(sealtk::core
     KwiverPipelineWorker.cpp
     KwiverTrackSource.cpp
     KwiverVideoSource.cpp
+    ScalarFilterModel.cpp
     TimeStamp.cpp
     VideoController.cpp
     VideoDistributor.cpp
@@ -49,6 +50,7 @@ sealtk_add_library(sealtk::core
     KwiverPipelineWorker.hpp
     KwiverTrackSource.hpp
     KwiverVideoSource.hpp
+    ScalarFilterModel.hpp
     TimeMap.hpp
     TimeStamp.hpp
     UnsharedPointer.hpp

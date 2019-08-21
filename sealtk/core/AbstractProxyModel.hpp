@@ -30,6 +30,12 @@ public:
   using QSortFilterProxyModel::QSortFilterProxyModel;
 
 protected:
+  /// Test if data is valid.
+  ///
+  /// This method tests if a data value is valid (i.e. is convertible to the
+  /// appropriate type) for a given data role.
+  static bool isValidData(QVariant const& data, int role);
+
   /// Compare data.
   ///
   /// This method performs a comparison of two data items which have the type

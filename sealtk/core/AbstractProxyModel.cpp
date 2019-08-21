@@ -17,6 +17,39 @@ namespace core
 {
 
 // ----------------------------------------------------------------------------
+bool AbstractProxyModel::isValidData(QVariant const& data, int role)
+{
+  switch (role)
+  {
+    // String comparisons
+    case core::NameRole:
+    case core::UniqueIdentityRole:
+      return data.canConvert<QString>();
+
+    // Boolean comparisons
+    case core::VisibilityRole:
+    case core::UserVisibilityRole:
+      return data.canConvert<bool>();
+
+    // Integer comparisons
+    // TODO classification
+    case core::ItemTypeRole:
+      return data.canConvert<int>();
+
+    // Floating-point comparisons
+    // TODO confidence
+    //   return data.canConvert<double>();
+
+    case core::StartTimeRole:
+    case core::EndTimeRole:
+      return data.canConvert<kv::timestamp::time_t>();
+
+    default:
+      return false;
+  }
+}
+
+// ----------------------------------------------------------------------------
 bool AbstractProxyModel::lessThan(
   QVariant const& left, QVariant const& right, int role) const
 {
