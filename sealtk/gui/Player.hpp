@@ -18,6 +18,7 @@
 #include <QOpenGLWidget>
 #include <QPointF>
 
+class QAbstractItemModel;
 class QImage;
 class QMatrix4x4;
 
@@ -58,8 +59,7 @@ signals:
 public slots:
   virtual void setImage(kwiver::vital::image_container_sptr const& image,
                         sealtk::core::VideoMetaData const& metaData);
-  virtual void setDetectedObjectSet(
-    kwiver::vital::detected_object_set_sptr const& detectedObjectSet);
+  void setTrackModel(QAbstractItemModel* model);
   void setHomography(QMatrix4x4 const& homography);
   void setHomographyImageSize(QSize size);
   void setZoom(float zoom);
