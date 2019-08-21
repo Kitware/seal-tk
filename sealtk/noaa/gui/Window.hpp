@@ -53,6 +53,8 @@ public slots:
 protected:
   QTE_DECLARE_PRIVATE(Window)
 
+  void closeEvent(QCloseEvent* event) override;
+
 private:
   QTE_DECLARE_PRIVATE_RPTR(Window)
 };
