@@ -133,7 +133,7 @@ QVariant AbstractItemRepresentation::data(
     }
   }
 
-  return AbstractProxyModel::data(index, role);
+  return this->AbstractProxyModel::data(index, role);
 }
 
 // ----------------------------------------------------------------------------
@@ -249,7 +249,7 @@ QVariant AbstractItemRepresentation::headerData(
     }
   }
 
-  return AbstractProxyModel::headerData(section, orientation, role);
+  return this->AbstractProxyModel::headerData(section, orientation, role);
 }
 
 // ----------------------------------------------------------------------------
@@ -268,7 +268,7 @@ bool AbstractItemRepresentation::lessThan(
     return this->lessThan(left, right, dataRole);
   }
 
-  return AbstractProxyModel::lessThan(left, right);
+  return this->AbstractProxyModel::lessThan(left, right);
 }
 
 // ----------------------------------------------------------------------------
@@ -303,7 +303,7 @@ bool AbstractItemRepresentation::filterAcceptsRow(
     }
   }
 
-  return AbstractProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+  return this->AbstractProxyModel::filterAcceptsRow(sourceRow, sourceParent);
 }
 
 // ----------------------------------------------------------------------------
@@ -322,7 +322,7 @@ bool AbstractItemRepresentation::filterAcceptsColumn(
     return false;
   }
 
-  return AbstractProxyModel::filterAcceptsColumn(
+  return this->AbstractProxyModel::filterAcceptsColumn(
     sourceColumn, sourceParent);
 }
 
@@ -331,7 +331,7 @@ void AbstractItemRepresentation::sort(int column, Qt::SortOrder order)
 {
   QTE_D();
 
-  AbstractProxyModel::sort(column, order);
+  this->AbstractProxyModel::sort(column, order);
 
   // Determine, if we are sorting (column >= 0), if QSortFilterProxyModel
   // figured out what column to sort; if not, we may need to force a sort later

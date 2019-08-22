@@ -231,7 +231,7 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
     }
   }
 
-  return AbstractItemModel::data(index, role);
+  return this->AbstractItemModel::data(index, role);
 }
 
 // ----------------------------------------------------------------------------

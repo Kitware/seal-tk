@@ -442,7 +442,7 @@ void Player::paintEvent(QPaintEvent* event)
   QTE_D();
 
   // Handle usual GL painting
-  QOpenGLWidget::paintEvent(event);
+  this->QOpenGLWidget::paintEvent(event);
 
   // Paint text overlay, if needed
   if (!d->image)

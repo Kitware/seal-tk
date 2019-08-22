@@ -183,7 +183,7 @@ QVariant ScalarFilterModel::data(QModelIndex const& index, int role) const
     }
   }
 
-  return AbstractProxyModel::data(index, role);
+  return this->AbstractProxyModel::data(index, role);
 }
 
 } // namespace core

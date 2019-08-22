@@ -83,7 +83,7 @@ QVariant TestModel::data(QModelIndex const& index, int role) const
     }
   }
 
-  return sealtk::core::AbstractItemModel::data(index, role);
+  return this->sealtk::core::AbstractItemModel::data(index, role);
 }
 
 // ----------------------------------------------------------------------------
