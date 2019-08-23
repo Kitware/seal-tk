@@ -4,6 +4,8 @@
 
 #include <sealtk/gui/Player.hpp>
 
+#include <sealtk/gui/PlayerTool.hpp>
+
 #include <sealtk/core/AutoLevelsTask.hpp>
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/ImageUtils.hpp>
@@ -127,6 +129,8 @@ public:
   core::VideoDistributor* videoSource = nullptr;
   core::ScalarFilterModel trackModelFilter;
   QSet<qint64> selectedTracks;
+
+  PlayerTool* activeTool = nullptr;
 };
 
 // ----------------------------------------------------------------------------
@@ -403,11 +407,42 @@ void Player::setSelectionColor(QColor const& color)
 }
 
 // ----------------------------------------------------------------------------
+void Player::setActiveTool(PlayerTool* tool)
+{
+  QTE_D();
+
+  if (tool != d->activeTool)
+  {
+    if (d->activeTool)
+    {
+      d->activeTool->deactivate();
+    }
+
+    d->activeTool = tool;
+
+    if (d->activeTool)
+    {
+      d->activeTool->activate();
+    }
+
+    emit this->activeToolChanged(d->activeTool);
+  }
+}
+
+// ----------------------------------------------------------------------------
 QSize Player::homographyImageSize() const
 {
   QTE_D();
 
   return d->homographyImageSize;
+}
+
+// ----------------------------------------------------------------------------
+PlayerTool* Player::activeTool() const
+{
+  QTE_D();
+
+  return d->activeTool;
 }
 
 // ----------------------------------------------------------------------------
@@ -511,6 +546,11 @@ void Player::paintGL()
     functions->glClearColor(0.5f * r, 0.5f * g, 0.5f * b, 0.0f);
     functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
+
+  if (d->activeTool)
+  {
+    d->activeTool->paintGL();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -554,6 +594,11 @@ void Player::mousePressEvent(QMouseEvent* event)
     d->dragging = true;
     d->dragStart = event->pos();
   }
+
+  if (d->activeTool)
+  {
+    d->activeTool->mousePressEvent(event);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -570,6 +615,11 @@ void Player::mouseMoveEvent(QMouseEvent* event)
   {
     d->dragging = false;
   }
+
+  if (d->activeTool)
+  {
+    d->activeTool->mouseMoveEvent(event);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -580,6 +630,11 @@ void Player::mouseReleaseEvent(QMouseEvent* event)
   if (event->button() == Qt::MiddleButton)
   {
     d->dragging = false;
+  }
+
+  if (d->activeTool)
+  {
+    d->activeTool->mouseReleaseEvent(event);
   }
 }
 

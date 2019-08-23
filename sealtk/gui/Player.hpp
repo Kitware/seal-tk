@@ -39,6 +39,8 @@ QTE_ENUM_NS(ContrastMode)
 
 QTE_END_META_NAMESPACE()
 
+class PlayerTool;
+
 class PlayerPrivate;
 
 class SEALTK_GUI_EXPORT Player : public QOpenGLWidget
@@ -66,6 +68,7 @@ public:
   core::VideoDistributor* videoSource() const;
   ContrastMode contrastMode() const;
   QSize homographyImageSize() const;
+  PlayerTool* activeTool() const;
 
   QColor defaultColor() const;
   QColor selectionColor() const;
@@ -74,6 +77,7 @@ signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
   void imageSizeChanged(QSize imageSize) const;
+  void activeToolChanged(PlayerTool* tool) const;
 
   void defaultColorChanged(QColor const& color) const;
   void selectionColorChanged(QColor const& color) const;
@@ -91,6 +95,7 @@ public slots:
   void setContrastMode(ContrastMode mode);
   void setManualLevels(float low, float high);
   void setPercentiles(double deviance, double tolerance);
+  void setActiveTool(PlayerTool* tool);
 
   void setDefaultColor(QColor const& color);
   void setSelectionColor(QColor const& color);
