@@ -9,6 +9,8 @@
 #include <QDebug>
 #include <QtAlgorithms>
 
+#include <array>
+
 #include <climits>
 #include <cmath>
 
