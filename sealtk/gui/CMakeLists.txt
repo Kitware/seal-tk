@@ -10,6 +10,7 @@ sealtk_add_library(sealtk::gui
     FusionModel.cpp
     Player.cpp
     PlayerControl.cpp
+    PlayerTool.cpp
     Resources.cpp
     SplitterWindow.cpp
 
@@ -20,6 +21,7 @@ sealtk_add_library(sealtk::gui
     FusionModel.hpp
     Player.hpp
     PlayerControl.hpp
+    PlayerTool.hpp
     Resources.hpp
     SplitterWindow.hpp
 
