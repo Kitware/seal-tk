@@ -394,6 +394,7 @@ void WindowPrivate::loadDetections(WindowData* data)
       [data, this](std::shared_ptr<QAbstractItemModel> const& model){
         data->trackModel = model;
         this->trackModel.addModel(model.get());
+        data->player->setTrackModel(model.get());
       });
     QObject::connect(
       data->trackSource.get(), &sc::AbstractDataSource::failed, q,

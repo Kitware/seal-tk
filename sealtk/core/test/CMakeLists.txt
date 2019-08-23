@@ -99,6 +99,14 @@ sealtk_add_test(DirectoryListing
     sealtk::core
   )
 
+sealtk_add_test(ScalarFilterModel
+  SOURCES
+    ScalarFilterModel.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+  )
+
 sealtk_add_test(TimeMap
   SOURCES
     TimeMap.cpp

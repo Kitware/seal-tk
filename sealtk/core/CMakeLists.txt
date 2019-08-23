@@ -13,6 +13,7 @@ sealtk_add_library(sealtk::core
   SOURCES
     AbstractDataSource.cpp
     AbstractItemModel.cpp
+    AbstractProxyModel.cpp
     AutoLevelsTask.cpp
     DataModelTypes.cpp
     DateUtils.cpp
@@ -24,6 +25,7 @@ sealtk_add_library(sealtk::core
     KwiverPipelineWorker.cpp
     KwiverTrackSource.cpp
     KwiverVideoSource.cpp
+    ScalarFilterModel.cpp
     TimeStamp.cpp
     VideoController.cpp
     VideoDistributor.cpp
@@ -36,6 +38,7 @@ sealtk_add_library(sealtk::core
   HEADERS
     AbstractDataSource.hpp
     AbstractItemModel.hpp
+    AbstractProxyModel.hpp
     AutoLevelsTask.hpp
     DataModelTypes.hpp
     DateUtils.hpp
@@ -47,6 +50,7 @@ sealtk_add_library(sealtk::core
     KwiverPipelineWorker.hpp
     KwiverTrackSource.hpp
     KwiverVideoSource.hpp
+    ScalarFilterModel.hpp
     TimeMap.hpp
     TimeStamp.hpp
     UnsharedPointer.hpp

@@ -45,16 +45,25 @@ QModelIndex AbstractItemModel::parent(QModelIndex const& child) const
 // ----------------------------------------------------------------------------
 QVariant AbstractItemModel::data(QModelIndex const& index, int role) const
 {
-  if (role == core::VisibilityRole)
+  switch (role)
   {
-    // VisibilityRole is meant to be defined by filters based on whatever
-    // filtering criteria they are using. Models notionally should not provide
-    // this role directly. However, this will break if a model is used without
-    // a filter, so by default, map VisibilityRole to UserVisibilityRole.
-    return this->data(index, core::UserVisibilityRole);
-  }
+    case VisibilityRole:
+      // VisibilityRole is meant to be defined by filters based on whatever
+      // filtering criteria they are using. Models notionally should not
+      // provide this role directly. However, that would break things if a
+      // model is used without a filter, so by default, map VisibilityRole to
+      // UserVisibilityRole.
+      return this->data(index, UserVisibilityRole);
 
-  return {};
+    case UserVisibilityRole:
+      // Subclasses ought to implement this, but since our framework is
+      // absolutely dependent on this producing a sensible value, provide a
+      // fallback just in case.
+      return true;
+
+    default:
+      return {};
+  }
 }
 
 } // namespace core

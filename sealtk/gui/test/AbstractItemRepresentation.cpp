@@ -97,7 +97,7 @@ QVariant TestModel::data(QModelIndex const& index, int role) const
       return visibilityData[r];
 
     default:
-      return AbstractItemModel::data(index, role);
+      return this->AbstractItemModel::data(index, role);
   }
 }
 

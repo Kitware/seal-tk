@@ -8,9 +8,9 @@
 #include <sealtk/gui/Export.h>
 #include <sealtk/gui/Enums.hpp>
 
-#include <qtGlobal.h>
+#include <sealtk/core/AbstractProxyModel.hpp>
 
-#include <QSortFilterProxyModel>
+#include <qtGlobal.h>
 
 namespace sealtk
 {
@@ -27,7 +27,7 @@ class AbstractItemRepresentationPrivate;
 /// low-level data types into data suitable for presentation, as well as common
 /// handling for handling and manipulating item visibility states.
 class SEALTK_GUI_EXPORT AbstractItemRepresentation
-  : public QSortFilterProxyModel
+  : public sealtk::core::AbstractProxyModel
 {
   Q_OBJECT
 
@@ -123,6 +123,8 @@ protected:
     return sm->data(si, role);
   }
 
+  using AbstractProxyModel::lessThan;
+
   /// Compare data for two indices.
   ///
   /// This method performs a comparison of the \p role data of two proxy
@@ -141,7 +143,7 @@ protected:
   bool filterAcceptsRow(
     int sourceRow, QModelIndex const& sourceParent) const override;
   bool filterAcceptsColumn(
-    int source_column, QModelIndex const& source_parent) const override;
+    int sourceColumn, QModelIndex const& sourceParent) const override;
 
 private:
   QTE_DECLARE_PRIVATE(AbstractItemRepresentation)

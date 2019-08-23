@@ -15,6 +15,8 @@
 
 #include <qtScopedValueChange.h>
 
+#include <QRectF>
+
 namespace kv = kwiver::vital;
 namespace kvr = kwiver::vital::range;
 
@@ -113,57 +115,123 @@ int KwiverTrackModel::rowCount(QModelIndex const& parent) const
 
   if (parent.isValid())
   {
-    // TODO detections?
-    return 0;
+    QTE_D();
+
+    auto const pr = parent.row();
+    if (pr < 0 || pr >= static_cast<int>(d->tracks.size()))
+    {
+      return 0;
+    }
+
+    auto const pru = static_cast<uint>(pr);
+    return static_cast<int>(d->tracks[pru].track->size());
   }
 
   return static_cast<int>(d->tracks.size());
 }
 
 // ----------------------------------------------------------------------------
+QModelIndex KwiverTrackModel::index(
+  int row, int column, QModelIndex const& parent) const
+{
+  if (parent.isValid())
+  {
+    auto const data = static_cast<uint>(parent.row() + 1);
+    return this->createIndex(row, column, data);
+  }
+
+  return this->createIndex(row, column);
+}
+
+// ----------------------------------------------------------------------------
+QModelIndex KwiverTrackModel::parent(QModelIndex const& child) const
+{
+  if (auto const r = child.internalId())
+  {
+    return this->createIndex(static_cast<int>(r - 1), 0);
+  }
+  return {};
+}
+
+// ----------------------------------------------------------------------------
 QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
 {
-  // TODO detections?
-  if (this->checkIndex(index, IndexIsValid | ParentIsInvalid))
+  if (this->checkIndex(index, IndexIsValid))
   {
     QTE_D_SHARED();
 
-    auto const& track = d->tracks[static_cast<unsigned>(index.row())];
-    switch (role)
+    if (auto const pr = static_cast<int>(index.internalId()))
     {
-      case core::NameRole:
-      case core::LogicalIdentityRole:
-        return static_cast<qint64>(track.track->id());
+      auto const& track = d->tracks[static_cast<uint>(pr - 1)];
+      auto const& state =
+        std::static_pointer_cast<kv::object_track_state>(
+          *(track.track->begin() + index.row()));
 
-      case core::StartTimeRole:
-        if (!track.track->empty())
-        {
-          auto const& s =
-            std::static_pointer_cast<kv::object_track_state>(
-              track.track->front());
-          return QVariant::fromValue(s->time());
-        }
-        return {};
+      switch (role)
+      {
+        case core::NameRole:
+        case core::LogicalIdentityRole:
+          return static_cast<qint64>(track.track->id());
 
-      case core::EndTimeRole:
-        if (!track.track->empty())
-        {
-          auto const& s =
-            std::static_pointer_cast<kv::object_track_state>(
-              track.track->back());
-          return QVariant::fromValue(s->time());
-        }
-        return {};
+        case core::StartTimeRole:
+        case core::EndTimeRole:
+          return QVariant::fromValue(state->time());
 
-      case core::UserVisibilityRole:
-        return track.visible;
+        case AreaLocationRole:
+          if (state->detection)
+          {
+            auto const& bb = state->detection->bounding_box();
+            return QRectF{bb.min_x(), bb.min_y(), bb.width(), bb.height()};
+          }
+          return {};
 
-      default:
-        break;
+        case core::UserVisibilityRole:
+          return track.visible;
+
+        default:
+          break;
+      }
+    }
+    else
+    {
+      auto const& track = d->tracks[static_cast<uint>(index.row())];
+
+      switch (role)
+      {
+        case core::NameRole:
+        case core::LogicalIdentityRole:
+          return static_cast<qint64>(track.track->id());
+
+        case core::StartTimeRole:
+          if (!track.track->empty())
+          {
+            auto const& s =
+              std::static_pointer_cast<kv::object_track_state>(
+                track.track->front());
+            return QVariant::fromValue(s->time());
+          }
+          return {};
+
+        case core::EndTimeRole:
+          if (!track.track->empty())
+          {
+            auto const& s =
+              std::static_pointer_cast<kv::object_track_state>(
+                track.track->back());
+            return QVariant::fromValue(s->time());
+          }
+          return {};
+
+        case core::UserVisibilityRole:
+          return track.visible;
+
+        default:
+          break;
+      }
     }
   }
 
-  return AbstractItemModel::data(index, role);
+  return this->AbstractItemModel::data(index, role);
 }
 
 // ----------------------------------------------------------------------------
