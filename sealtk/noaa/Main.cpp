@@ -28,9 +28,9 @@ int main(int argc, char** argv)
   QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
   QApplication app{argc, argv};
-  QApplication::setApplicationName("SEAL-TK");
+  QApplication::setApplicationName(QStringLiteral("SEAL-TK"));
   QApplication::setApplicationVersion(QStringLiteral(SEALTK_VERSION));
-  QApplication::setOrganizationName("Kitware");
+  QApplication::setOrganizationName(QStringLiteral("Kitware"));
 
   QCommandLineParser parser;
   parser.setApplicationDescription(

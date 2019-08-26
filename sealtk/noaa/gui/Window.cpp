@@ -187,10 +187,10 @@ Window::Window(QWidget* parent)
           });
 
   d->registerVideoSourceFactory(
-    "Image List File...",
+    QStringLiteral("Image List File..."),
     new core::ImageListVideoSourceFactory{false, d->videoController.get()});
   d->registerVideoSourceFactory(
-    "Image Directory...",
+    QStringLiteral("Image Directory..."),
     new core::ImageListVideoSourceFactory{true, d->videoController.get()});
 
   d->uiState.mapState("Window/state", this);
