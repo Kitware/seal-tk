@@ -2,6 +2,7 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
+#include <sealtk/noaa/gui/Resources.hpp>
 #include <sealtk/noaa/gui/Window.hpp>
 
 #include <sealtk/noaa/core/Config.h>
@@ -22,8 +23,8 @@
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-  sealtk::gui::Resources r;
-  Q_INIT_RESOURCE(SEALTKBranding);
+  sealtk::gui::Resources commonResources;
+  sealtk::gui::Resources noaaResources;
 
   QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
