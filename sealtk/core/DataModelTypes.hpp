@@ -7,6 +7,8 @@
 
 #include <sealtk/core/Export.h>
 
+#include <qtGlobal.h>
+
 #include <QMetaType>
 
 namespace sealtk
@@ -15,15 +17,7 @@ namespace sealtk
 namespace core
 {
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-Q_NAMESPACE_EXPORT(SEALTK_CORE_EXPORT)
-#else
-Q_NAMESPACE
-# ifndef Q_OS_WINDOWS
-  // Ugh...
-  extern SEALTK_CORE_EXPORT const QMetaObject staticMetaObject;
-# endif
-#endif
+QTE_BEGIN_META_NAMESPACE(SEALTK_CORE_EXPORT, data_model_types)
 
 /// Well known item types.
 enum ItemType
@@ -38,10 +32,12 @@ enum ItemType
   BuiltinItems    = 0x2f
 };
 
-Q_ENUM_NS(ItemType)
+QTE_ENUM_NS(ItemType)
 
 /// Set of well known item types.
 Q_DECLARE_FLAGS(ItemTypes, ItemType)
+
+QTE_FLAG_NS(ItemTypes)
 
 /// Common data roles for item data models.
 ///
@@ -97,7 +93,9 @@ enum ItemDataRole
   UserRole = Qt::UserRole + 224
 };
 
-Q_ENUM_NS(ItemDataRole)
+QTE_ENUM_NS(ItemDataRole)
+
+QTE_END_META_NAMESPACE()
 
 } // namespace core
 

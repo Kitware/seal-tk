@@ -7,7 +7,6 @@ include(SEALTKUtils)
 sealtk_add_library(sealtk::gui
   SOURCES
     AbstractItemRepresentation.cpp
-    Enums.cpp
     FusionModel.cpp
     Player.cpp
     PlayerControl.cpp
@@ -18,7 +17,6 @@ sealtk_add_library(sealtk::gui
 
   HEADERS
     AbstractItemRepresentation.hpp
-    Enums.hpp
     FusionModel.hpp
     Player.hpp
     PlayerControl.hpp

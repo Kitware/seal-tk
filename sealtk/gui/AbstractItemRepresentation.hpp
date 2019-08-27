@@ -6,7 +6,6 @@
 #define sealtk_gui_AbstractItemRepresentation_hpp
 
 #include <sealtk/gui/Export.h>
-#include <sealtk/gui/Enums.hpp>
 
 #include <sealtk/core/AbstractProxyModel.hpp>
 
@@ -17,6 +16,24 @@ namespace sealtk
 
 namespace gui
 {
+
+QTE_BEGIN_META_NAMESPACE(SEALTK_GUI_EXPORT, representation_enums)
+
+/// Item visibility mode.
+///
+/// This enumeration specifies how "hidden" items will be manipulated by the
+/// representation.
+enum ItemVisibilityMode
+{
+  /// "Hidden" items are not shown.
+  OmitHidden,
+  /// "Hidden" items are shown in an alternate ("grayed out") color.
+  ShadowHidden,
+};
+
+QTE_ENUM_NS(ItemVisibilityMode)
+
+QTE_END_META_NAMESPACE()
 
 class AbstractItemRepresentationPrivate;
 
