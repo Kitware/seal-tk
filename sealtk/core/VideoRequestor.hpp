@@ -15,9 +15,9 @@ namespace sealtk
 namespace core
 {
 
-class VideoFrame;
-class VideoRequest;
-class VideoRequestInfo;
+struct VideoFrame;
+struct VideoRequest;
+struct VideoRequestInfo;
 
 // ============================================================================
 class SEALTK_CORE_EXPORT VideoRequestor : public QObject
@@ -28,7 +28,7 @@ public:
   virtual ~VideoRequestor() = default;
 
 protected:
-  friend class VideoRequest;
+  friend struct VideoRequest;
 
   explicit VideoRequestor(QObject* parent = nullptr);
 

@@ -31,6 +31,12 @@ class SEALTK_GUI_EXPORT PlayerControl : public QWidget
 {
   Q_OBJECT
 
+  Q_PROPERTY(kwiver::vital::timestamp::time_t min READ min WRITE setMin);
+  Q_PROPERTY(kwiver::vital::timestamp::time_t max READ max WRITE setMax);
+  Q_PROPERTY(kwiver::vital::timestamp::time_t time READ time WRITE setTime
+             NOTIFY timeSet);
+  Q_PROPERTY(State state READ state WRITE setState NOTIFY stateSet);
+
 public:
   enum State
   {
@@ -43,12 +49,6 @@ public:
 
   core::VideoController* videoController() const;
   void setVideoController(core::VideoController* videoController);
-
-  Q_PROPERTY(kwiver::vital::timestamp::time_t min READ min WRITE setMin);
-  Q_PROPERTY(kwiver::vital::timestamp::time_t max READ max WRITE setMax);
-  Q_PROPERTY(kwiver::vital::timestamp::time_t time READ time WRITE setTime
-             NOTIFY timeSet);
-  Q_PROPERTY(State state READ state WRITE setState NOTIFY stateSet);
 
   kwiver::vital::timestamp::time_t min() const;
   kwiver::vital::timestamp::time_t max() const;
