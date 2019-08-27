@@ -5,6 +5,8 @@
 #ifndef sealtk_gui_Enums_hpp
 #define sealtk_gui_Enums_hpp
 
+#include <sealtk/gui/Export.h>
+
 #include <QObject>
 
 namespace sealtk
@@ -13,7 +15,15 @@ namespace sealtk
 namespace gui
 {
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+Q_NAMESPACE_EXPORT(SEALTK_GUI_EXPORT)
+#else
 Q_NAMESPACE
+# ifndef Q_OS_WINDOWS
+  // Ugh...
+  extern SEALTK_GUI_EXPORT const QMetaObject staticMetaObject;
+# endif
+#endif
 
 /// Item visibility mode.
 ///

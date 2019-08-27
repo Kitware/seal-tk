@@ -5,6 +5,8 @@
 #ifndef sealtk_core_DataModelTypes_hpp
 #define sealtk_core_DataModelTypes_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <QMetaType>
 
 namespace sealtk
@@ -13,7 +15,15 @@ namespace sealtk
 namespace core
 {
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+Q_NAMESPACE_EXPORT(SEALTK_CORE_EXPORT)
+#else
 Q_NAMESPACE
+# ifndef Q_OS_WINDOWS
+  // Ugh...
+  extern SEALTK_CORE_EXPORT const QMetaObject staticMetaObject;
+# endif
+#endif
 
 /// Well known item types.
 enum ItemType

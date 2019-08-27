@@ -8,12 +8,14 @@ sealtk_add_library(sealtk::noaa_gui
   SOURCES
     About.cpp
     Player.cpp
+    Resources.cpp
     Window.cpp
     SEALTKBranding.qrc
 
   HEADERS
     About.hpp
     Player.hpp
+    Resources.hpp
     Window.hpp
 
   PUBLIC_LINK_LIBRARIES

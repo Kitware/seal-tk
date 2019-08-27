@@ -5,6 +5,8 @@
 #ifndef sealtk_core_KwiverPipelineWorker_hpp
 #define sealtk_core_KwiverPipelineWorker_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <arrows/qt/EmbeddedPipelineWorker.h>
 
 #include <qtGlobal.h>
@@ -20,7 +22,8 @@ class VideoSource;
 class KwiverPipelineWorkerPrivate;
 
 // ----------------------------------------------------------------------------
-class KwiverPipelineWorker : public kwiver::arrows::qt::EmbeddedPipelineWorker
+class SEALTK_CORE_EXPORT KwiverPipelineWorker
+  : public kwiver::arrows::qt::EmbeddedPipelineWorker
 {
   Q_OBJECT
 
