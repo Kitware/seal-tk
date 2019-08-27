@@ -42,7 +42,7 @@ VideoMetaData::~VideoMetaData()
 VideoMetaData::VideoMetaData(VideoMetaData const&) = default;
 VideoMetaData::VideoMetaData(VideoMetaData&&) = default;
 VideoMetaData& VideoMetaData::operator=(VideoMetaData const&) = default;
-VideoMetaData& VideoMetaData::operator=(VideoMetaData&) = default;
+VideoMetaData& VideoMetaData::operator=(VideoMetaData&&) = default;
 
 // ----------------------------------------------------------------------------
 kv::timestamp VideoMetaData::timeStamp() const

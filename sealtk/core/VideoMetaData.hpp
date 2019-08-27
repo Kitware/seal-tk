@@ -32,7 +32,7 @@ public:
   VideoMetaData(VideoMetaData const&);
   VideoMetaData(VideoMetaData&&);
   VideoMetaData& operator=(VideoMetaData const&);
-  VideoMetaData& operator=(VideoMetaData&);
+  VideoMetaData& operator=(VideoMetaData&&);
 
   kwiver::vital::timestamp timeStamp() const;
   kwiver::vital::path_t imageName() const;
