@@ -19,7 +19,8 @@ namespace core
 {
 
 class VideoRequestor;
-class VideoFrame;
+
+struct VideoFrame;
 
 // ============================================================================
 /// Common information for a video request.
