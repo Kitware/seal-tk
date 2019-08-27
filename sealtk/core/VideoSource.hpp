@@ -18,6 +18,7 @@ namespace sealtk
 namespace core
 {
 
+class VideoMetaData;
 class VideoProvider;
 
 struct VideoRequest;
@@ -48,6 +49,13 @@ public:
   /// before #framesChanged() is emitted may return an empty map.
   virtual TimeMap<kwiver::vital::timestamp::frame_t> frames() const = 0;
 
+  /// Get the collection of meta-data for this source.
+  ///
+  /// This method returns a map of times for which the video source has video,
+  /// mapped to their corresponding metadata. Note that calling this method
+  /// before #framesChanged() is emitted may return an empty map.
+  virtual TimeMap<VideoMetaData> metaData() const = 0;
+
 signals:
   /// Emitted when the set of available frames changes.
   ///
@@ -55,7 +63,7 @@ signals:
   /// this has obvious use for "streaming" sources (that is, the set of frames
   /// is properly time variable), even "static" sources, because video is
   /// normally loaded asynchronously, should emit this signal at least once to
-  /// indicate when they are ready for users to call #frames.
+  /// indicate when they are ready for users to call #frames and/or #metaData.
   void framesChanged();
 
 public slots:

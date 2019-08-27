@@ -4,15 +4,13 @@
 
 #include <sealtk/core/KwiverPipelineWorker.hpp>
 
+#include <sealtk/core/KwiverPipelinePortSet.hpp>
 #include <sealtk/core/VideoFrame.hpp>
 #include <sealtk/core/VideoRequest.hpp>
 #include <sealtk/core/VideoRequestor.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
 #include <sealtk/util/unique.hpp>
-
-#include <sprokit/processes/adapters/adapter_data_set.h>
-#include <sprokit/processes/adapters/embedded_pipeline.h>
 
 #include <vital/range/iota.h>
 
@@ -30,14 +28,17 @@ using ts_time_t = kv::timestamp::time_t;
 
 using super = kwiver::arrows::qt::EmbeddedPipelineWorker;
 
-namespace sealtk {
+namespace sealtk
+{
 
-namespace core {
+namespace core
+{
 
-namespace { // anonymous
+namespace // anonymous
+{
 
 // ============================================================================
-class PortSet
+class PortSet : public KwiverPipelinePortSet
 {
 public:
   PortSet(kwiver::embedded_pipeline& pipeline, int index);
@@ -47,39 +48,19 @@ public:
   void ensureInputs(ka::adapter_data_set_t const& dataSet);
 
 private:
-  static std::string portName(std::string const& base, int index);
-
-  static void bind(std::string& out, std::string const& expected,
-                   std::string const& in);
-
-  template <typename T>
-  static void addInput(ka::adapter_data_set_t const& dataSet,
-                       std::string const& portName, T const& data);
-
-  template <typename T>
-  static void ensureInput(ka::adapter_data_set_t const& dataSet,
-                          std::string const& portName, T const& data);
-
   std::string imagePort;
   std::string namePort;
-  std::string timePort;
 };
 
 // ----------------------------------------------------------------------------
 PortSet::PortSet(kwiver::embedded_pipeline& pipeline, int index)
 {
-  using std::string;
-
-  auto const imagePortName = this->portName("image", index);
-  auto const namePortName = this->portName("file_name", index);
-  auto const timePortName = this->portName("timestamp", index);
-
-  for (auto const& p : pipeline.input_port_names())
-  {
-    this->bind(this->imagePort, imagePortName, p);
-    this->bind(this->namePort, namePortName, p);
-    this->bind(this->timePort, timePortName, p);
-  }
+  KwiverPipelinePortSet::bind(
+    pipeline, index, PortType::Input,
+    {
+      {this->imagePort, this->portName("image", index)},
+      {this->namePort, this->portName("file_name", index)},
+    });
 }
 
 // ----------------------------------------------------------------------------
@@ -99,53 +80,6 @@ void PortSet::ensureInputs(ka::adapter_data_set_t const& dataSet)
   this->ensureInput(dataSet, this->imagePort, kv::image_container_sptr{});
   this->ensureInput(dataSet, this->namePort, kv::path_t{});
   this->ensureInput(dataSet, this->timePort, kv::timestamp{});
-}
-
-// ----------------------------------------------------------------------------
-template <typename T>
-void PortSet::addInput(ka::adapter_data_set_t const& dataSet,
-                       std::string const& portName, T const& data)
-{
-  if (!portName.empty())
-  {
-    dataSet->add_value(portName, data);
-  }
-}
-
-// ----------------------------------------------------------------------------
-template <typename T>
-void PortSet::ensureInput(ka::adapter_data_set_t const& dataSet,
-                          std::string const& portName, T const& data)
-{
-  if (!portName.empty())
-  {
-    auto const& iter = dataSet->find(portName);
-    if (iter == dataSet->end())
-    {
-      dataSet->add_value(portName, data);
-    }
-  }
-}
-
-// ----------------------------------------------------------------------------
-std::string PortSet::portName(std::string const& base, int index)
-{
-  if (index)
-  {
-    return base + std::to_string(index + 1);
-  }
-
-  return base;
-}
-
-// ----------------------------------------------------------------------------
-void PortSet::bind(std::string& out, std::string const& expected,
-                   std::string const& in)
-{
-  if (in == expected)
-  {
-    out = expected;
-  }
 }
 
 // ============================================================================
@@ -420,6 +354,6 @@ void KwiverPipelineWorker::reportError(
   QMessageBox::warning(w, subject, message);
 }
 
-} // namespace tools
+} // namespace core
 
-} // namespace kwiver
+} // namespace sealtk

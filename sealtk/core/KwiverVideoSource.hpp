@@ -38,6 +38,7 @@ public:
 
   bool isReady() const override;
   TimeMap<kwiver::vital::timestamp::frame_t> frames() const override;
+  TimeMap<VideoMetaData> metaData() const override;
 
 protected:
   QTE_DECLARE_PRIVATE(KwiverVideoSource)
