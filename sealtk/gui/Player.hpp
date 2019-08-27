@@ -34,16 +34,16 @@ class SEALTK_GUI_EXPORT Player : public QOpenGLWidget
 {
   Q_OBJECT
 
-public:
-  explicit Player(QWidget* parent = nullptr);
-  ~Player() override;
-
   Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged)
   Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged)
   Q_PROPERTY(QSize homographyImageSize
              READ homographyImageSize
              WRITE setHomographyImageSize)
   Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
+
+public:
+  explicit Player(QWidget* parent = nullptr);
+  ~Player() override;
 
   float zoom() const;
   QPointF center() const;
