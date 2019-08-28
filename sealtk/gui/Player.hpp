@@ -6,7 +6,6 @@
 #define sealtk_gui_Player_hpp
 
 #include <sealtk/gui/Export.h>
-#include <sealtk/gui/Enums.hpp>
 
 #include <sealtk/core/VideoDistributor.hpp>
 
@@ -27,6 +26,18 @@ namespace sealtk
 
 namespace gui
 {
+
+QTE_BEGIN_META_NAMESPACE(SEALTK_GUI_EXPORT, player_enums)
+
+enum class ContrastMode
+{
+  Manual,
+  Percentile,
+};
+
+QTE_ENUM_NS(ContrastMode)
+
+QTE_END_META_NAMESPACE()
 
 class PlayerPrivate;
 
