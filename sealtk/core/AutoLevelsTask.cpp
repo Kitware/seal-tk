@@ -102,7 +102,7 @@ double imageChannelScale(kv::image_pixel_traits const& traits)
   if (traits.type == PixelType::FLOAT)
     return 1.0;
 
-  return std::ldexp(1.0, static_cast<int>(-(traits.num_bytes * CHAR_BIT)));
+  return std::ldexp(1.0, -static_cast<int>(traits.num_bytes * CHAR_BIT));
 }
 
 // ----------------------------------------------------------------------------
