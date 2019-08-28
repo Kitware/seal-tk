@@ -12,10 +12,12 @@
 
 #include <sealtk/util/unique.hpp>
 
+#include <arrows/qt/image_container.h>
+
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
 
-#include <arrows/qt/image_container.h>
+#include <vital/range/indirect.h>
 
 #include <qtStlUtil.h>
 
@@ -25,6 +27,7 @@
 #include <QtTest>
 
 namespace kv = kwiver::vital;
+namespace kvr = kwiver::vital::range;
 
 namespace sealtk
 {
@@ -43,9 +46,11 @@ class TestKwiverVideoSource : public QObject
 private slots:
   void initTestCase();
   void init();
+  void cleanup();
+
+  void metaData();
   void seek();
   void frames();
-  void cleanup();
 
 private:
   kv::config_block_sptr config;
@@ -81,6 +86,51 @@ void TestKwiverVideoSource::init()
 void TestKwiverVideoSource::cleanup()
 {
   this->videoSource.reset();
+}
+
+// ----------------------------------------------------------------------------
+void TestKwiverVideoSource::metaData()
+{
+  struct ExpectedMetaData
+  {
+    kv::timestamp::frame_t frame;
+    QString imageName;
+  };
+
+  static QHash<kv::timestamp::time_t, ExpectedMetaData> allExpected{
+    {1000, {1, "1000.png"}},
+    {2000, {2, "2000.png"}},
+    {3000, {3, "3000.png"}},
+    {4000, {4, "4000.png"}},
+    {5000, {5, "5000.png"}},
+  };
+
+  // Busy-loop until the source reports readiness; this is hardly the most
+  // efficient way, but it is the safest
+  while (!this->videoSource->isReady())
+  {
+    QApplication::processEvents();
+  }
+
+  auto const& md = this->videoSource->metaData();
+
+  QCOMPARE(md.count(), allExpected.count());
+  for (auto const& mdi : md | kvr::indirect)
+  {
+    QVERIFY(allExpected.contains(mdi.key()));
+    auto const& expected = allExpected.value(mdi.key());
+
+    QFileInfo fi{qtString(mdi.value().imageName())};
+    auto const& ts = mdi.value().timeStamp();
+
+    QVERIFY(ts.has_valid_time());
+    QCOMPARE(ts.get_time_usec(), mdi.key());
+
+    QVERIFY(ts.has_valid_frame());
+    QCOMPARE(ts.get_frame(), expected.frame);
+
+    QCOMPARE(fi.fileName(), expected.imageName);
+  }
 }
 
 // ----------------------------------------------------------------------------
