@@ -25,10 +25,12 @@ sealtk_add_library(sealtk::noaa_core
   SOURCES
     FilenameUtils.cpp
     ImageListVideoSourceFactory.cpp
+    NoaaPipelineWorker.cpp
 
   HEADERS
     FilenameUtils.hpp
     ImageListVideoSourceFactory.hpp
+    NoaaPipelineWorker.hpp
     "${CMAKE_CURRENT_BINARY_DIR}/Config.h"
 
   PUBLIC_LINK_LIBRARIES
