@@ -38,9 +38,10 @@ namespace gui
 class PlayerPrivate
 {
 public:
-  std::vector<QAction*> videoSourceActions;
+  QList<QAction*> videoSourceActions;
   QAction* loadTransformAction = nullptr;
   QAction* loadDetectionsAction = nullptr;
+  QAction* saveDetectionsAction = nullptr;
 
   kv::transform_2d_sptr transform;
   QSizeF imageSize;
@@ -61,16 +62,19 @@ Player::Player(Role role, QWidget* parent)
 
   if (role == Role::Slave)
   {
-    d->loadTransformAction = new QAction{"Load Transformation...", this};
+    d->loadTransformAction = new QAction{"Load &Transformation...", this};
 
     connect(d->loadTransformAction, &QAction::triggered,
             this, [this, d]{ d->loadTransform(this); });
   }
 
-  d->loadDetectionsAction = new QAction{"Load Detections...", this};
+  d->loadDetectionsAction = new QAction{"&Load Detections...", this};
+  d->saveDetectionsAction = new QAction{"&Save Detections...", this};
 
   connect(d->loadDetectionsAction, &QAction::triggered,
           this, &Player::loadDetectionsTriggered);
+  connect(d->saveDetectionsAction, &QAction::triggered,
+          this, &Player::saveDetectionsTriggered);
 }
 
 // ----------------------------------------------------------------------------
@@ -88,7 +92,7 @@ void Player::registerVideoSourceFactory(
   connect(action, &QAction::triggered, factory,
           [factory, handle]{ factory->loadVideoSource(handle); });
 
-  d->videoSourceActions.emplace_back(action);
+  d->videoSourceActions.append(action);
 }
 
 // ----------------------------------------------------------------------------
@@ -119,17 +123,17 @@ void Player::contextMenuEvent(QContextMenuEvent* event)
 
   auto* menu = new QMenu;
 
-  auto* submenu = menu->addMenu("Load Video");
-  for (auto& action : d->videoSourceActions)
-  {
-    submenu->addAction(action);
-  }
+  auto* submenu = menu->addMenu("Load &Video");
+  submenu->addActions(d->videoSourceActions);
 
   if (d->loadTransformAction)
   {
     menu->addAction(d->loadTransformAction);
   }
   menu->addAction(d->loadDetectionsAction);
+  menu->addAction(d->saveDetectionsAction);
+
+  d->saveDetectionsAction->setEnabled(this->videoSource());
 
   menu->exec(event->globalPos());
 }
