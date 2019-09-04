@@ -22,6 +22,15 @@ sealtk_add_library(sealtk::core_test_common
     kwiver::vital_algo
   )
 
+sealtk_add_test(KwiverDetectionsSink
+  SOURCES
+    KwiverDetectionsSink.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+    sealtk::core_test_common
+  )
+
 sealtk_add_test(KwiverPipelineWorker
   SOURCES
     KwiverPipelineWorker.cpp
