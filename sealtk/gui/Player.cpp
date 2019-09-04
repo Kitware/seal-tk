@@ -205,7 +205,7 @@ void Player::setHomography(QMatrix4x4 const& homography)
   QTE_D();
 
   d->homography = homography;
-  this->update();
+  d->updateViewHomography();
 }
 
 //-----------------------------------------------------------------------------
