@@ -62,29 +62,23 @@ constexpr DataRow data3[] = {
 };
 
 // ============================================================================
-class TestModel : public sealtk::core::AbstractItemModel
+class TestModelBase : public sealtk::core::AbstractItemModel
 {
 public:
-  template <size_t N>
-  TestModel(DataRow const (&rows)[N])
-    : rowData{rows}, size{static_cast<int>(N)} {}
+  using sealtk::core::AbstractItemModel::data;
 
-  int rowCount(QModelIndex const& parent = {}) const override
-  { return (parent.isValid() ? 0 : this->size); }
-
-  QVariant data(QModelIndex const& index, int role) const override;
-
-private:
-  DataRow const* const rowData;
-  int const size;
+protected:
+  QVariant data(QModelIndex const& index, int role,
+                DataRow const* rowData) const;
 };
 
 // ----------------------------------------------------------------------------
-QVariant TestModel::data(QModelIndex const& index, int role) const
+QVariant TestModelBase::data(
+  QModelIndex const& index, int role, DataRow const* rowData) const
 {
   if (this->checkIndex(index, IndexIsValid | ParentIsInvalid))
   {
-    auto& row = this->rowData[index.row()];
+    auto& row = rowData[index.row()];
     switch (role)
     {
       case sealtk::core::NameRole:
@@ -107,6 +101,52 @@ QVariant TestModel::data(QModelIndex const& index, int role) const
 
   return sealtk::core::AbstractItemModel::data(index, role);
 }
+
+// ============================================================================
+class TestModel : public TestModelBase
+{
+public:
+  template <size_t N>
+  TestModel(DataRow const (&rows)[N])
+    : rowData{rows}, size{static_cast<int>(N)} {}
+
+  int rowCount(QModelIndex const& parent = {}) const override
+  { return (parent.isValid() ? 0 : this->size); }
+
+  QVariant data(QModelIndex const& index, int role) const override
+  { return this->data(index, role, rowData); }
+
+protected:
+  using TestModelBase::data;
+
+private:
+  DataRow const* const rowData;
+  int const size;
+};
+
+// ============================================================================
+class TestMutatingModel : public TestModelBase
+{
+public:
+  int rowCount(QModelIndex const& parent = {}) const override
+  { return (parent.isValid() ? 0 : this->rowData.count()); }
+
+  QVariant data(QModelIndex const& index, int role) const override
+  { return this->data(index, role, rowData.data()); }
+
+  void insertRow(int i, DataRow const& row)
+  {
+    this->beginInsertRows({}, i, i);
+    this->rowData.insert(i, row);
+    this->endInsertRows();
+  }
+
+protected:
+  using TestModelBase::data;
+
+private:
+  QVector<DataRow> rowData;
+};
 
 // ----------------------------------------------------------------------------
 void testRow(
@@ -164,6 +204,7 @@ class TestFusionModel : public QObject
 
 private slots:
   void operations();
+  void mutatingModel();
 };
 
 // ----------------------------------------------------------------------------
@@ -200,6 +241,35 @@ void TestFusionModel::operations()
   QCOMPARE(fm.rowCount(), 4);
   testModelData(fm, 2, 40, 60, true);
   testModelData(fm, 3, 70, 90, true);
+  testModelData(fm, 4, 30, 80, false);
+  testModelData(fm, 5, 20, 70, false);
+}
+
+// ----------------------------------------------------------------------------
+void TestFusionModel::mutatingModel()
+{
+  TestModel dmc{data3};
+  TestMutatingModel dmm;
+
+  // Test model initial state
+  FusionModel fm;
+  fm.addModel(&dmc);
+  fm.addModel(&dmm);
+
+  QCOMPARE(fm.rowCount(), 3);
+  testModelData(fm, 2, 40, 50, true);
+  testModelData(fm, 4, 30, 80, false);
+  testModelData(fm, 5, 20, 70, false);
+
+  // Test state after adding some new rows
+  dmm.insertRow(0, data1[0]);
+  dmm.insertRow(0, data1[1]);
+  dmm.insertRow(1, data1[2]);
+
+  QCOMPARE(fm.rowCount(), 5);
+  testModelData(fm, 1, 50, 50, true);
+  testModelData(fm, 2, 10, 80, true);
+  testModelData(fm, 3, 70, 80, false);
   testModelData(fm, 4, 30, 80, false);
   testModelData(fm, 5, 20, 70, false);
 }
