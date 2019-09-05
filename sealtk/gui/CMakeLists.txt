@@ -7,6 +7,7 @@ include(SEALTKUtils)
 sealtk_add_library(sealtk::gui
   SOURCES
     AbstractItemRepresentation.cpp
+    CreateDetectionPlayerTool.cpp
     FusionModel.cpp
     Player.cpp
     PlayerControl.cpp
@@ -18,6 +19,7 @@ sealtk_add_library(sealtk::gui
 
   HEADERS
     AbstractItemRepresentation.hpp
+    CreateDetectionPlayerTool.hpp
     FusionModel.hpp
     Player.hpp
     PlayerControl.hpp
