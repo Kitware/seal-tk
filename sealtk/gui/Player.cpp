@@ -76,7 +76,8 @@ public:
 
   void drawImage(float levelShift, float levelScale,
                  QOpenGLFunctions* functions);
-  void drawDetections(QOpenGLFunctions* functions);
+  void drawDetections(QOpenGLFunctions* functions, QOpenGLBuffer& buffer,
+                      QVector<DetectionInfo> const& indices);
 
   LevelsPair levels();
   void computeLevels(LevelsPair const& temporaryLevels);
@@ -110,6 +111,7 @@ public:
 
   QColor defaultColor = {255, 255, 0};
   QColor selectionColor = {255, 20, 144};
+  QColor pendingColor = {88, 184, 255};
 
   bool initialized = false;
 
@@ -245,8 +247,11 @@ void Player::setHomography(QMatrix4x4 const& homography)
 {
   QTE_D();
 
-  d->homography = homography;
-  d->updateViewHomography();
+  if (!qFuzzyCompare(homography, d->homography))
+  {
+    d->homography = homography;
+    d->updateViewHomography();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -407,6 +412,25 @@ void Player::setSelectionColor(QColor const& color)
 }
 
 // ----------------------------------------------------------------------------
+QColor Player::pendingColor() const
+{
+  QTE_D();
+  return d->pendingColor;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setPendingColor(QColor const& color)
+{
+  QTE_D();
+
+  if (d->pendingColor != color)
+  {
+    d->pendingColor = color;
+    this->update();
+  }
+}
+
+// ----------------------------------------------------------------------------
 void Player::setActiveTool(PlayerTool* tool)
 {
   QTE_D();
@@ -430,6 +454,39 @@ void Player::setActiveTool(PlayerTool* tool)
 }
 
 // ----------------------------------------------------------------------------
+void Player::drawPendingDetection(QRectF const& detection)
+{
+  QTE_D();
+
+  auto* const functions = this->context()->functions();
+  QOpenGLBuffer buffer{QOpenGLBuffer::VertexBuffer};
+  QVector<float> vertexData;
+  QVector<DetectionInfo> indices;
+  auto const first = vertexData.count();
+
+  auto const minX = static_cast<float>(detection.left());
+  auto const maxX = static_cast<float>(detection.right());
+  auto const minY = static_cast<float>(detection.top());
+  auto const maxY = static_cast<float>(detection.bottom());
+  vertexData.append(minX); vertexData.append(minY);
+  vertexData.append(maxX); vertexData.append(minY);
+  vertexData.append(maxX); vertexData.append(maxY);
+  vertexData.append(minX); vertexData.append(maxY);
+  vertexData.append(minX); vertexData.append(minY);
+
+  auto const last = vertexData.count();
+  indices.append({-1, first, last - first});
+
+  buffer.create();
+  buffer.bind();
+  buffer.allocate(vertexData.data(),
+                  vertexData.size() * static_cast<int>(sizeof(float)));
+  buffer.release();
+
+  d->drawDetections(functions, buffer, indices);
+}
+
+// ----------------------------------------------------------------------------
 QSize Player::homographyImageSize() const
 {
   QTE_D();
@@ -438,11 +495,51 @@ QSize Player::homographyImageSize() const
 }
 
 // ----------------------------------------------------------------------------
+QMatrix4x4 Player::homography() const
+{
+  QTE_D();
+
+  return d->homography;
+}
+
+// ----------------------------------------------------------------------------
+QMatrix4x4 Player::viewHomography() const
+{
+  QTE_D();
+
+  return d->viewHomography;
+}
+
+// ----------------------------------------------------------------------------
 PlayerTool* Player::activeTool() const
 {
   QTE_D();
 
   return d->activeTool;
+}
+
+// ----------------------------------------------------------------------------
+bool Player::hasImage() const
+{
+  QTE_D();
+
+  return d->image != nullptr;
+}
+
+// ----------------------------------------------------------------------------
+QPointF Player::viewToImage(QPointF const& viewCoord) const
+{
+  QTE_D();
+
+  if (!d->image)
+  {
+    return QPointF{};
+  }
+
+  auto xf = (d->viewHomography * d->homography).inverted();
+  xf.ortho(this->rect());
+
+  return xf * viewCoord;
 }
 
 // ----------------------------------------------------------------------------
@@ -533,7 +630,8 @@ void Player::paintGL()
 
     if (!d->detectedObjectVertexIndices.isEmpty())
     {
-      d->drawDetections(functions);
+      d->drawDetections(functions, d->detectedObjectVertexBuffer,
+                        d->detectedObjectVertexIndices);
     }
   }
   else
@@ -903,10 +1001,12 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
 }
 
 // ----------------------------------------------------------------------------
-void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
+void PlayerPrivate::drawDetections(
+  QOpenGLFunctions* functions, QOpenGLBuffer& buffer,
+  QVector<DetectionInfo> const& indices)
 {
   this->detectionShaderProgram.bind();
-  this->detectedObjectVertexBuffer.bind();
+  buffer.bind();
 
   this->detectionShaderProgram.setAttributeBuffer(0, GL_FLOAT, 0, 2);
   this->detectionShaderProgram.enableAttributeArray(0);
@@ -916,14 +1016,16 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
   this->detectionShaderProgram.setUniformValue(
     this->detectionViewHomographyLocation, this->viewHomography);
 
-  for (auto const& vertexInfo : this->detectedObjectVertexIndices)
+  for (auto const& vertexInfo : indices)
   {
     if (auto const k = vertexInfo.count / 5)
     {
       auto const& color =
-        (this->selectedTracks.contains(vertexInfo.id)
-         ? this->selectionColor
-         : this->defaultColor);
+        (vertexInfo.id < 0
+         ? this->pendingColor
+         : (this->selectedTracks.contains(vertexInfo.id)
+            ? this->selectionColor
+            : this->defaultColor));
       this->detectionShaderProgram.setUniformValue(
         this->detectionColorLocation,
         static_cast<float>(color.redF()),
@@ -939,7 +1041,7 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
     }
   }
 
-  this->detectedObjectVertexBuffer.release();
+  buffer.release();
   this->detectionShaderProgram.release();
 }
 
