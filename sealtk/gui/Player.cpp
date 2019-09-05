@@ -72,10 +72,14 @@ public:
   void updateViewHomography();
   void updateDetectedObjectVertexBuffers();
   void updateDetections();
+  void createDetectedObjectVertexBuffers(
+    QAbstractItemModel const& tracks, QOpenGLBuffer& buffer,
+    QVector<DetectionInfo>& indices);
 
   void drawImage(float levelShift, float levelScale,
                  QOpenGLFunctions* functions);
-  void drawDetections(QOpenGLFunctions* functions);
+  void drawDetections(QOpenGLFunctions* functions, QOpenGLBuffer& buffer,
+                      QVector<DetectionInfo> const& indices);
 
   LevelsPair levels();
   void computeLevels(LevelsPair const& temporaryLevels);
@@ -109,6 +113,7 @@ public:
 
   QColor defaultColor = {255, 255, 0};
   QColor selectionColor = {255, 20, 144};
+  QColor pendingColor = {0, 0, 255};
 
   bool initialized = false;
 
@@ -244,8 +249,12 @@ void Player::setHomography(QMatrix4x4 const& homography)
 {
   QTE_D();
 
-  d->homography = homography;
-  d->updateViewHomography();
+  if (!qFuzzyCompare(homography, d->homography))
+  {
+    d->homography = homography;
+    d->updateViewHomography();
+    emit this->homographyChanged(homography);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -406,6 +415,25 @@ void Player::setSelectionColor(QColor const& color)
 }
 
 // ----------------------------------------------------------------------------
+QColor Player::pendingColor() const
+{
+  QTE_D();
+  return d->pendingColor;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setPendingColor(QColor const& color)
+{
+  QTE_D();
+
+  if (d->pendingColor != color)
+  {
+    d->pendingColor = color;
+    this->update();
+  }
+}
+
+// ----------------------------------------------------------------------------
 void Player::setActiveTool(PlayerTool* tool)
 {
   QTE_D();
@@ -429,6 +457,39 @@ void Player::setActiveTool(PlayerTool* tool)
 }
 
 // ----------------------------------------------------------------------------
+void Player::drawPendingDetection(QRectF const& detection)
+{
+  QTE_D();
+
+  auto* const functions = this->context()->functions();
+  QOpenGLBuffer buffer{QOpenGLBuffer::VertexBuffer};
+  QVector<float> vertexData;
+  QVector<DetectionInfo> indices;
+  auto const first = vertexData.count();
+
+  auto const minX = static_cast<float>(detection.left());
+  auto const maxX = static_cast<float>(detection.right());
+  auto const minY = static_cast<float>(detection.top());
+  auto const maxY = static_cast<float>(detection.bottom());
+  vertexData.append(minX); vertexData.append(minY);
+  vertexData.append(maxX); vertexData.append(minY);
+  vertexData.append(maxX); vertexData.append(maxY);
+  vertexData.append(minX); vertexData.append(maxY);
+  vertexData.append(minX); vertexData.append(minY);
+
+  auto const last = vertexData.count();
+  indices.append({-1, first, last - first});
+
+  buffer.create();
+  buffer.bind();
+  buffer.allocate(vertexData.data(),
+                  vertexData.size() * static_cast<int>(sizeof(float)));
+  buffer.release();
+
+  d->drawDetections(functions, buffer, indices);
+}
+
+// ----------------------------------------------------------------------------
 QSize Player::homographyImageSize() const
 {
   QTE_D();
@@ -442,6 +503,56 @@ PlayerTool* Player::activeTool() const
   QTE_D();
 
   return d->activeTool;
+}
+
+// ----------------------------------------------------------------------------
+QMatrix4x4 Player::homography() const
+{
+  QTE_D();
+
+  return d->homography;
+}
+
+// ----------------------------------------------------------------------------
+QMatrix4x4 Player::viewHomography() const
+{
+  QTE_D();
+
+  return d->viewHomography;
+}
+
+// ----------------------------------------------------------------------------
+kwiver::vital::image_container_sptr Player::image() const
+{
+  QTE_D();
+
+  return d->image;
+}
+
+// ----------------------------------------------------------------------------
+QPointF Player::viewSpaceToWorldSpace(QPointF const& viewCoord) const
+{
+  QTE_D();
+
+  if (!d->image)
+  {
+    return QPointF{};
+  }
+
+  auto const qw = this->width();
+  auto const qh = this->height();
+
+  auto const widgetToGL = QMatrix4x4{
+    2.0f / qw, 0.0f, 0.0f, -1.0f,
+    0.0f, -2.0f / qh, 0.0f, 1.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f,
+  };
+
+  auto const m = d->viewHomography * d->homography;
+  auto const minv = m.inverted() * widgetToGL;
+
+  return minv * viewCoord;
 }
 
 // ----------------------------------------------------------------------------
@@ -532,7 +643,8 @@ void Player::paintGL()
 
     if (!d->detectedObjectVertexIndices.isEmpty())
     {
-      d->drawDetections(functions);
+      d->drawDetections(functions, d->detectedObjectVertexBuffer,
+                        d->detectedObjectVertexIndices);
     }
   }
   else
@@ -732,31 +844,40 @@ void PlayerPrivate::updateViewHomography()
 // ----------------------------------------------------------------------------
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
+  this->createDetectedObjectVertexBuffers(this->trackModelFilter,
+                                          this->detectedObjectVertexBuffer,
+                                          this->detectedObjectVertexIndices);
+}
+
+//-----------------------------------------------------------------------------
+void PlayerPrivate::createDetectedObjectVertexBuffers(
+  QAbstractItemModel const& tracks, QOpenGLBuffer& buffer,
+  QVector<DetectionInfo>& indices)
+{
   QVector<float> vertexData;
   static constexpr decltype(vertexData.count()) tuple_size = 2;
 
   // Get bounding boxes of all "active" detected objects
-  this->detectedObjectVertexIndices.clear();
-  for (auto const pr : kvr::iota(this->trackModelFilter.rowCount()))
+  indices.clear();
+  for (auto const pr : kvr::iota(tracks.rowCount()))
   {
     auto const first = vertexData.count() / tuple_size;
 
-    auto const& parentIndex = this->trackModelFilter.index(pr, 0);
+    auto const& parentIndex = tracks.index(pr, 0);
     auto const& parentData =
-      this->trackModelFilter.data(parentIndex, core::LogicalIdentityRole);
+      tracks.data(parentIndex, core::LogicalIdentityRole);
     auto const id = parentData.value<qint64>();
 
-    auto const childRows = this->trackModelFilter.rowCount(parentIndex);
+    auto const childRows = tracks.rowCount(parentIndex);
     for (auto const childRow : kvr::iota(childRows))
     {
-      auto const& childIndex =
-        this->trackModelFilter.index(childRow, 0, parentIndex);
-      auto const& childVisibility =
-        this->trackModelFilter.data(childIndex, core::VisibilityRole);
+      auto const& childIndex = tracks.index(childRow, 0, parentIndex);
+      auto const& childVisibility = tracks.data(childIndex,
+                                                core::VisibilityRole);
       if (childVisibility.toBool())
       {
-        auto const& childData =
-          this->trackModelFilter.data(childIndex, core::AreaLocationRole);
+        auto const& childData = tracks.data(childIndex,
+                                            core::AreaLocationRole);
         if (childData.canConvert<QRectF>())
         {
           auto const& box = childData.toRectF();
@@ -774,7 +895,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
     }
 
     auto const last = vertexData.count() / tuple_size;
-    this->detectedObjectVertexIndices.append({id, first, last - first});
+    indices.append({id, first, last - first});
   }
 
   if (vertexData.isEmpty())
@@ -783,15 +904,15 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
   }
 
   // Regenerate vertex buffer
-  if (!this->detectedObjectVertexBuffer.isCreated())
+  if (!buffer.isCreated())
   {
-    this->detectedObjectVertexBuffer.create();
+    buffer.create();
   }
 
-  this->detectedObjectVertexBuffer.bind();
-  this->detectedObjectVertexBuffer.allocate(
-    vertexData.data(), vertexData.size() * static_cast<int>(sizeof(float)));
-  this->detectedObjectVertexBuffer.release();
+  buffer.bind();
+  buffer.allocate(vertexData.data(),
+                  vertexData.size() * static_cast<int>(sizeof(float)));
+  buffer.release();
 }
 
 // ----------------------------------------------------------------------------
@@ -902,10 +1023,12 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
 }
 
 // ----------------------------------------------------------------------------
-void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
+void PlayerPrivate::drawDetections(
+  QOpenGLFunctions* functions, QOpenGLBuffer& buffer,
+  QVector<DetectionInfo> const& indices)
 {
   this->detectionShaderProgram.bind();
-  this->detectedObjectVertexBuffer.bind();
+  buffer.bind();
 
   this->detectionShaderProgram.setAttributeBuffer(0, GL_FLOAT, 0, 2);
   this->detectionShaderProgram.enableAttributeArray(0);
@@ -915,14 +1038,16 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
   this->detectionShaderProgram.setUniformValue(
     this->detectionViewHomographyLocation, this->viewHomography);
 
-  for (auto const& vertexInfo : this->detectedObjectVertexIndices)
+  for (auto const& vertexInfo : indices)
   {
     if (auto const k = vertexInfo.count / 5)
     {
       auto const& color =
-        (this->selectedTracks.contains(vertexInfo.id)
-         ? this->selectionColor
-         : this->defaultColor);
+        (vertexInfo.id < 0
+         ? this->pendingColor
+         : (this->selectedTracks.contains(vertexInfo.id)
+            ? this->selectionColor
+            : this->defaultColor));
       this->detectionShaderProgram.setUniformValue(
         this->detectionColorLocation,
         static_cast<float>(color.redF()),
@@ -938,7 +1063,7 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
     }
   }
 
-  this->detectedObjectVertexBuffer.release();
+  buffer.release();
   this->detectionShaderProgram.release();
 }
 

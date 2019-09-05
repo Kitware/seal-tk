@@ -14,12 +14,13 @@
 
 #include <qtGlobal.h>
 
+#include <QMatrix4x4>
 #include <QOpenGLWidget>
 #include <QPointF>
+#include <QRectF>
 
 class QAbstractItemModel;
 class QImage;
-class QMatrix4x4;
 
 namespace sealtk
 {
@@ -53,11 +54,15 @@ class SEALTK_GUI_EXPORT Player : public QOpenGLWidget
              READ homographyImageSize
              WRITE setHomographyImageSize)
   Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
+  Q_PROPERTY(QMatrix4x4 homography READ homography WRITE setHomography)
+  Q_PROPERTY(QMatrix4x4 viewHomography READ viewHomography)
 
   Q_PROPERTY(QColor defaultColor READ defaultColor
              WRITE setDefaultColor NOTIFY defaultColorChanged)
   Q_PROPERTY(QColor selectionColor READ selectionColor
              WRITE setSelectionColor NOTIFY defaultColorChanged)
+  Q_PROPERTY(QColor pendingColor READ pendingColor
+             WRITE setPendingColor NOTIFY pendingColorChanged)
 
 public:
   explicit Player(QWidget* parent = nullptr);
@@ -69,18 +74,26 @@ public:
   ContrastMode contrastMode() const;
   QSize homographyImageSize() const;
   PlayerTool* activeTool() const;
+  QMatrix4x4 homography() const;
+  QMatrix4x4 viewHomography() const;
+  kwiver::vital::image_container_sptr image() const;
+
+  QPointF viewSpaceToWorldSpace(QPointF const& viewCoord) const;
 
   QColor defaultColor() const;
   QColor selectionColor() const;
+  QColor pendingColor() const;
 
 signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
   void imageSizeChanged(QSize imageSize) const;
   void activeToolChanged(PlayerTool* tool) const;
+  void homographyChanged(QMatrix4x4 const& homography) const;
 
   void defaultColorChanged(QColor const& color) const;
   void selectionColorChanged(QColor const& color) const;
+  void pendingColorChanged(QColor const& color) const;
 
 public slots:
   virtual void setImage(kwiver::vital::image_container_sptr const& image,
@@ -99,6 +112,9 @@ public slots:
 
   void setDefaultColor(QColor const& color);
   void setSelectionColor(QColor const& color);
+  void setPendingColor(QColor const& color);
+
+  void drawPendingDetection(QRectF const& detection);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
