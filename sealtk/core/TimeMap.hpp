@@ -5,11 +5,16 @@
 #ifndef sealtk_core_TimeMap_hpp
 #define sealtk_core_TimeMap_hpp
 
+#include <sealtk/core/Export.h>
+
 #include <vital/types/timestamp.h>
 
 #include <qtEnumerate.h>
+#include <qtGlobal.h>
 
 #include <QMap>
+#include <QMetaObject>
+#include <QMetaType>
 #include <QSet>
 
 namespace sealtk
@@ -17,6 +22,8 @@ namespace sealtk
 
 namespace core
 {
+
+QTE_BEGIN_META_NAMESPACE(SEALTK_CORE_EXPORT, time_map_enums)
 
 /// Requested seek mode.
 ///
@@ -62,6 +69,10 @@ enum SeekMode
   /// \sa ::SeekUpperBound
   SeekPrevious
 };
+
+QTE_ENUM_NS(SeekMode)
+
+QTE_END_META_NAMESPACE()
 
 // ============================================================================
 template <typename Value>
@@ -252,5 +263,7 @@ void TimeMap<Value>::insert(TimeMap<Value> const& other)
 } // namespace core
 
 } // namespace sealtk
+
+Q_DECLARE_METATYPE(sealtk::core::SeekMode)
 
 #endif
