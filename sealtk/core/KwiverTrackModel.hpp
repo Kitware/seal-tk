@@ -33,7 +33,7 @@ public:
   int rowCount(QModelIndex const& parent = {}) const override;
   QModelIndex parent(QModelIndex const& child) const override;
   QModelIndex index(
-    int row, int column, QModelIndex const& parent) const override;
+    int row, int column, QModelIndex const& parent = {}) const override;
 
   QVariant data(QModelIndex const& index, int role) const override;
   bool setData(

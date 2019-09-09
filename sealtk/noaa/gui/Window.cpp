@@ -12,12 +12,15 @@
 #include <sealtk/noaa/core/NoaaPipelineWorker.hpp>
 
 #include <sealtk/gui/AbstractItemRepresentation.hpp>
+#include <sealtk/gui/CreateTrackPlayerTool.hpp>
 #include <sealtk/gui/FusionModel.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
 #include <sealtk/core/KwiverDetectionsSink.hpp>
+#include <sealtk/core/KwiverPipelineWorker.hpp>
+#include <sealtk/core/KwiverTrackModel.hpp>
 #include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
@@ -27,6 +30,8 @@
 #include <sealtk/util/unique.hpp>
 
 #include <sealtk/gui/SplitterWindow.hpp>
+
+#include <vital/types/object_track_set.h>
 
 #include <qtStlUtil.h>
 #include <qtUiState.h>
@@ -41,10 +46,13 @@
 #include <QUrlQuery>
 #include <QVector>
 
+#include <algorithm>
 #include <memory>
 
 namespace sc = sealtk::core;
 namespace sg = sealtk::gui;
+
+namespace kv = kwiver::vital;
 
 namespace sealtk
 {
@@ -64,6 +72,7 @@ struct WindowData
   sc::VideoSource* videoSource = nullptr;
   sg::SplitterWindow* window = nullptr;
   sealtk::noaa::gui::Player* player = nullptr;
+  sealtk::gui::CreateTrackPlayerTool* createTrackTool = nullptr;
 
   std::shared_ptr<sc::AbstractDataSource> trackSource;
   std::shared_ptr<QAbstractItemModel> trackModel;
@@ -117,6 +126,8 @@ public:
   void loadDetections(WindowData* data);
   void saveDetections(WindowData* data);
   void executePipeline(QString const& pipelineFile);
+  void createDetection(WindowData* data, QRectF const& detection);
+  void resetActiveTool();
 
   WindowData* dataForView(int viewIndex);
   void setTrackModel(
@@ -198,6 +209,11 @@ Window::Window(QWidget* parent)
           &QItemSelectionModel::selectionChanged,
           this, [d](QItemSelection const& selection){
             d->updateTrackSelection(selection);
+          });
+  connect(d->ui.actionCreateDetection, &QAction::triggered,
+          this, [d]{
+            d->eoWindow.player->setActiveTool(d->eoWindow.createTrackTool);
+            d->irWindow.player->setActiveTool(d->irWindow.createTrackTool);
           });
 
   connect(d->ui.tracks->selectionModel(),
@@ -384,6 +400,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   data->window->setClosable(false);
   data->window->setWindowTitle(title);
   data->player->setDefaultColor(qRgb(240, 176, 48));
+  data->createTrackTool = new sg::CreateTrackPlayerTool{data->player};
 
   QObject::connect(q, &Window::zoomChanged,
                    data->player, &sg::Player::setZoom);
@@ -403,6 +420,13 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::saveDetectionsTriggered,
     q, [data, this]{ this->saveDetections(data); });
+
+  QObject::connect(
+    data->createTrackTool, &sg::CreateTrackPlayerTool::detectionCreated,
+    [this, data](QRectF const& detection){
+      this->createDetection(data, detection);
+      this->resetActiveTool();
+    });
 
   this->ui.centralwidget->addWidget(data->window);
 }
@@ -577,6 +601,53 @@ void WindowPrivate::updateTrackSelection(QItemSelection const& selection)
 
   this->eoWindow.player->setSelectedTrackIds(selectedTracks);
   this->irWindow.player->setSelectedTrackIds(selectedTracks);
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::resetActiveTool()
+{
+  this->eoWindow.player->setActiveTool(nullptr);
+  this->irWindow.player->setActiveTool(nullptr);
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::createDetection(WindowData* data, QRectF const& detection)
+{
+  if (!data->trackModel)
+  {
+    data->trackModel = std::make_shared<sc::KwiverTrackModel>();
+    this->trackModel.addModel(data->trackModel.get());
+    data->player->setTrackModel(data->trackModel.get());
+  }
+
+  auto* const tracks = qobject_cast<sc::KwiverTrackModel*>(
+    data->trackModel.get());
+
+  if (tracks)
+  {
+    qint64 maxId = 0;
+    for (int row = 0; row < tracks->rowCount(); ++row)
+    {
+      auto const index = tracks->index(row, 0);
+      maxId = std::max(
+        maxId, tracks->data(index, sc::LogicalIdentityRole).toLongLong());
+    }
+
+    auto const time = this->videoController->time();
+    auto const detectedObject = std::make_shared<kv::detected_object>(
+      kv::bounding_box_d{detection.left(), detection.top(), detection.right(),
+                         detection.bottom()});
+    auto const trackState = std::make_shared<kv::object_track_state>(
+      data->videoSource->frames()[time], time, detectedObject);
+    auto const track = kv::track::create();
+    track->append(trackState);
+    track->set_id(maxId + 1);
+    auto const newTracks = std::make_shared<kv::object_track_set>();
+    newTracks->insert(track);
+
+    tracks->addTracks(newTracks);
+    data->player->update();
+  }
 }
 
 } // namespace gui
