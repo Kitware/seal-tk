@@ -11,6 +11,7 @@ set(SEALTK_CORE_VERSION_OUT
 
 sealtk_add_library(sealtk::core
   SOURCES
+    AbstractDataSink.cpp
     AbstractDataSource.cpp
     AbstractItemModel.cpp
     AbstractProxyModel.cpp
@@ -21,6 +22,7 @@ sealtk_add_library(sealtk::core
     FileVideoSourceFactory.cpp
     ImageUtils.cpp
     KwiverFileVideoSourceFactory.cpp
+    KwiverDetectionsSink.cpp
     KwiverTrackModel.cpp
     KwiverPipelineWorker.cpp
     KwiverTrackSource.cpp
@@ -36,6 +38,7 @@ sealtk_add_library(sealtk::core
     VideoSourceFactory.cpp
 
   HEADERS
+    AbstractDataSink.hpp
     AbstractDataSource.hpp
     AbstractItemModel.hpp
     AbstractProxyModel.hpp
@@ -46,6 +49,7 @@ sealtk_add_library(sealtk::core
     FileVideoSourceFactory.hpp
     ImageUtils.hpp
     KwiverFileVideoSourceFactory.hpp
+    KwiverDetectionsSink.hpp
     KwiverTrackModel.hpp
     KwiverPipelineWorker.hpp
     KwiverTrackSource.hpp

@@ -47,6 +47,7 @@ public:
 
 signals:
   void loadDetectionsTriggered() const;
+  void saveDetectionsTriggered() const;
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
