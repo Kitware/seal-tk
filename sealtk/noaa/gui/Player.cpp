@@ -141,7 +141,7 @@ void PlayerPrivate::loadTransform(Player* q)
   if (!path.isEmpty())
   {
     auto config = kv::config_block::empty_config();
-    config->set_value("transform_reader:type", "itk");
+    config->set_value("transform_reader:type", "auto");
 
     try
     {
