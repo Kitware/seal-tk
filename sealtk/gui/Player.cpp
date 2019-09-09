@@ -752,10 +752,10 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
                                               sizeof(VertexData));
   this->imageShaderProgram.enableAttributeArray(1);
 
-  this->imageShaderProgram.setUniformValueArray(this->imageHomographyLocation,
-                                                &this->homography, 1);
-  this->imageShaderProgram.setUniformValueArray(
-    this->imageViewHomographyLocation, &this->viewHomography, 1);
+  this->imageShaderProgram.setUniformValue(
+    this->imageHomographyLocation, this->homography);
+  this->imageShaderProgram.setUniformValue(
+    this->imageViewHomographyLocation, this->viewHomography);
 
   this->imageShaderProgram.setUniformValue(
     this->levelShiftLocation, levelShift);
@@ -778,10 +778,10 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
   this->detectionShaderProgram.setAttributeBuffer(0, GL_FLOAT, 0, 2);
   this->detectionShaderProgram.enableAttributeArray(0);
 
-  this->detectionShaderProgram.setUniformValueArray(
-    this->detectionHomographyLocation, &this->homography, 1);
-  this->detectionShaderProgram.setUniformValueArray(
-    this->detectionViewHomographyLocation, &this->viewHomography, 1);
+  this->detectionShaderProgram.setUniformValue(
+    this->detectionHomographyLocation, this->homography);
+  this->detectionShaderProgram.setUniformValue(
+    this->detectionViewHomographyLocation, this->viewHomography);
 
   for (auto const& vertexInfo : this->detectedObjectVertexIndices)
   {
