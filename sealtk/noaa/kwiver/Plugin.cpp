@@ -35,15 +35,16 @@ void register_factories(::kwiver::vital::plugin_loader& vpm)
 
   auto fact = vpm.ADD_ALGORITHM("noaa_timestamp_passthrough",
                                 TimestampPassthrough);
-  fact->add_attribute(kvpf::PLUGIN_DESCRIPTION,
-                      "Timestamp parser for NOAA images")
-       .add_attribute(kvpf::PLUGIN_MODULE_NAME, MODULE_NAME)
-       .add_attribute(kvpf::PLUGIN_VERSION, MODULE_VERSION)
-       .add_attribute(kvpf::PLUGIN_ORGANIZATION, MODULE_ORGANIZATION);
+  (*fact)
+    .add_attribute(kvpf::PLUGIN_DESCRIPTION,
+                   "Timestamp parser for NOAA images")
+    .add_attribute(kvpf::PLUGIN_MODULE_NAME, MODULE_NAME)
+    .add_attribute(kvpf::PLUGIN_VERSION, MODULE_VERSION)
+    .add_attribute(kvpf::PLUGIN_ORGANIZATION, MODULE_ORGANIZATION);
 }
 
-}
+} // namespace kwiver
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk

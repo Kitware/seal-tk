@@ -5,8 +5,9 @@
 #ifndef sealtk_core_VideoRequest_hpp
 #define sealtk_core_VideoRequest_hpp
 
-#include <sealtk/core/Export.h>
 #include <sealtk/core/TimeMap.hpp>
+
+#include <sealtk/core/Export.h>
 
 #include <qtTransferablePointer.h>
 

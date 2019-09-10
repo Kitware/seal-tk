@@ -65,7 +65,6 @@ void VideoMetaData::setTimeStamp(kv::timestamp const& ts)
   d->timeStamp = ts;
 }
 
-
 // ----------------------------------------------------------------------------
 void VideoMetaData::setImageName(kv::path_t const& in)
 {

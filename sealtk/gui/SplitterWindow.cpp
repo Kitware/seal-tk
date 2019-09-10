@@ -11,7 +11,7 @@ namespace sealtk
 namespace gui
 {
 
-//=============================================================================
+// ============================================================================
 class SplitterWindowPrivate
 {
 public:
@@ -23,10 +23,10 @@ public:
   bool closable = true;
 };
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(SplitterWindow)
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 SplitterWindow::SplitterWindow(QWidget* parent)
   : QWidget(parent),
     d_ptr{new SplitterWindowPrivate(this)}
@@ -40,12 +40,12 @@ SplitterWindow::SplitterWindow(QWidget* parent)
           this, &QWidget::hide);
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 SplitterWindow::~SplitterWindow()
 {
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QWidget* SplitterWindow::centralWidget() const
 {
   QTE_D();
@@ -53,7 +53,7 @@ QWidget* SplitterWindow::centralWidget() const
   return d->ui.centralWidget;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void SplitterWindow::setCentralWidget(QWidget* widget)
 {
   QTE_D();
@@ -62,7 +62,7 @@ void SplitterWindow::setCentralWidget(QWidget* widget)
   d->ui.centralWidget = widget;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 bool SplitterWindow::closable() const
 {
   QTE_D();
@@ -70,7 +70,7 @@ bool SplitterWindow::closable() const
   return d->closable;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void SplitterWindow::setClosable(bool closable)
 {
   QTE_D();
@@ -80,12 +80,12 @@ void SplitterWindow::setClosable(bool closable)
   d->ui.closeButton->setVisible(closable);
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 SplitterWindowPrivate::SplitterWindowPrivate(SplitterWindow* parent)
   : parent(parent)
 {
 }
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk

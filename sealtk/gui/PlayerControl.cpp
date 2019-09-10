@@ -48,15 +48,9 @@ PlayerControl::PlayerControl(QWidget* parent)
           this, &PlayerControl::setTime);
 
   connect(d->ui.previousFrameButton, &QToolButton::pressed,
-          [this]()
-  {
-    emit this->previousFrameTriggered();
-  });
+          this, &PlayerControl::previousFrameTriggered);
   connect(d->ui.nextFrameButton, &QToolButton::pressed,
-          [this]()
-  {
-    emit this->nextFrameTriggered();
-  });
+          this, &PlayerControl::nextFrameTriggered);
 }
 
 // ----------------------------------------------------------------------------
@@ -207,6 +201,6 @@ void PlayerControl::setParamsFromVideoController()
   }
 }
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk

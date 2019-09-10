@@ -130,6 +130,6 @@ bool TimeStamp::operator!=(TimeStamp const& rhs) const
   return !this->operator==(rhs);
 }
 
-}
+} // namespace core
 
-}
+} // namespace sealtk

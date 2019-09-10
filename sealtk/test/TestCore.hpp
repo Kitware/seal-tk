@@ -20,8 +20,8 @@ static inline QString testDataPath(QString const& path)
   return QStringLiteral(SEALTK_TEST_DATA_DIR "/") + path;
 }
 
-}
+} // namespace test
 
-}
+} // namespace sealtk
 
 #endif

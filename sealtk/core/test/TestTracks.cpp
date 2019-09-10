@@ -6,8 +6,8 @@
 
 #include <sealtk/core/DataModelTypes.hpp>
 
-#include <vital/range/iota.h>
 #include <vital/range/indirect.h>
+#include <vital/range/iota.h>
 
 #include <QAbstractItemModel>
 

@@ -21,10 +21,10 @@ namespace core
 SEALTK_NOAA_CORE_EXPORT
 QDateTime imageFilenameToQDateTime(QString const& path);
 
-}
+} // namespace core
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
 
 #endif

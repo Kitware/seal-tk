@@ -58,7 +58,7 @@ namespace gui
 namespace // anonymous
 {
 
-//=============================================================================
+// ============================================================================
 struct WindowData
 {
   sc::VideoSource* videoSource = nullptr;
@@ -69,7 +69,7 @@ struct WindowData
   std::shared_ptr<QAbstractItemModel> trackModel;
 };
 
-//=============================================================================
+// ============================================================================
 class TrackRepresentation : public sg::AbstractItemRepresentation
 {
 public:
@@ -101,7 +101,7 @@ public:
 
 } // namespace <anonymous>
 
-//=============================================================================
+// ============================================================================
 class WindowPrivate
 {
 public:
@@ -136,10 +136,10 @@ private:
   QTE_DECLARE_PUBLIC_PTR(Window)
 };
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(Window)
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 Window::Window(QWidget* parent)
   : QMainWindow{parent},
     d_ptr{new WindowPrivate{this}}
@@ -203,12 +203,12 @@ Window::Window(QWidget* parent)
   d->uiState.restore();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 Window::~Window()
 {
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Window::closeEvent(QCloseEvent* e)
 {
   QTE_D();
@@ -218,7 +218,7 @@ void Window::closeEvent(QCloseEvent* e)
   QMainWindow::closeEvent(e);
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Window::setPipelineDirectory(QString const& directory)
 {
   QTE_D();
@@ -239,26 +239,26 @@ void Window::setPipelineDirectory(QString const& directory)
     auto* const action = d->ui.menuPipeline->addAction(key);
     auto const& filename = pipelines[key];
     connect(action, &QAction::triggered, this, [filename, d]{
-      d->executePipeline(filename);
-    });
+              d->executePipeline(filename);
+            });
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 float Window::zoom() const
 {
   QTE_D();
   return d->zoom;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QPointF Window::center() const
 {
   QTE_D();
   return d->center;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Window::setZoom(float zoom)
 {
   QTE_D();
@@ -269,7 +269,7 @@ void Window::setZoom(float zoom)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Window::setCenter(QPointF center)
 {
   QTE_D();
@@ -281,59 +281,53 @@ void Window::setCenter(QPointF center)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Window::showAbout()
 {
   About about{this};
   about.exec();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void WindowPrivate::registerVideoSourceFactory(
   QString const& name, sc::VideoSourceFactory* factory)
 {
   QTE_Q();
 
-  this->eoWindow.player->registerVideoSourceFactory(name, factory,
-                                                    &this->eoWindow);
-  this->irWindow.player->registerVideoSourceFactory(name, factory,
-                                                    &this->irWindow);
+  this->eoWindow.player->registerVideoSourceFactory(
+    name, factory, &this->eoWindow);
+  this->irWindow.player->registerVideoSourceFactory(
+    name, factory, &this->irWindow);
 
   QObject::connect(
     factory, &sc::VideoSourceFactory::videoSourceLoaded,
-    [this, q](void* handle, sc::VideoSource* videoSource)
-  {
-    auto* data = static_cast<WindowData*>(handle);
+    [this](void* handle, sc::VideoSource* videoSource){
+      auto* const data = static_cast<WindowData*>(handle);
 
-    // If this view had a video source previously, delete it
-    delete data->videoSource;
+      // If this view had a video source previously, delete it
+      delete data->videoSource;
 
-    // Add the new video source
-    data->videoSource = videoSource;
-    auto* const videoDistributor =
-      this->videoController->addVideoSource(videoSource);
-    data->player->setVideoSource(videoDistributor);
+      // Add the new video source
+      data->videoSource = videoSource;
+      auto* const videoDistributor =
+        this->videoController->addVideoSource(videoSource);
+      data->player->setVideoSource(videoDistributor);
 
-    // Enable pipelines
-    this->ui.menuPipeline->setEnabled(true);
-  });
+      // Enable pipelines
+      this->ui.menuPipeline->setEnabled(true);
+    });
 
-  auto* fileFactory =
+  auto* const fileFactory =
     dynamic_cast<sc::FileVideoSourceFactory*>(factory);
   if (fileFactory)
   {
     QObject::connect(
       fileFactory, &sc::FileVideoSourceFactory::fileRequested,
       [q, fileFactory](void* handle){
-        QString filename;
-        if (fileFactory->expectsDirectory())
-        {
-          filename = QFileDialog::getExistingDirectory(q);
-        }
-        else
-        {
-          filename = QFileDialog::getOpenFileName(q);
-        }
+        auto const& filename =
+          (fileFactory->expectsDirectory()
+           ? QFileDialog::getExistingDirectory(q)
+           : QFileDialog::getOpenFileName(q));
 
         if (!filename.isNull())
         {
@@ -343,7 +337,7 @@ void WindowPrivate::registerVideoSourceFactory(
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void WindowPrivate::createWindow(WindowData* data, QString const& title,
                                  sealtk::noaa::gui::Player::Role role)
 {
@@ -377,7 +371,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   this->ui.centralwidget->addWidget(data->window);
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void WindowPrivate::loadDetections(WindowData* data)
 {
   QTE_Q();
@@ -417,7 +411,7 @@ void WindowPrivate::loadDetections(WindowData* data)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void WindowPrivate::saveDetections(WindowData* data)
 {
   QTE_Q();
@@ -465,7 +459,7 @@ void WindowPrivate::saveDetections(WindowData* data)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void WindowPrivate::executePipeline(QString const& pipelineFile)
 {
   QTE_Q();

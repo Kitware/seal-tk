@@ -59,10 +59,10 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(Window)
 };
 
-}
+} // namespace gui
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
 
 #endif

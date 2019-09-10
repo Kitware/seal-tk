@@ -49,8 +49,8 @@ QDateTime imageFilenameToQDateTime(QString const& path)
   return QDateTime{};
 }
 
-}
+} // namespace core
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk

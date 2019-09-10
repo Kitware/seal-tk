@@ -9,8 +9,8 @@
 #include <vital/range/iota.h>
 
 #include <QImage>
-#include <QOpenGLTexture>
 #include <QOpenGLPixelTransferOptions>
+#include <QOpenGLTexture>
 #include <QtAlgorithms>
 
 namespace sealtk
@@ -43,21 +43,29 @@ bool checkStrides(ptrdiff_t xs, ptrdiff_t ys, ptrdiff_t cs, ptrdiff_t ss,
   // Check that X and Y strides are positive; we don't support backwards
   // packing
   if (xs < 0 || ys < 0)
+  {
     return false;
+  }
 
   // Check that pixels are packed in rows; we don't support column packing
   if (xs > ys)
+  {
     return false;
+  }
 
   // Check row stride; must be some number of (sub)pixel strides, rounded up to
   // the alignment
   if (!isAligned(ys, xs, alignment))
+  {
     return false;
+  }
 
   // Check for single-channel images; for single channel, no further checks are
   // needed
   if (ck == 1)
+  {
     return true;
+  }
 
   // Check if we are plane-packed or pixel-packed
   auto const acs = std::abs(cs);
@@ -66,14 +74,18 @@ bool checkStrides(ptrdiff_t xs, ptrdiff_t ys, ptrdiff_t cs, ptrdiff_t ss,
     // Check plane stride; must be some number of row strides, rounded up to
     // the alignment
     if (!isAligned(acs, ys, alignment))
+    {
       return false;
+    }
   }
   else // Pixel-packed
   {
     // Check that there is no padding between sub-pixel values (shouldn't be!)
     // or between pixels (not supported)
     if (acs != ss || xs != (ss * static_cast<ptrdiff_t>(ck)))
+    {
       return false;
+    }
   }
 
   // Looks okay!
@@ -105,32 +117,32 @@ TextureFormat getFormat(kwiver::vital::image_pixel_traits const& traits,
   switch (traits.type)
   {
     case PixelType::SIGNED:
-      if (hasFormat(1, 1)) return {TF::R8_SNorm,     PF::Red,  PT::Int8};
-      if (hasFormat(1, 2)) return {TF::RG8_SNorm,    PF::RG,   PT::Int8};
-      if (hasFormat(1, 3)) return {TF::RGB8_SNorm,   PF::RGB,  PT::Int8};
-      if (hasFormat(1, 4)) return {TF::RGBA8_SNorm,  PF::RGBA, PT::Int8};
-      if (hasFormat(2, 1)) return {TF::R16_SNorm,    PF::Red,  PT::Int16};
-      if (hasFormat(2, 2)) return {TF::RG16_SNorm,   PF::RG,   PT::Int16};
-      if (hasFormat(2, 3)) return {TF::RGB16_SNorm,  PF::RGB,  PT::Int16};
-      if (hasFormat(2, 4)) return {TF::RGBA16_SNorm, PF::RGBA, PT::Int16};
+      if (hasFormat(1, 1)) { return {TF::R8_SNorm,     PF::Red,  PT::Int8}; }
+      if (hasFormat(1, 2)) { return {TF::RG8_SNorm,    PF::RG,   PT::Int8}; }
+      if (hasFormat(1, 3)) { return {TF::RGB8_SNorm,   PF::RGB,  PT::Int8}; }
+      if (hasFormat(1, 4)) { return {TF::RGBA8_SNorm,  PF::RGBA, PT::Int8}; }
+      if (hasFormat(2, 1)) { return {TF::R16_SNorm,    PF::Red,  PT::Int16}; }
+      if (hasFormat(2, 2)) { return {TF::RG16_SNorm,   PF::RG,   PT::Int16}; }
+      if (hasFormat(2, 3)) { return {TF::RGB16_SNorm,  PF::RGB,  PT::Int16}; }
+      if (hasFormat(2, 4)) { return {TF::RGBA16_SNorm, PF::RGBA, PT::Int16}; }
       break;
 
     case PixelType::UNSIGNED:
-      if (hasFormat(1, 1)) return {TF::R8_UNorm,     PF::Red,  PT::UInt8};
-      if (hasFormat(1, 2)) return {TF::RG8_UNorm,    PF::RG,   PT::UInt8};
-      if (hasFormat(1, 3)) return {TF::RGB8_UNorm,   PF::RGB,  PT::UInt8};
-      if (hasFormat(1, 4)) return {TF::RGBA8_UNorm,  PF::RGBA, PT::UInt8};
-      if (hasFormat(2, 1)) return {TF::R16_UNorm,    PF::Red,  PT::UInt16};
-      if (hasFormat(2, 2)) return {TF::RG16_UNorm,   PF::RG,   PT::UInt16};
-      if (hasFormat(2, 3)) return {TF::RGB16_UNorm,  PF::RGB,  PT::UInt16};
-      if (hasFormat(2, 4)) return {TF::RGBA16_UNorm, PF::RGBA, PT::UInt16};
+      if (hasFormat(1, 1)) { return {TF::R8_UNorm,     PF::Red,  PT::UInt8}; }
+      if (hasFormat(1, 2)) { return {TF::RG8_UNorm,    PF::RG,   PT::UInt8}; }
+      if (hasFormat(1, 3)) { return {TF::RGB8_UNorm,   PF::RGB,  PT::UInt8}; }
+      if (hasFormat(1, 4)) { return {TF::RGBA8_UNorm,  PF::RGBA, PT::UInt8}; }
+      if (hasFormat(2, 1)) { return {TF::R16_UNorm,    PF::Red,  PT::UInt16}; }
+      if (hasFormat(2, 2)) { return {TF::RG16_UNorm,   PF::RG,   PT::UInt16}; }
+      if (hasFormat(2, 3)) { return {TF::RGB16_UNorm,  PF::RGB,  PT::UInt16}; }
+      if (hasFormat(2, 4)) { return {TF::RGBA16_UNorm, PF::RGBA, PT::UInt16}; }
       break;
 
     case PixelType::FLOAT:
-      if (hasFormat(4, 1)) return {TF::R32F,    PF::Red,  PT::Float32};
-      if (hasFormat(4, 2)) return {TF::RG32F,   PF::RG,   PT::Float32};
-      if (hasFormat(4, 3)) return {TF::RGB32F,  PF::RGB,  PT::Float32};
-      if (hasFormat(4, 4)) return {TF::RGBA32F, PF::RGBA, PT::Float32};
+      if (hasFormat(4, 1)) { return {TF::R32F,    PF::Red,  PT::Float32}; }
+      if (hasFormat(4, 2)) { return {TF::RG32F,   PF::RG,   PT::Float32}; }
+      if (hasFormat(4, 3)) { return {TF::RGB32F,  PF::RGB,  PT::Float32}; }
+      if (hasFormat(4, 4)) { return {TF::RGBA32F, PF::RGBA, PT::Float32}; }
       break;
 
     default:
@@ -201,7 +213,9 @@ void SEALTK_CORE_EXPORT imageToTexture(
   using PixelTraits = kwiver::vital::image_pixel_traits;
 
   if (!imageContainer)
+  {
     return;
+  }
 
   // Get image, pixel traits, and subpixel stride
   auto const& image = imageContainer->get_image();
@@ -210,7 +224,9 @@ void SEALTK_CORE_EXPORT imageToTexture(
 
   // Check for bitmap images; for now, these are not supported
   if (pt.type == PixelTraits::BOOL)
+  {
     return; // TODO
+  }
 
   // Get dimensions and strides
   auto const xk = image.width();
@@ -226,7 +242,9 @@ void SEALTK_CORE_EXPORT imageToTexture(
 
   auto const tf = getFormat(pt, isPlanePacked ? 1 : ck);
   if (tf.textureFormat == QOpenGLTexture::NoFormat)
+  {
     return; // Unsupported format
+  }
 
   // Get row alignment
   auto const alignment =
@@ -236,7 +254,9 @@ void SEALTK_CORE_EXPORT imageToTexture(
   // (NOTE: Plane-packed could support N channels, but how would users render
   // that?)
   if (ck > 4)
+  {
     return;
+  }
 
   // Check for acceptable strides
   if (checkStrides(xs, ys, cs, ss, ck, alignment))

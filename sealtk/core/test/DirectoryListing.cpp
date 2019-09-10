@@ -82,23 +82,26 @@ void TestDirectoryListing::listing_data()
   QTest::addColumn<QStringList>("types");
   QTest::addColumn<FileMap>("expectedFiles");
 
-  QTest::newRow("single type") << QStringList{TYPE_TXT}
+  QTest::newRow("single type")
+    << QStringList{TYPE_TXT}
     << FileMap{
-      {"foo", "foo.txt"},
-      {"bar", "bar.txt"},
-    };
+         {"foo", "foo.txt"},
+         {"bar", "bar.txt"},
+       };
 
-  QTest::newRow("multiple types") << QStringList{TYPE_EX1, TYPE_EX2}
+  QTest::newRow("multiple types")
+    << QStringList{TYPE_EX1, TYPE_EX2}
     << FileMap{
-      {"file1", "file1.ex1"},
-      {"file2", "file2.ex2"},
-    };
+         {"file1", "file1.ex1"},
+         {"file2", "file2.ex2"},
+       };
 
-  QTest::newRow("'complex' type") << QStringList{TYPE_TXT_NEW}
+  QTest::newRow("'complex' type")
+    << QStringList{TYPE_TXT_NEW}
     << FileMap{
-      {"foo", "foo.txt.new"},
-      {"bar.none", "bar.none.txt.new"},
-    };
+         {"foo", "foo.txt.new"},
+         {"bar.none", "bar.none.txt.new"},
+       };
 }
 
 } // namespace test

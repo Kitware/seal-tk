@@ -32,6 +32,6 @@ Resources::~Resources()
   cleanup();
 }
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk

@@ -20,7 +20,7 @@
 
 #include <memory>
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
   sealtk::gui::Resources commonResources;
@@ -56,7 +56,8 @@ int main(int argc, char** argv)
   }
   else
   {
-    pipelineDirectory = QApplication::applicationDirPath() +
+    pipelineDirectory =
+      QApplication::applicationDirPath() +
       QStringLiteral("/" SEALTK_NOAA_RELATIVE_SHARE_DIR "/seal-tk/pipelines");
   }
 

@@ -49,10 +49,14 @@ void TestDateUtils::vitalTimeToQDateTime_data()
   QTest::addColumn<kv::timestamp::time_t>("input");
   QTest::addColumn<QDateTime>("expected");
 
-  QTest::newRow("zero") << 0l << QDateTime{{1970, 1, 1}, {0, 0, 0}, Qt::UTC};
-  QTest::newRow("sample1") << 545415827289000l
+  QTest::newRow("zero")
+    << 0l
+    << QDateTime{{1970, 1, 1}, {0, 0, 0}, Qt::UTC};
+  QTest::newRow("sample1")
+    << 545415827289000l
     << QDateTime{{1987, 4, 14}, {16, 23, 47, 289}, Qt::UTC};
-  QTest::newRow("sample2") << 1381481842745000l
+  QTest::newRow("sample2")
+    << 1381481842745000l
     << QDateTime{{2013, 10, 11}, {8, 57, 22, 745}, Qt::UTC};
 }
 
@@ -71,7 +75,9 @@ void TestDateUtils::qDateTimeToVitalTime_data()
   QTest::addColumn<QDateTime>("input");
   QTest::addColumn<kv::timestamp::time_t>("expected");
 
-  QTest::newRow("zero") << QDateTime{{1970, 1, 1}, {0, 0, 0}, Qt::UTC} << 0l;
+  QTest::newRow("zero")
+    << QDateTime{{1970, 1, 1}, {0, 0, 0}, Qt::UTC}
+    << 0l;
   QTest::newRow("sample1")
     << QDateTime{{1987, 4, 14}, {16, 23, 47, 289}, Qt::UTC}
     << 545415827289000l;

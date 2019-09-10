@@ -150,8 +150,10 @@ void TestVideoController::compareFrames(
 
       if (!seekFiles[i][j].isEmpty())
       {
-        auto const& expected = QImage{sealtk::test::testDataPath(
-          "VideoController/" + seekFiles[i][j])};
+        auto const& expectedPath =
+          sealtk::test::testDataPath("VideoController/" + seekFiles[i][j]);
+
+        auto const& expected = QImage{expectedPath};
         auto const& actual =
           sealtk::core::imageContainerToQImage(frame.image);
         QCOMPARE(actual, expected);
@@ -176,9 +178,9 @@ void TestVideoController::initTestCase()
   this->config = kv::config_block::empty_config();
   this->config->set_value("video_reader:type", "image_list");
   this->config->set_value("video_reader:image_list:image_reader:type",
-    "timestamp_passthrough");
+                          "timestamp_passthrough");
   this->config->set_value("video_reader:image_list:image_reader:"
-    "timestamp_passthrough:image_reader:type", "qt");
+                          "timestamp_passthrough:image_reader:type", "qt");
 }
 
 // ----------------------------------------------------------------------------

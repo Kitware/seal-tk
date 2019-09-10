@@ -16,10 +16,10 @@ namespace test
 
 void loadKwiverPlugins();
 
-}
+} // namespace test
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

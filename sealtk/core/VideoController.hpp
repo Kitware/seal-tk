@@ -5,8 +5,9 @@
 #ifndef sealtk_core_VideoController_hpp
 #define sealtk_core_VideoController_hpp
 
-#include <sealtk/core/Export.h>
 #include <sealtk/core/TimeMap.hpp>
+
+#include <sealtk/core/Export.h>
 
 #include <qtGlobal.h>
 
@@ -63,8 +64,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(VideoController)
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

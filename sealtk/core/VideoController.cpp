@@ -110,12 +110,13 @@ VideoDistributor* VideoController::addVideoSource(VideoSource* videoSource)
             this->removeVideoSource(videoSource);
           });
 
-  auto fetch = [d, videoSource](time_t t, qint64 i){
-    auto* const distributor = d->videoSources[videoSource].get();
-    Q_ASSERT(distributor);
+  auto const fetch =
+    [d, videoSource](time_t t, qint64 i){
+      auto* const distributor = d->videoSources[videoSource].get();
+      Q_ASSERT(distributor);
 
-    distributor->requestFrame(videoSource, t, SeekExact, i);
-  };
+      distributor->requestFrame(videoSource, t, SeekExact, i);
+    };
 
   distributor = make_unique<VideoDistributor>(this);
 

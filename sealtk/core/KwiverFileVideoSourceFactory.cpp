@@ -52,6 +52,6 @@ void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
   }
 }
 
-}
+} // namespace core
 
-}
+} // namespace sealtk

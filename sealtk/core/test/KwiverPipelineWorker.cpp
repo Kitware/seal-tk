@@ -19,8 +19,6 @@
 
 #include <vital/range/iota.h>
 
-// #include <arrows/qt/image_container.h>
-//
 #include <qtGet.h>
 #include <qtStlUtil.h>
 
@@ -126,11 +124,11 @@ void TestKwiverPipelineWorker::initTestCase()
   config = kv::config_block::empty_config();
   config->set_value("video_reader:type", "image_list");
   config->set_value("video_reader:image_list:image_reader:type",
-    "timestamp_passthrough");
+                    "timestamp_passthrough");
   config->set_value("video_reader:image_list:image_reader:"
-    "timestamp_passthrough:image_reader:type", "qt");
+                    "timestamp_passthrough:image_reader:type", "qt");
 
-  for (auto const n : {1, 2, 3})
+  for (auto const n : { 1, 2, 3 })
   {
     auto const& input =
       SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/list%1.txt").arg(n);
@@ -247,32 +245,32 @@ void TestKwiverPipelineWorker::pipeline_data()
     << SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/matching.pipe")
     << true << QVector<int>{0, 1, 2}
     << QVector<QStringList>{
-      {"1000.png", "1000.png", QString{}},
-      {QString{},  "2000.png", "2000.png"},
-      {"3000.png", QString{},  "3000.png"},
-      {"4000.png", "4000.png", "4000.png"},
-      {QString{},  QString{},  "5000.png"},
-    };
+         {"1000.png", "1000.png", QString{}},
+         {QString{},  "2000.png", "2000.png"},
+         {"3000.png", QString{},  "3000.png"},
+         {"4000.png", "4000.png", "4000.png"},
+         {QString{},  QString{},  "5000.png"},
+       };
 
   QTest::newRow("missing source")
     << SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/missing.pipe")
     << true << QVector<int>{0, -1, 2}
     << QVector<QStringList>{
-      {"1000.png", QString{}, QString{}},
-      {QString{},  QString{}, "2000.png"},
-      {"3000.png", QString{}, "3000.png"},
-      {"4000.png", QString{}, "4000.png"},
-      {QString{},  QString{}, "5000.png"},
-    };
+         {"1000.png", QString{}, QString{}},
+         {QString{},  QString{}, "2000.png"},
+         {"3000.png", QString{}, "3000.png"},
+         {"4000.png", QString{}, "4000.png"},
+         {QString{},  QString{}, "5000.png"},
+       };
 
   QTest::newRow("excess sources")
     << SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/excess.pipe")
     << false << QVector<int>{0, 1, 2}
     << QVector<QStringList>{
-      {"1000.png"},
-      {"2000.png"},
-      {"4000.png"},
-    };
+         {"1000.png"},
+         {"2000.png"},
+         {"4000.png"},
+       };
 }
 
 } // namespace test

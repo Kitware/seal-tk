@@ -52,7 +52,9 @@ double getPixel(kv::image const& image, size_t i, size_t j,
 {
   auto result = 0.0;
   for (auto c : kvr::iota(channelScales.size()))
+  {
     result += static_cast<double>(image.at<T>(i, j, c)) * channelScales[c];
+  }
 
   return result;
 }
@@ -100,7 +102,9 @@ PixelFunc pixelFunc(kv::image_pixel_traits const& traits)
 double imageChannelScale(kv::image_pixel_traits const& traits)
 {
   if (traits.type == PixelType::FLOAT)
+  {
     return 1.0;
+  }
 
   return std::ldexp(1.0, -static_cast<int>(traits.num_bytes * CHAR_BIT));
 }
@@ -122,7 +126,9 @@ std::pair<size_t, size_t> scanBuckets(
       first = std::min(first, n);
       accum += s;
       if (accum >= threshold)
+      {
         return {first, n};
+      }
     }
   }
 
@@ -200,7 +206,9 @@ void AutoLevelsTask::execute()
   QTE_D();
 
   if (!d->image)
+  {
     return;
+  }
 
   // Get image and image dimensions
   auto const& image = d->image->get_image();
@@ -209,14 +217,18 @@ void AutoLevelsTask::execute()
   auto const channels = image.depth();
 
   if (iCount < 1 || jCount < 1)
+  {
     return;
+  }
 
   // Get image pixel traits and function to read a pixel
   auto const pt = image.pixel_traits();
   auto const pf = pixelFunc(pt);
 
   if (!pf)
+  {
     return;
+  }
 
   // Compute initial stride
   auto stride = std::max(leadingBit(iCount), leadingBit(jCount));
@@ -227,7 +239,9 @@ void AutoLevelsTask::execute()
 
   // Zero-initialize histogram buckets
   for (auto& b : buckets)
+  {
     b = 0;
+  }
 
   // Determine channel weights
   auto const channelOffset = (pt.type == PixelType::SIGNED ? 0.5 : 0.0);
@@ -243,7 +257,9 @@ void AutoLevelsTask::execute()
       for (auto const j : kvr::iota(jCount >> stride))
       {
         if ((i & 0x1) && (j & 0x1))
+        {
           continue; // Skip pixels we already looked at
+        }
 
         // Get pixel value
         auto const v = (*pf)(image, i << stride, j << stride, chanelWeights);
@@ -258,7 +274,9 @@ void AutoLevelsTask::execute()
     }
 
     if (samples > MIN_SAMPLES)
+    {
       d->update(this, samples, buckets);
+    }
   }
 
   d->update(this, samples, buckets);

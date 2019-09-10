@@ -8,6 +8,7 @@
 #include <sealtk/gui/Export.h>
 
 #include <qtGlobal.h>
+
 #include <QWidget>
 
 #include <vital/types/timestamp.h>
@@ -20,7 +21,7 @@ namespace core
 
 class VideoController;
 
-}
+} // namespace core
 
 namespace gui
 {
@@ -79,8 +80,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(PlayerControl)
 };
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk
 
 #endif

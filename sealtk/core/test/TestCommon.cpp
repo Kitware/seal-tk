@@ -22,16 +22,15 @@ namespace test
 {
 
 // ============================================================================
-class TimestampPassthrough : public kv::algorithm_impl<TimestampPassthrough,
-  kv::algo::image_io>
+class TimestampPassthrough
+  : public kv::algorithm_impl<TimestampPassthrough, kv::algo::image_io>
 {
 public:
   TimestampPassthrough();
 
   ~TimestampPassthrough() override = default;
 
-  kv::config_block_sptr get_configuration() const
-    override;
+  kv::config_block_sptr get_configuration() const override;
 
   void set_configuration(kv::config_block_sptr config) override;
 
@@ -42,8 +41,8 @@ private:
 
   kv::image_container_sptr load_(std::string const& filename) const override;
 
-  void save_(std::string const& filename, kv::image_container_sptr data) const
-    override;
+  void save_(std::string const& filename,
+             kv::image_container_sptr data) const override;
 
   kv::metadata_sptr load_metadata_(std::string const& filename) const override;
 
@@ -62,8 +61,8 @@ kv::config_block_sptr TimestampPassthrough::get_configuration() const
 {
   auto config = kv::algo::image_io::get_configuration();
 
-  kv::algo::image_io::get_nested_algo_configuration("image_reader", config,
-    this->imageReader);
+  kv::algo::image_io::get_nested_algo_configuration(
+    "image_reader", config, this->imageReader);
 
   return config;
 }
@@ -74,16 +73,16 @@ void TimestampPassthrough::set_configuration(kv::config_block_sptr config)
   auto newConfig = this->get_configuration();
   newConfig->merge_config(config);
 
-  kv::algo::image_io::set_nested_algo_configuration("image_reader", newConfig,
-    this->imageReader);
+  kv::algo::image_io::set_nested_algo_configuration(
+    "image_reader", newConfig, this->imageReader);
 }
 
 // ----------------------------------------------------------------------------
-bool TimestampPassthrough::check_configuration(kv::config_block_sptr config)
-  const
+bool TimestampPassthrough::check_configuration(
+  kv::config_block_sptr config) const
 {
-  return kv::algo::image_io::check_nested_algo_configuration("image_reader",
-    config);
+  return kv::algo::image_io::check_nested_algo_configuration(
+    "image_reader", config);
 }
 
 // ----------------------------------------------------------------------------
@@ -116,8 +115,8 @@ kv::metadata_sptr TimestampPassthrough::load_metadata_(
 {
   if (this->imageReader)
   {
-    return this->fixupMetadata(filename,
-                               this->imageReader->load_metadata(filename));
+    return this->fixupMetadata(
+      filename, this->imageReader->load_metadata(filename));
   }
 
   return this->fixupMetadata(filename, nullptr);
@@ -137,11 +136,8 @@ kv::metadata_sptr TimestampPassthrough::fixupMetadata(
   auto match = regex.match(qtString(filename));
   if (match.hasMatch())
   {
-    std::istringstream is{stdString(match.captured(1))};
-    kv::timestamp::time_t time;
-    is >> time;
     kv::timestamp ts;
-    ts.set_time_usec(time);
+    ts.set_time_usec(match.captured(1).toLongLong());
     md->set_timestamp(ts);
   }
 
@@ -152,12 +148,12 @@ kv::metadata_sptr TimestampPassthrough::fixupMetadata(
 void loadKwiverPlugins()
 {
   kv::plugin_manager::instance().load_all_plugins();
-  kv::plugin_manager::instance().ADD_ALGORITHM("timestamp_passthrough",
-                                               TimestampPassthrough);
+  kv::plugin_manager::instance().ADD_ALGORITHM(
+    "timestamp_passthrough", TimestampPassthrough);
 }
 
-}
+} // namespace test
 
-}
+} // namespace core
 
-}
+} // namespace sealtk

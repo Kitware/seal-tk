@@ -13,6 +13,8 @@
 
 #include <sstream>
 
+namespace kv = kwiver::vital;
+
 namespace sealtk
 {
 
@@ -25,42 +27,40 @@ namespace kwiver
 // ----------------------------------------------------------------------------
 TimestampPassthrough::TimestampPassthrough()
 {
-  this->set_capability(::kwiver::vital::algo::image_io::HAS_TIME, true);
+  this->set_capability(kv::algo::image_io::HAS_TIME, true);
 }
 
 // ----------------------------------------------------------------------------
-::kwiver::vital::config_block_sptr
-  TimestampPassthrough::get_configuration() const
+kv::config_block_sptr TimestampPassthrough::get_configuration() const
 {
-  auto config = ::kwiver::vital::algo::image_io::get_configuration();
+  auto config = kv::algo::image_io::get_configuration();
 
-  ::kwiver::vital::algo::image_io::get_nested_algo_configuration(
+  kv::algo::image_io::get_nested_algo_configuration(
     "image_reader", config, this->imageReader);
 
   return config;
 }
 
 // ----------------------------------------------------------------------------
-void TimestampPassthrough::set_configuration(
-  ::kwiver::vital::config_block_sptr config)
+void TimestampPassthrough::set_configuration(kv::config_block_sptr config)
 {
   auto newConfig = this->get_configuration();
   newConfig->merge_config(config);
 
-  ::kwiver::vital::algo::image_io::set_nested_algo_configuration(
+  kv::algo::image_io::set_nested_algo_configuration(
     "image_reader", newConfig, this->imageReader);
 }
 
 // ----------------------------------------------------------------------------
 bool TimestampPassthrough::check_configuration(
-  ::kwiver::vital::config_block_sptr config) const
+  kv::config_block_sptr config) const
 {
-  return ::kwiver::vital::algo::image_io::check_nested_algo_configuration(
+  return kv::algo::image_io::check_nested_algo_configuration(
     "image_reader", config);
 }
 
 // ----------------------------------------------------------------------------
-::kwiver::vital::image_container_sptr TimestampPassthrough::load_(
+kv::image_container_sptr TimestampPassthrough::load_(
   std::string const& filename) const
 {
   if (this->imageReader)
@@ -75,8 +75,7 @@ bool TimestampPassthrough::check_configuration(
 
 // ----------------------------------------------------------------------------
 void TimestampPassthrough::save_(
-  std::string const& filename,
-  ::kwiver::vital::image_container_sptr data) const
+  std::string const& filename, kv::image_container_sptr data) const
 {
   if (this->imageReader)
   {
@@ -85,7 +84,7 @@ void TimestampPassthrough::save_(
 }
 
 // ----------------------------------------------------------------------------
-::kwiver::vital::metadata_sptr TimestampPassthrough::load_metadata_(
+kv::metadata_sptr TimestampPassthrough::load_metadata_(
   std::string const& filename) const
 {
   if (this->imageReader)
@@ -98,19 +97,19 @@ void TimestampPassthrough::save_(
 }
 
 // ----------------------------------------------------------------------------
-::kwiver::vital::metadata_sptr TimestampPassthrough::fixupMetadata(
-  std::string const& filename, ::kwiver::vital::metadata_sptr md) const
+kv::metadata_sptr TimestampPassthrough::fixupMetadata(
+  std::string const& filename, kv::metadata_sptr md) const
 {
   if (!md)
   {
-    md = std::make_shared<::kwiver::vital::metadata>();
+    md = std::make_shared<kv::metadata>();
   }
 
   auto dateTime =
     core::imageFilenameToQDateTime(QString::fromStdString(filename));
   if (!dateTime.isNull())
   {
-    ::kwiver::vital::timestamp ts;
+    kv::timestamp ts;
     ts.set_time_usec(sealtk::core::qDateTimeToVitalTime(dateTime));
     md->set_timestamp(ts);
   }
@@ -118,8 +117,8 @@ void TimestampPassthrough::save_(
   return md;
 }
 
-}
+} // namespace kwiver
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
