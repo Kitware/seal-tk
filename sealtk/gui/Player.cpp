@@ -593,12 +593,13 @@ void PlayerPrivate::updateViewHomography()
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
   QVector<float> vertexData;
+  static constexpr decltype(vertexData.count()) tuple_size = 2;
 
   // Get bounding boxes of all "active" detected objects
   this->detectedObjectVertexIndices.clear();
   for (auto const pr : kvr::iota(this->trackModelFilter.rowCount()))
   {
-    auto const first = vertexData.count();
+    auto const first = vertexData.count() / tuple_size;
 
     auto const& pi = this->trackModelFilter.index(pr, 0);
     for (auto const cr : kvr::iota(this->trackModelFilter.rowCount(pi)))
@@ -625,7 +626,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
       }
     }
 
-    auto const last = vertexData.count();
+    auto const last = vertexData.count() / tuple_size;
     this->detectedObjectVertexIndices.append({first, last - first});
   }
 
