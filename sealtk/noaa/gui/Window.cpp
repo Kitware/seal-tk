@@ -383,6 +383,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   data->window->setCentralWidget(data->player);
   data->window->setClosable(false);
   data->window->setWindowTitle(title);
+  data->player->setDefaultColor(qRgb(240, 176, 48));
 
   QObject::connect(q, &Window::zoomChanged,
                    data->player, &sg::Player::setZoom);
