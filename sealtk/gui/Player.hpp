@@ -52,6 +52,11 @@ class SEALTK_GUI_EXPORT Player : public QOpenGLWidget
              WRITE setHomographyImageSize)
   Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
 
+  Q_PROPERTY(QColor defaultColor READ defaultColor
+             WRITE setDefaultColor NOTIFY defaultColorChanged)
+  Q_PROPERTY(QColor selectionColor READ selectionColor
+             WRITE setSelectionColor NOTIFY defaultColorChanged)
+
 public:
   explicit Player(QWidget* parent = nullptr);
   ~Player() override;
@@ -62,15 +67,22 @@ public:
   ContrastMode contrastMode() const;
   QSize homographyImageSize() const;
 
+  QColor defaultColor() const;
+  QColor selectionColor() const;
+
 signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
   void imageSizeChanged(QSize imageSize) const;
 
+  void defaultColorChanged(QColor const& color) const;
+  void selectionColorChanged(QColor const& color) const;
+
 public slots:
   virtual void setImage(kwiver::vital::image_container_sptr const& image,
                         sealtk::core::VideoMetaData const& metaData);
   void setTrackModel(QAbstractItemModel* model);
+  void setSelectedTrackIds(QSet<qint64> const& selectedIds);
   void setHomography(QMatrix4x4 const& homography);
   void setHomographyImageSize(QSize size);
   void setZoom(float zoom);
@@ -79,6 +91,9 @@ public slots:
   void setContrastMode(ContrastMode mode);
   void setManualLevels(float low, float high);
   void setPercentiles(double deviance, double tolerance);
+
+  void setDefaultColor(QColor const& color);
+  void setSelectionColor(QColor const& color);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
