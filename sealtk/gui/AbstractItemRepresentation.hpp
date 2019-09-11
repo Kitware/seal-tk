@@ -83,25 +83,10 @@ public:
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override;
 
-  // Reimplemented from QSortFilterProxyModel
-  void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
-
 public slots:
   /// Set the visibility mode for "hidden" items.
   /// \sa ItemVisibilityMode, itemVisibilityMode, itemVisibilityMode()
   virtual void setItemVisibilityMode(ItemVisibilityMode);
-
-protected slots:
-  /// Update sorting when data changes.
-  ///
-  /// This slot checks if the model has not been sorted, and if so, sorts it.
-  /// This is done to work around a bug in QSortFilterProxyModel where items
-  /// are not sorted after a data change if all items were initially hidden.
-  ///
-  /// This slot is called automatically when the proxy model's data changes
-  /// (note: \em not the source model's data). Users should not normally need
-  /// to call this slot themselves.
-  void updateSort();
 
 protected:
   QTE_DECLARE_PRIVATE_RPTR(AbstractItemRepresentation)
