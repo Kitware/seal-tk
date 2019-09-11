@@ -13,7 +13,8 @@
 
 #include <qtGet.h>
 
-#include <QDebug>
+#include <QMultiHash>
+#include <QSet>
 
 namespace kv = kwiver::vital;
 namespace kvr = kwiver::vital::range;
@@ -73,16 +74,25 @@ struct BooleanOr
 class FusionModelPrivate
 {
 public:
-  QSet<QAbstractItemModel*> models;
-  QHash<qint64, int> items;
-  QVector<RowData> data;
+  FusionModelPrivate(FusionModel* q) : q_ptr{q} {}
 
   void addModelData(QAbstractItemModel* model);
   void removeModelData(QAbstractItemModel* model);
 
+  void addModelData(QAbstractItemModel* model, int firstRow, int rowAfterLast);
+  void shiftModelRows(QAbstractItemModel* model, int firstRow, int rowOffset);
+
   template <typename Fusor>
 
   static QVariant fuseData(RowData const& rowData, int role);
+
+  QSet<QAbstractItemModel*> models;
+  QHash<qint64, int> items;
+  QVector<RowData> data;
+
+private:
+  QTE_DECLARE_PUBLIC_PTR(FusionModel);
+  QTE_DECLARE_PUBLIC(FusionModel);
 };
 
 // ----------------------------------------------------------------------------
@@ -90,7 +100,7 @@ QTE_IMPLEMENT_D_FUNC(FusionModel)
 
 // ----------------------------------------------------------------------------
 FusionModel::FusionModel(QObject* parent)
-  : AbstractItemModel{parent}, d_ptr{new FusionModelPrivate}
+  : AbstractItemModel{parent}, d_ptr{new FusionModelPrivate{this}}
 {
 }
 
@@ -157,7 +167,16 @@ void FusionModel::addModel(QAbstractItemModel* model)
 
     connect(model, &QObject::destroyed, this,
             [model, this]{ this->removeModel(model); });
-    // TODO handle rows added, removed, moved
+    connect(model, &QAbstractItemModel::rowsInserted,
+            [model, this](QModelIndex const& parent, int first, int last){
+              if (!parent.isValid())
+              {
+                QTE_D();
+                d->shiftModelRows(model, first, 1 + last - first);
+                d->addModelData(model, first, last + 1);
+              }
+            });
+    // TODO handle rows removed, moved
   }
 }
 
@@ -178,8 +197,19 @@ void FusionModel::removeModel(QAbstractItemModel* model)
 // ----------------------------------------------------------------------------
 void FusionModelPrivate::addModelData(QAbstractItemModel* model)
 {
-  // Examine all rows of model
-  for (auto const sourceRow : kvr::iota(model->rowCount()))
+  this->addModelData(model, 0, model->rowCount());
+}
+
+// ----------------------------------------------------------------------------
+void FusionModelPrivate::addModelData(
+  QAbstractItemModel* model, int firstRow, int rowAfterLast)
+{
+  auto const oldCount = this->data.count();
+  QHash<qint64, RowData> newData;
+  QSet<int> modifiedRows;
+
+  // Examine rows of model
+  for (auto sourceRow = firstRow; sourceRow < rowAfterLast; ++sourceRow)
   {
     auto const& index = model->index(sourceRow, 0);
     auto const iid =
@@ -189,16 +219,62 @@ void FusionModelPrivate::addModelData(QAbstractItemModel* model)
     auto const localRow = this->items.value(iid, -1);
     if (localRow < 0)
     {
-      // Item is new
-      auto r = RowData{iid, {{model, sourceRow}}};
-      this->items.insert(iid, this->data.size());
-      this->data.append(std::move(r));
+      // Item is new, and...
+      if (auto* const newRow = qtGet(newData, iid))
+      {
+        // ...we are already adding a row for the new item
+        newRow->rows.insert(model, sourceRow);
+      }
+      else
+      {
+        // ...this is the first time we've seen the item
+        newData.insert(iid, {iid, {{model, sourceRow}}});
+      }
     }
     else
     {
       // Update source rows of existing item
       auto& r = this->data[localRow];
       r.rows.insert(model, sourceRow);
+      modifiedRows.insert(localRow);
+    }
+  }
+
+  QTE_Q();
+
+  if (!newData.isEmpty())
+  {
+    auto const newCount = oldCount + newData.count();
+    q->beginInsertRows({}, oldCount, newCount - 1);
+
+    this->data.reserve(newCount);
+    for (auto i : newData | kvr::indirect)
+    {
+      this->items.insert(i.key(), this->data.count());
+      this->data.append(std::move(i.value()));
+    }
+
+    q->endInsertRows();
+  }
+
+  if (!modifiedRows.isEmpty())
+  {
+    q->emitDataChanged({}, modifiedRows.toList());
+  }
+}
+
+// ----------------------------------------------------------------------------
+void FusionModelPrivate::shiftModelRows(
+  QAbstractItemModel* model, int firstRow, int rowOffset)
+{
+  for (auto& rd : this->data)
+  {
+    for (auto&& i : rd.rows | kvr::indirect)
+    {
+      if (i.key() == model && i.value() >= firstRow)
+      {
+        i.value() += rowOffset;
+      }
     }
   }
 }

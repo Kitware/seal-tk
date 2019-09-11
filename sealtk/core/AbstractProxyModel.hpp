@@ -47,6 +47,13 @@ protected:
     QVariant const& left, QVariant const& right, int role) const;
 
   using QSortFilterProxyModel::lessThan;
+
+  /// Emit dataChanged for all top-level items.
+  ///
+  /// This method emits QAbstractItemModel::dataChanged for all top-level
+  /// items, with #VisibilityRole as the list of changed roles. This is useful
+  /// for model data filters when their filtering criteria changes.
+  void invalidateVisibility();
 };
 
 } // namespace core

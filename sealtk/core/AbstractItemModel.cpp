@@ -66,6 +66,34 @@ QVariant AbstractItemModel::data(QModelIndex const& index, int role) const
   }
 }
 
+// ----------------------------------------------------------------------------
+void AbstractItemModel::emitDataChanged(
+  QModelIndex const& parent, QList<int>&& rows, QVector<int> const& roles)
+{
+  qSort(rows.begin(), rows.end());
+
+  auto first = rows.takeFirst();
+  auto last = first;
+
+  for (auto const row : rows)
+  {
+    if (row != last + 1)
+    {
+      emit this->dataChanged(
+        this->index(first, 0, parent),
+        this->index(last, 0, parent),
+        roles);
+      first = row;
+    }
+    last = row;
+  }
+
+  emit this->dataChanged(
+    this->index(first, 0, parent),
+    this->index(last, 0, parent),
+    roles);
+}
+
 } // namespace core
 
 } // namespace sealtk

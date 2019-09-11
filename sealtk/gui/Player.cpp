@@ -60,6 +60,7 @@ public:
   void createTexture();
   void updateViewHomography();
   void updateDetectedObjectVertexBuffers();
+  void updateDetections();
 
   void drawImage(float levelShift, float levelScale,
                  QOpenGLFunctions* functions);
@@ -121,6 +122,18 @@ Player::Player(QWidget* parent)
   : QOpenGLWidget(parent),
     d_ptr{new PlayerPrivate{this}}
 {
+  QTE_D();
+
+  connect(&d->trackModelFilter, &QAbstractItemModel::rowsInserted,
+          this, [d]{ d->updateDetections(); });
+  connect(&d->trackModelFilter, &QAbstractItemModel::rowsRemoved,
+          this, [d]{ d->updateDetections(); });
+  connect(&d->trackModelFilter, &QAbstractItemModel::rowsMoved,
+          this, [d]{ d->updateDetections(); });
+  connect(&d->trackModelFilter, &QAbstractItemModel::dataChanged,
+          this, [d]{ d->updateDetections(); });
+  connect(&d->trackModelFilter, &QAbstractItemModel::modelReset,
+          this, [d]{ d->updateDetections(); });
 }
 
 // ----------------------------------------------------------------------------
@@ -193,10 +206,7 @@ void Player::setTrackModel(QAbstractItemModel* model)
           [d]{ d->trackModelFilter.setSourceModel(nullptr); });
   d->trackModelFilter.setSourceModel(model);
 
-  this->makeCurrent();
-  d->updateDetectedObjectVertexBuffers();
-  this->doneCurrent();
-  this->update();
+  d->updateDetections();
 }
 
 // ----------------------------------------------------------------------------
@@ -786,6 +796,18 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
 
   this->detectedObjectVertexBuffer.release();
   this->detectionShaderProgram.release();
+}
+
+// ----------------------------------------------------------------------------
+void PlayerPrivate::updateDetections()
+{
+  QTE_Q();
+
+  q->makeCurrent();
+  this->updateDetectedObjectVertexBuffers();
+  q->doneCurrent();
+
+  q->update();
 }
 
 } // namespace gui

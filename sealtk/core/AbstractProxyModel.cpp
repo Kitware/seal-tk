@@ -89,6 +89,18 @@ bool AbstractProxyModel::lessThan(
   }
 }
 
+// ----------------------------------------------------------------------------
+void AbstractProxyModel::invalidateVisibility()
+{
+  if (auto const rows = this->rowCount())
+  {
+    auto const& first = this->index(0, 0);
+    auto const& last = this->index(rows, 0);
+
+    emit this->dataChanged(first, last, {VisibilityRole});
+  }
+}
+
 } // namespace core
 
 } // namespace sealtk

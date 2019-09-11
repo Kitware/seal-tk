@@ -45,6 +45,9 @@ public:
 protected:
   static constexpr auto IndexIsValid = CheckIndexOption::IndexIsValid;
   static constexpr auto ParentIsInvalid = CheckIndexOption::ParentIsInvalid;
+
+  void emitDataChanged(QModelIndex const& parent, QList<int>&& rows,
+                       QVector<int> const& roles = {});
 };
 
 } // namespace core

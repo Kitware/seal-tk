@@ -256,7 +256,7 @@ void KwiverTrackModel::addTracks(
     auto const oldRows = this->rowCount({});
     auto const newRows = newTracks.size();
 
-    this->beginInsertRows({}, oldRows, newRows);
+    this->beginInsertRows({}, oldRows, oldRows + newRows - 1);
 
     for (auto& track : newTracks)
     {

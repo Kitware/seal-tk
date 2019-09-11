@@ -9,6 +9,7 @@
 #include <sealtk/noaa/gui/Player.hpp>
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
+#include <sealtk/noaa/core/NoaaPipelineWorker.hpp>
 
 #include <sealtk/gui/AbstractItemRepresentation.hpp>
 #include <sealtk/gui/FusionModel.hpp>
@@ -17,7 +18,6 @@
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
 #include <sealtk/core/KwiverDetectionsSink.hpp>
-#include <sealtk/core/KwiverPipelineWorker.hpp>
 #include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
@@ -116,6 +116,10 @@ public:
   void loadDetections(WindowData* data);
   void saveDetections(WindowData* data);
   void executePipeline(QString const& pipelineFile);
+
+  WindowData* dataForView(int viewIndex);
+  void setTrackModel(
+    WindowData *data, std::shared_ptr<QAbstractItemModel> const& model);
 
   Ui::Window ui;
   qtUiState uiState;
@@ -391,9 +395,7 @@ void WindowPrivate::loadDetections(WindowData* data)
     QObject::connect(
       data->trackSource.get(), &sc::AbstractDataSource::modelReady, q,
       [data, this](std::shared_ptr<QAbstractItemModel> const& model){
-        data->trackModel = model;
-        this->trackModel.addModel(model.get());
-        data->player->setTrackModel(model.get());
+        this->setTrackModel(data, model);
       });
     QObject::connect(
       data->trackSource.get(), &sc::AbstractDataSource::failed, q,
@@ -476,7 +478,7 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
   progressDialog.setAutoReset(false);
   progressDialog.show();
 
-  sc::KwiverPipelineWorker worker{q};
+  core::NoaaPipelineWorker worker{q};
 
   worker.addVideoSource(this->eoWindow.videoSource);
   worker.addVideoSource(this->irWindow.videoSource);
@@ -489,9 +491,43 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
     &worker, &sc::KwiverPipelineWorker::progressValueChanged,
     &progressDialog, &QProgressDialog::setValue);
 
+  QObject::connect(
+    &worker, &core::NoaaPipelineWorker::trackModelReady, q,
+    [this](int i, std::shared_ptr<QAbstractItemModel> const& model){
+      this->setTrackModel(this->dataForView(i), model);
+    });
+
   if (worker.initialize(pipelineFile))
   {
     worker.execute();
+  }
+}
+
+// ----------------------------------------------------------------------------
+WindowData* WindowPrivate::dataForView(int viewIndex)
+{
+  switch (viewIndex)
+  {
+    case 0: return &this->eoWindow;
+    case 1: return &this->irWindow;
+    default: return nullptr;
+  }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::setTrackModel(
+  WindowData* data, std::shared_ptr<QAbstractItemModel> const& model)
+{
+  if (data)
+  {
+    if (data->trackModel)
+    {
+      this->trackModel.removeModel(data->trackModel.get());
+    }
+
+    data->trackModel = model;
+    this->trackModel.addModel(model.get());
+    data->player->setTrackModel(model.get());
   }
 }
 

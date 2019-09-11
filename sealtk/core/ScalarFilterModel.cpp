@@ -54,7 +54,7 @@ void ScalarFilterModel::setLowerBound(int role, QVariant const& bound)
     if (bound != old.first)
     {
       old.first = bound;
-      this->invalidate();
+      this->invalidateVisibility();
     }
   }
 }
@@ -70,7 +70,7 @@ void ScalarFilterModel::setUpperBound(int role, QVariant const& bound)
     if (bound != old.second)
     {
       old.second = bound;
-      this->invalidate();
+      this->invalidateVisibility();
     }
   }
 }
@@ -88,7 +88,7 @@ void ScalarFilterModel::setBound(
     {
       old.first = lower;
       old.second = upper;
-      this->invalidate();
+      this->invalidateVisibility();
     }
   }
 }
@@ -110,7 +110,7 @@ void ScalarFilterModel::clearLowerBound(int role)
       d->bounds.erase(i);
     }
 
-    this->invalidate();
+    this->invalidateVisibility();
   }
 }
 
@@ -131,7 +131,7 @@ void ScalarFilterModel::clearUpperBound(int role)
       d->bounds.erase(i);
     }
 
-    this->invalidate();
+    this->invalidateVisibility();
   }
 }
 
@@ -142,7 +142,7 @@ void ScalarFilterModel::clearBound(int role)
 
   if (d->bounds.remove(role))
   {
-    this->invalidate();
+    this->invalidateVisibility();
   }
 }
 
@@ -154,7 +154,7 @@ void ScalarFilterModel::clearBounds()
   if (!d->bounds.isEmpty())
   {
     d->bounds.clear();
-    this->invalidate();
+    this->invalidateVisibility();
   }
 }
 

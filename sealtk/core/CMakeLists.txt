@@ -24,6 +24,7 @@ sealtk_add_library(sealtk::core
     KwiverFileVideoSourceFactory.cpp
     KwiverDetectionsSink.cpp
     KwiverTrackModel.cpp
+    KwiverPipelinePortSet.cpp
     KwiverPipelineWorker.cpp
     KwiverTrackSource.cpp
     KwiverVideoSource.cpp
@@ -51,6 +52,7 @@ sealtk_add_library(sealtk::core
     KwiverFileVideoSourceFactory.hpp
     KwiverDetectionsSink.hpp
     KwiverTrackModel.hpp
+    KwiverPipelinePortSet.hpp
     KwiverPipelineWorker.hpp
     KwiverTrackSource.hpp
     KwiverVideoSource.hpp
