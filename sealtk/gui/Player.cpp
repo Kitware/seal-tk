@@ -50,7 +50,7 @@ struct VertexData
   QVector2D textureCoords;
 };
 
-//=============================================================================
+// ============================================================================
 class PlayerPrivate
 {
 public:
@@ -113,17 +113,17 @@ public:
   core::ScalarFilterModel trackModelFilter;
 };
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(Player)
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 Player::Player(QWidget* parent)
   : QOpenGLWidget(parent),
     d_ptr{new PlayerPrivate{this}}
 {
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 Player::~Player()
 {
   QTE_D();
@@ -135,28 +135,28 @@ Player::~Player()
   disconnect(d->destroyResourcesConnection);
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 float Player::zoom() const
 {
   QTE_D();
   return d->zoom;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QPointF Player::center() const
 {
   QTE_D();
   return d->center;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 core::VideoDistributor* Player::videoSource() const
 {
   QTE_D();
   return d->videoSource;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setImage(kv::image_container_sptr const& image,
                       core::VideoMetaData const& metaData)
 {
@@ -184,7 +184,7 @@ void Player::setImage(kv::image_container_sptr const& image,
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setTrackModel(QAbstractItemModel* model)
 {
   QTE_D();
@@ -199,7 +199,7 @@ void Player::setTrackModel(QAbstractItemModel* model)
   this->update();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setHomography(QMatrix4x4 const& homography)
 {
   QTE_D();
@@ -208,7 +208,7 @@ void Player::setHomography(QMatrix4x4 const& homography)
   d->updateViewHomography();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setZoom(float zoom)
 {
   QTE_D();
@@ -221,7 +221,7 @@ void Player::setZoom(float zoom)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setCenter(QPointF center)
 {
   QTE_D();
@@ -235,7 +235,7 @@ void Player::setCenter(QPointF center)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setVideoSource(core::VideoDistributor* videoSource)
 {
   QTE_D();
@@ -268,14 +268,14 @@ void Player::setVideoSource(core::VideoDistributor* videoSource)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 ContrastMode Player::contrastMode() const
 {
   QTE_D();
   return d->contrastMode;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setContrastMode(ContrastMode newMode)
 {
   QTE_D();
@@ -286,7 +286,7 @@ void Player::setContrastMode(ContrastMode newMode)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setManualLevels(float low, float high)
 {
   QTE_D();
@@ -303,7 +303,7 @@ void Player::setManualLevels(float low, float high)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setPercentiles(double deviance, double tolerance)
 {
   QTE_D();
@@ -323,7 +323,7 @@ void Player::setPercentiles(double deviance, double tolerance)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QSize Player::homographyImageSize() const
 {
   QTE_D();
@@ -331,7 +331,7 @@ QSize Player::homographyImageSize() const
   return d->homographyImageSize;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::setHomographyImageSize(QSize size)
 {
   QTE_D();
@@ -343,20 +343,22 @@ void Player::setHomographyImageSize(QSize size)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::initializeGL()
 {
   QTE_D();
 
   d->destroyResourcesConnection = connect(
     this->context(), &QOpenGLContext::aboutToBeDestroyed,
-    this, [d] { d->destroyResources(); });
+    this, [d]{ d->destroyResources(); });
 
   d->createTexture();
   d->updateDetectedObjectVertexBuffers();
 
   if (d->initialized)
+  {
     return;
+  }
 
   d->imageTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
 
@@ -380,8 +382,8 @@ void Player::initializeGL()
   d->detectionShaderProgram.addShaderFromSourceFile(
     QOpenGLShader::Vertex, ":/DetectionVertex.glsl");
   // TODO Get the geometry shader working
-  /*d->detectionShaderProgram.addShaderFromSourceFile(
-    QOpenGLShader::Geometry, ":/DetectionGeometry.glsl");*/
+  // d->detectionShaderProgram.addShaderFromSourceFile(
+  //   QOpenGLShader::Geometry, ":/DetectionGeometry.glsl");
   d->detectionShaderProgram.addShaderFromSourceFile(
     QOpenGLShader::Fragment, ":/DetectionFragment.glsl");
   d->detectionShaderProgram.bindAttributeLocation("a_vertexCoords", 0);
@@ -395,10 +397,11 @@ void Player::initializeGL()
   d->initialized = true;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::paintGL()
 {
   QTE_D();
+
   auto* const functions = this->context()->functions();
 
   if (d->image)
@@ -429,14 +432,14 @@ void Player::paintGL()
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::resizeGL(int w, int h)
 {
   QTE_D();
   d->updateViewHomography();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::paintEvent(QPaintEvent* event)
 {
   QTE_D();
@@ -460,7 +463,7 @@ void Player::paintEvent(QPaintEvent* event)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::mousePressEvent(QMouseEvent* event)
 {
   QTE_D();
@@ -472,7 +475,7 @@ void Player::mousePressEvent(QMouseEvent* event)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::mouseMoveEvent(QMouseEvent* event)
 {
   QTE_D();
@@ -488,7 +491,7 @@ void Player::mouseMoveEvent(QMouseEvent* event)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::mouseReleaseEvent(QMouseEvent* event)
 {
   QTE_D();
@@ -499,14 +502,14 @@ void Player::mouseReleaseEvent(QMouseEvent* event)
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Player::wheelEvent(QWheelEvent* event)
 {
   auto const delta = std::pow(1.001, event->angleDelta().y());
   this->setZoom(this->zoom() * static_cast<float>(delta));
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 PlayerPrivate::PlayerPrivate(Player* parent)
   : q_ptr{parent}
 {
@@ -514,13 +517,15 @@ PlayerPrivate::PlayerPrivate(Player* parent)
   this->viewHomography.setToIdentity();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void PlayerPrivate::createTexture()
 {
   if (this->image)
   {
     if (this->imageTexture.isCreated())
+    {
       this->imageTexture.destroy();
+    }
 
     sealtk::core::imageToTexture(this->imageTexture, this->image);
 
@@ -541,7 +546,7 @@ void PlayerPrivate::createTexture()
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void PlayerPrivate::destroyResources()
 {
   QTE_Q();
@@ -551,7 +556,7 @@ void PlayerPrivate::destroyResources()
   q->doneCurrent();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void PlayerPrivate::updateViewHomography()
 {
   if (!this->image)
@@ -564,11 +569,11 @@ void PlayerPrivate::updateViewHomography()
   // Get image and view sizes
   auto const useHomography = !this->homography.isIdentity();
   auto const iw = (useHomography
-    ? static_cast<float>(this->homographyImageSize.width())
-    : static_cast<float>(image->width()));
+                   ? static_cast<float>(this->homographyImageSize.width())
+                   : static_cast<float>(image->width()));
   auto const ih = (useHomography
-    ? static_cast<float>(this->homographyImageSize.height())
-    : static_cast<float>(image->height()));
+                   ? static_cast<float>(this->homographyImageSize.height())
+                   : static_cast<float>(image->height()));
   auto const vw = static_cast<float>(q->width());
   auto const vh = static_cast<float>(q->height());
 
@@ -589,7 +594,7 @@ void PlayerPrivate::updateViewHomography()
   q->update();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
   QVector<float> vertexData;
@@ -646,7 +651,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
   this->detectedObjectVertexBuffer.release();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void PlayerPrivate::computeLevels(LevelsPair const& temporaryLevels)
 {
   QTE_Q();
@@ -661,7 +666,7 @@ void PlayerPrivate::computeLevels(LevelsPair const& temporaryLevels)
   // Hook up receipt of results from task
   QObject::connect(
     task, &core::AutoLevelsTask::levelsUpdated,
-    q, [t, cookie=this->percentileCookie, this](float low, float high){
+    q, [t, cookie = this->percentileCookie, this](float low, float high){
       if (this->percentileCookie == cookie)
       {
         // Update the entry in the map
@@ -688,7 +693,7 @@ void PlayerPrivate::computeLevels(LevelsPair const& temporaryLevels)
   this->percentileLevels.insert(t, temporaryLevels);
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 LevelsPair PlayerPrivate::levels()
 {
   switch (this->contrastMode)
@@ -720,7 +725,7 @@ LevelsPair PlayerPrivate::levels()
   }
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void PlayerPrivate::drawImage(float levelShift, float levelScale,
                               QOpenGLFunctions* functions)
 {
@@ -753,7 +758,7 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
   this->imageShaderProgram.release();
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
 {
   this->detectionShaderProgram.bind();
@@ -782,6 +787,6 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
   this->detectionShaderProgram.release();
 }
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk

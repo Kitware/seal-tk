@@ -5,18 +5,20 @@
 #ifndef sealtk_core_KwiverVideoSource_hpp
 #define sealtk_core_KwiverVideoSource_hpp
 
+#include <sealtk/core/VideoSource.hpp>
+
 #include <sealtk/core/Export.h>
 
-#include <sealtk/core/VideoSource.hpp>
+#include <qtGlobal.h>
+
+#include <vital/algo/detected_object_set_input.h>
+#include <vital/algo/video_input.h>
+
+#include <vital/types/timestamp.h>
 
 #include <QImage>
 #include <QObject>
 #include <QSet>
-#include <qtGlobal.h>
-
-#include <vital/types/timestamp.h>
-#include <vital/algo/detected_object_set_input.h>
-#include <vital/algo/video_input.h>
 
 namespace sealtk
 {
@@ -49,8 +51,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(KwiverVideoSource)
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

@@ -23,7 +23,7 @@ namespace QTest
 {
 
 // ----------------------------------------------------------------------------
-template<> char* toString<QSet<int>>(QSet<int> const& set)
+template <> char* toString<QSet<int>>(QSet<int> const& set)
 {
   QString s;
 

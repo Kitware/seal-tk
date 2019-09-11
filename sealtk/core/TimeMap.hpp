@@ -67,7 +67,7 @@ enum SeekMode
   /// Request nearest value that is strictly less than the request.
   ///
   /// \sa ::SeekUpperBound
-  SeekPrevious
+  SeekPrevious,
 };
 
 QTE_ENUM_NS(SeekMode)
@@ -225,7 +225,6 @@ Iterator TimeMap<Value>::find(Map& map, Key pos, SeekMode direction)
       // test)
       return --map.lowerBound(pos);
 
-
     default: // Nearest
       // Find the first item >= pos; it will be this or the one preceding
       iter = map.upperBound(pos);
@@ -243,8 +242,8 @@ Iterator TimeMap<Value>::find(Map& map, Key pos, SeekMode direction)
       {
         // Check if the distance to next is less than to previous
         return ((iter.key() - pos) < (pos - (iter - 1).key()))
-                 ? iter // Yes; return next
-                 : --iter; // No; return previous
+               ? iter // Yes; return next
+               : --iter; // No; return previous
       }
   }
 }

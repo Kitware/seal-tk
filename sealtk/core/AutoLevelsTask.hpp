@@ -45,8 +45,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(AutoLevelsTask)
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

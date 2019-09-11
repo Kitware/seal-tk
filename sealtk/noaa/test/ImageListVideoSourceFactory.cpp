@@ -99,18 +99,17 @@ void TestImageListVideoSourceFactory::loadVideoSource()
 
   connect(this->videoSourceFactory,
           &sealtk::core::FileVideoSourceFactory::fileRequested,
-          [this](void* handle)
-  {
-    this->videoSourceFactory->loadFile(
-      handle, SEALTK_TEST_DATA_PATH("ImageListVideoSourceFactory/list.txt"));
-  });
+          [this](void* handle){
+            this->videoSourceFactory->loadFile(
+              handle,
+              SEALTK_TEST_DATA_PATH("ImageListVideoSourceFactory/list.txt"));
+          });
   connect(this->videoSourceFactory,
           &sealtk::core::VideoSourceFactory::videoSourceLoaded,
-          [&videoSource](void* handle, sealtk::core::VideoSource* vs)
-  {
-    Q_UNUSED(handle);
-    videoSource = vs;
-  });
+          [&videoSource](void* handle, sealtk::core::VideoSource* vs){
+            Q_UNUSED(handle);
+            videoSource = vs;
+          });
   this->videoSourceFactory->loadVideoSource(nullptr);
 
   auto requestor = std::make_shared<sealtk::core::test::TestVideoRequestor>();
@@ -129,12 +128,12 @@ void TestImageListVideoSourceFactory::loadVideoSource()
 
     if (!seekFiles[i].isNull())
     {
-      auto const& expected = QImage{sealtk::test::testDataPath(
-        "ImageListVideoSourceFactory/" + seekFiles[i])};
-      auto const& actual =
-        sealtk::core::imageContainerToQImage(frame.image);
+      auto const& expectedPath =
+        sealtk::test::testDataPath("ImageListVideoSourceFactory/" +
+                                   seekFiles[i]);
 
-      QCOMPARE(actual, expected);
+      QCOMPARE(sealtk::core::imageContainerToQImage(frame.image),
+               QImage{expectedPath});
 
       QFileInfo fi{qtString(frame.metaData.imageName())};
       QCOMPARE(fi.fileName(), seekFiles[i]);
@@ -151,11 +150,11 @@ void TestImageListVideoSourceFactory::loadVideoSource()
   }
 }
 
-}
+} // namespace test
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
 
 // ----------------------------------------------------------------------------
 QTEST_MAIN(sealtk::noaa::test::TestImageListVideoSourceFactory)

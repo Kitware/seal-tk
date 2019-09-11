@@ -18,17 +18,16 @@ namespace noaa
 namespace kwiver
 {
 
-class SEALTK_NOAA_KWIVER_EXPORT
-  TimestampPassthrough : public ::kwiver::vital::algorithm_impl<
-    TimestampPassthrough, ::kwiver::vital::algo::image_io>
+class SEALTK_NOAA_KWIVER_EXPORT TimestampPassthrough
+  : public ::kwiver::vital::algorithm_impl<TimestampPassthrough,
+                                           ::kwiver::vital::algo::image_io>
 {
 public:
   TimestampPassthrough();
 
   ~TimestampPassthrough() override = default;
 
-  ::kwiver::vital::config_block_sptr get_configuration() const
-    override;
+  ::kwiver::vital::config_block_sptr get_configuration() const override;
 
   void set_configuration(::kwiver::vital::config_block_sptr config) override;
 
@@ -51,10 +50,10 @@ private:
     std::string const& filename, ::kwiver::vital::metadata_sptr md) const;
 };
 
-}
+} // namespace kwiver
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
 
 #endif

@@ -106,6 +106,7 @@ QVariant AbstractItemRepresentation::data(
       case Qt::ToolTipRole:
       {
         QTE_D();
+
         auto const c = index.column();
         if (c < d->columnRoles.size())
         {

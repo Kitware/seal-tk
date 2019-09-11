@@ -40,6 +40,6 @@ void FileVideoSourceFactory::loadVideoSource(void* handle)
   emit this->fileRequested(handle);
 }
 
-}
+} // namespace core
 
-}
+} // namespace sealtk

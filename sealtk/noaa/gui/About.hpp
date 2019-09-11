@@ -7,8 +7,9 @@
 
 #include <sealtk/noaa/gui/Export.h>
 
-#include <QDialog>
 #include <qtGlobal.h>
+
+#include <QDialog>
 
 namespace sealtk
 {
@@ -36,10 +37,10 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(About)
 };
 
-}
+} // namespace gui
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
 
 #endif

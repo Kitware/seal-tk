@@ -20,8 +20,8 @@ public:
   ~Resources();
 };
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk
 
 #endif

@@ -176,22 +176,32 @@ void TestAbstractItemRepresentation::displayData_data()
   QTest::addColumn<ItemVisibilityMode>("mode");
   QTest::addColumn<QStringList>("expected");
 
-  QTest::newRow("row 0") << 0 << ShadowHidden << QStringList{
-    QStringLiteral("Pig"),
-    QStringLiteral("{e98b70d3-3daf-48de-912b-1be111f66189}"),
-    QStringLiteral("16:23:47.289"),
-  };
-  QTest::newRow("row 1") << 1 << ShadowHidden << QStringList{
-    QStringLiteral("Cow"),
-    QStringLiteral("{ede5f114-0333-4c5f-9659-5250ef24fe0d}"),
-    QStringLiteral("08:57:22.745"),
-  };
-  QTest::newRow("row 2 (shadow)") << 2 << ShadowHidden << QStringList{
-    QStringLiteral("Emu"),
-    QStringLiteral("{478d0854-9d2e-478a-b882-475613fae453}"),
-    QStringLiteral("17:07:35.588"),
-  };
-  QTest::newRow("row 2 (omit)") << 2 << OmitHidden << QStringList{};
+  QTest::newRow("row 0")
+    << 0 << ShadowHidden
+    << QStringList{
+         QStringLiteral("Pig"),
+         QStringLiteral("{e98b70d3-3daf-48de-912b-1be111f66189}"),
+         QStringLiteral("16:23:47.289"),
+       };
+
+  QTest::newRow("row 1")
+    << 1 << ShadowHidden
+    << QStringList{
+         QStringLiteral("Cow"),
+         QStringLiteral("{ede5f114-0333-4c5f-9659-5250ef24fe0d}"),
+         QStringLiteral("08:57:22.745"),
+       };
+
+  QTest::newRow("row 2 (shadow)")
+    << 2 << ShadowHidden
+    << QStringList{
+         QStringLiteral("Emu"),
+         QStringLiteral("{478d0854-9d2e-478a-b882-475613fae453}"),
+         QStringLiteral("17:07:35.588"),
+       };
+
+  QTest::newRow("row 2 (omit)")
+    << 2 << OmitHidden << QStringList{};
 }
 
 // ----------------------------------------------------------------------------
@@ -207,22 +217,32 @@ void TestAbstractItemRepresentation::tooltipData_data()
   QTest::addColumn<ItemVisibilityMode>("mode");
   QTest::addColumn<QStringList>("expected");
 
-  QTest::newRow("row 0") << 0 << ShadowHidden << QStringList{
-    QStringLiteral("Pig"),
-    QStringLiteral("{e98b70d3-3daf-48de-912b-1be111f66189}"),
-    QStringLiteral("1987-04-14 16:23:47.289"),
-  };
-  QTest::newRow("row 1") << 1 << ShadowHidden << QStringList{
-    QStringLiteral("Cow"),
-    QStringLiteral("{ede5f114-0333-4c5f-9659-5250ef24fe0d}"),
-    QStringLiteral("2013-10-11 08:57:22.745"),
-  };
-  QTest::newRow("row 2 (shadow)") << 2 << ShadowHidden << QStringList{
-    QStringLiteral("Emu"),
-    QStringLiteral("{478d0854-9d2e-478a-b882-475613fae453}"),
-    QStringLiteral("2019-06-06 17:07:35.588"),
-  };
-  QTest::newRow("row 2 (omit)") << 2 << OmitHidden << QStringList{};
+  QTest::newRow("row 0")
+    << 0 << ShadowHidden
+    << QStringList{
+         QStringLiteral("Pig"),
+         QStringLiteral("{e98b70d3-3daf-48de-912b-1be111f66189}"),
+         QStringLiteral("1987-04-14 16:23:47.289"),
+       };
+
+  QTest::newRow("row 1")
+    << 1 << ShadowHidden
+    << QStringList{
+         QStringLiteral("Cow"),
+         QStringLiteral("{ede5f114-0333-4c5f-9659-5250ef24fe0d}"),
+         QStringLiteral("2013-10-11 08:57:22.745"),
+       };
+
+  QTest::newRow("row 2 (shadow)")
+    << 2 << ShadowHidden
+    << QStringList{
+         QStringLiteral("Emu"),
+         QStringLiteral("{478d0854-9d2e-478a-b882-475613fae453}"),
+         QStringLiteral("2019-06-06 17:07:35.588"),
+       };
+
+  QTest::newRow("row 2 (omit)")
+    << 2 << OmitHidden << QStringList{};
 }
 
 // ----------------------------------------------------------------------------

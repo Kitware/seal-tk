@@ -36,6 +36,7 @@ struct TimeStampTestData
 class TestTimeStamp : public QObject
 {
   Q_OBJECT
+
 public:
   TestTimeStamp();
 
@@ -237,26 +238,26 @@ TestTimeStamp::TestTimeStamp()
 
 // ----------------------------------------------------------------------------
 #define COMPARE(NAME, OP)                                                     \
-void TestTimeStamp::NAME()                                                    \
-{                                                                             \
-  QFETCH(TimeStamp, t1);                                                      \
-  QFETCH(TimeStamp, t2);                                                      \
-  QFETCH(bool, expected);                                                     \
-                                                                              \
-  QCOMPARE((t1 OP t2), expected);                                             \
-}                                                                             \
-                                                                              \
-void TestTimeStamp::NAME##_data()                                             \
-{                                                                             \
-  QTest::addColumn<TimeStamp>("t1");                                          \
-  QTest::addColumn<TimeStamp>("t2");                                          \
-  QTest::addColumn<bool>("expected");                                         \
-                                                                              \
-  for (auto const& d : this->data)                                            \
+  void TestTimeStamp::NAME()                                                  \
   {                                                                           \
-    QTest::newRow(d.name) << d.t1 << d.t2 << d.NAME;                          \
+    QFETCH(TimeStamp, t1);                                                    \
+    QFETCH(TimeStamp, t2);                                                    \
+    QFETCH(bool, expected);                                                   \
+                                                                              \
+    QCOMPARE((t1 OP t2), expected);                                           \
   }                                                                           \
-}
+                                                                              \
+  void TestTimeStamp::NAME##_data()                                           \
+  {                                                                           \
+    QTest::addColumn<TimeStamp>("t1");                                        \
+    QTest::addColumn<TimeStamp>("t2");                                        \
+    QTest::addColumn<bool>("expected");                                       \
+                                                                              \
+    for (auto const& d : this->data)                                          \
+    {                                                                         \
+      QTest::newRow(d.name) << d.t1 << d.t2 << d.NAME;                        \
+    }                                                                         \
+  }
 
 COMPARE(eq, ==)
 COMPARE(ne, !=)
@@ -265,11 +266,11 @@ COMPARE(le, <=)
 COMPARE(gt, >)
 COMPARE(lt, <)
 
-}
+} // namespace test
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 Q_DECLARE_METATYPE(sealtk::core::test::TimeStampTestData)
 

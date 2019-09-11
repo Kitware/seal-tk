@@ -30,7 +30,7 @@ namespace sealtk
 namespace core
 {
 
-//=============================================================================
+// ============================================================================
 class KwiverDetectionsSinkPrivate
 {
 public:
@@ -44,7 +44,7 @@ public:
   TimeMap<Frame> frames;
 };
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 QTE_IMPLEMENT_D_FUNC(KwiverDetectionsSink)
 
 // ----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ KwiverDetectionsSink::~KwiverDetectionsSink()
 {
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 bool KwiverDetectionsSink::setData(
   VideoSource* video, QAbstractItemModel* model, bool includeHidden)
 {
@@ -115,7 +115,7 @@ bool KwiverDetectionsSink::setData(
   return haveData;
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 void KwiverDetectionsSink::writeData(QUrl const& uri) const
 {
   QTE_D();

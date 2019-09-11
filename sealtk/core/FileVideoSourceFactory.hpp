@@ -5,13 +5,14 @@
 #ifndef sealtk_core_FileVideoSourceFactory_hpp
 #define sealtk_core_FileVideoSourceFactory_hpp
 
+#include <sealtk/core/VideoSourceFactory.hpp>
+
 #include <sealtk/core/Export.h>
+
+#include <qtGlobal.h>
 
 #include <QObject>
 #include <QString>
-#include <qtGlobal.h>
-
-#include <sealtk/core/VideoSourceFactory.hpp>
 
 namespace sealtk
 {
@@ -47,8 +48,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(FileVideoSourceFactory)
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

@@ -46,7 +46,7 @@ void compareFiles(QIODevice& actual, QString const& expected,
   QVERIFY(ef.open(QIODevice::ReadOnly));
 
   actual.seek(0);
-  while(!actual.atEnd())
+  while (!actual.atEnd())
   {
     auto const& al = actual.readLine();
     if (ignoreLines.match(al).hasMatch())

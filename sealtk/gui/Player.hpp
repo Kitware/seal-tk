@@ -98,8 +98,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(Player)
 };
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk
 
 #endif

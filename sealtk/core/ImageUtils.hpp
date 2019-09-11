@@ -25,8 +25,8 @@ void SEALTK_CORE_EXPORT imageToTexture(
   QOpenGLTexture& texture,
   kwiver::vital::image_container_sptr const& image);
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

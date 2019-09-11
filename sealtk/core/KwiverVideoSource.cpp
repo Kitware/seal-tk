@@ -36,7 +36,7 @@ kv::path_t getImageName(kv::metadata_vector const& mdv)
 {
   for (auto const& mdp : mdv | kvr::valid)
   {
-    if ( auto const& mdi = mdp->find( kwiver::vital::VITAL_META_IMAGE_URI ) )
+    if (auto const& mdi = mdp->find(kwiver::vital::VITAL_META_IMAGE_URI))
     {
       return mdi.as_string();
     }
@@ -198,6 +198,6 @@ kv::timestamp KwiverVideoSourcePrivate::processRequest(
   return {};
 }
 
-}
+} // namespace core
 
-}
+} // namespace sealtk

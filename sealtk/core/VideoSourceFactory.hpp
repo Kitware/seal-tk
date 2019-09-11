@@ -7,8 +7,9 @@
 
 #include <sealtk/core/Export.h>
 
-#include <QObject>
 #include <qtGlobal.h>
+
+#include <QObject>
 
 namespace sealtk
 {
@@ -41,8 +42,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(VideoSourceFactory)
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

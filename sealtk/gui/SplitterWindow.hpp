@@ -7,8 +7,9 @@
 
 #include <sealtk/gui/Export.h>
 
-#include <QWidget>
 #include <qtGlobal.h>
+
+#include <QWidget>
 
 namespace sealtk
 {
@@ -40,8 +41,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(SplitterWindow)
 };
 
-}
+} // namespace gui
 
-}
+} // namespace sealtk
 
 #endif

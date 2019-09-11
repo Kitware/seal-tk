@@ -44,11 +44,12 @@ constexpr auto FBO_SIZE = static_cast<int>(IMAGE_SIZE);
 // the immediately following code). Work around this by instead using the
 // QString-from-literal constructors. This is less efficient, but at least it
 // compiles.
-#undef QStringLiteral
-#define QStringLiteral QString
+# undef QStringLiteral
+# define QStringLiteral QString
 #endif
 
-static auto const VERTEX_SHADER_CODE = QStringLiteral(R"(
+static auto const VERTEX_SHADER_CODE = QStringLiteral(
+  R"(
   #version 130
 
   in vec3 vert;
@@ -62,7 +63,8 @@ static auto const VERTEX_SHADER_CODE = QStringLiteral(R"(
     tc = vert.xy;
   })");
 
-static auto const PIXEL_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(R"(
+static auto const PIXEL_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(
+  R"(
   #version 130
 
   uniform sampler2DArray tex;
@@ -74,7 +76,8 @@ static auto const PIXEL_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(R"(
     color = texture(tex, vec3(tc, 0));
   })");
 
-static auto const PLANE_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(R"(
+static auto const PLANE_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(
+  R"(
   #version 130
 
   uniform sampler2DArray tex;
@@ -122,9 +125,9 @@ kv::image fillTestImage(kv::image image)
     {
       for (auto const k : kvr::iota(image.depth()))
       {
-        image.at<uchar>(i, j, k) =  pixelValue(static_cast<int>(i),
-                                               static_cast<int>(j),
-                                               static_cast<int>(k));
+        image.at<uchar>(i, j, k) = pixelValue(static_cast<int>(i),
+                                              static_cast<int>(j),
+                                              static_cast<int>(k));
       }
     }
   }
@@ -185,17 +188,17 @@ void TestImageUtils::initTestCase()
   m_pixelPackedShader.reset(new QOpenGLShaderProgram);
   QVERIFY(m_pixelPackedShader->create());
   QVERIFY(m_pixelPackedShader->addShaderFromSourceCode(
-    QOpenGLShader::Vertex, VERTEX_SHADER_CODE));
+            QOpenGLShader::Vertex, VERTEX_SHADER_CODE));
   QVERIFY(m_pixelPackedShader->addShaderFromSourceCode(
-    QOpenGLShader::Fragment, PIXEL_PACKED_FRAGMENT_SHADER_CODE));
+            QOpenGLShader::Fragment, PIXEL_PACKED_FRAGMENT_SHADER_CODE));
   QVERIFY(m_pixelPackedShader->link());
 
   m_planePackedShader.reset(new QOpenGLShaderProgram);
   QVERIFY(m_planePackedShader->create());
   QVERIFY(m_planePackedShader->addShaderFromSourceCode(
-    QOpenGLShader::Vertex, VERTEX_SHADER_CODE));
+            QOpenGLShader::Vertex, VERTEX_SHADER_CODE));
   QVERIFY(m_planePackedShader->addShaderFromSourceCode(
-    QOpenGLShader::Fragment, PLANE_PACKED_FRAGMENT_SHADER_CODE));
+            QOpenGLShader::Fragment, PLANE_PACKED_FRAGMENT_SHADER_CODE));
   QVERIFY(m_planePackedShader->link());
 
   float vertexData[] = {
@@ -241,7 +244,6 @@ void TestImageUtils::imageToTexture()
   // Bind FBO
   QVERIFY(m_context.makeCurrent(&m_surface));
   QVERIFY(m_fbo->bind());
-
 
   // Create and fill texture
   QOpenGLTexture texture{QOpenGLTexture::Target2DArray};

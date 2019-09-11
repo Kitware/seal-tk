@@ -5,15 +5,16 @@
 #ifndef sealtk_core_KwiverFileVideoSourceFactory_hpp
 #define sealtk_core_KwiverFileVideoSourceFactory_hpp
 
+#include <sealtk/core/FileVideoSourceFactory.hpp>
+
 #include <sealtk/core/Export.h>
+
+#include <vital/config/config_block.h>
+
+#include <qtGlobal.h>
 
 #include <QObject>
 #include <QString>
-#include <qtGlobal.h>
-
-#include <sealtk/core/FileVideoSourceFactory.hpp>
-
-#include <vital/config/config_block.h>
 
 namespace sealtk
 {
@@ -47,8 +48,8 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(KwiverFileVideoSourceFactory)
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

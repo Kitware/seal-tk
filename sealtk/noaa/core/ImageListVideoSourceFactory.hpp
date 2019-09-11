@@ -5,12 +5,13 @@
 #ifndef sealtk_noaa_core_ImageListVideoSourceFactory_hpp
 #define sealtk_noaa_core_ImageListVideoSourceFactory_hpp
 
-#include <QObject>
-#include <qtGlobal.h>
-
 #include <sealtk/noaa/core/Export.h>
 
 #include <sealtk/core/KwiverFileVideoSourceFactory.hpp>
+
+#include <qtGlobal.h>
+
+#include <QObject>
 
 namespace sealtk
 {
@@ -20,7 +21,7 @@ namespace core
 
 class VideoController;
 
-}
+} // namespace core
 
 namespace noaa
 {
@@ -30,8 +31,8 @@ namespace core
 
 class ImageListVideoSourceFactoryPrivate;
 
-class SEALTK_NOAA_CORE_EXPORT ImageListVideoSourceFactory :
-  public sealtk::core::KwiverFileVideoSourceFactory
+class SEALTK_NOAA_CORE_EXPORT ImageListVideoSourceFactory
+  : public sealtk::core::KwiverFileVideoSourceFactory
 {
   Q_OBJECT
 
@@ -51,10 +52,10 @@ private:
   QTE_DECLARE_PRIVATE_RPTR(ImageListVideoSourceFactory)
 };
 
-}
+} // namespace core
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
 
 #endif

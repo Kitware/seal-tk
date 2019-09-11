@@ -69,11 +69,11 @@ void TestFilenameUtils::imageFilenameToQDateTime_data()
     << QDateTime{};
 }
 
-}
+} // namespace test
 
-}
+} // namespace noaa
 
-}
+} // namespace sealtk
 
 QTEST_MAIN(sealtk::noaa::test::TestFilenameUtils)
 #include "FilenameUtils.moc"

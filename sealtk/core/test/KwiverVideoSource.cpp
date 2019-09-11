@@ -64,9 +64,9 @@ void TestKwiverVideoSource::initTestCase()
   this->config = kv::config_block::empty_config();
   this->config->set_value("video_reader:type", "image_list");
   this->config->set_value("video_reader:image_list:image_reader:type",
-    "timestamp_passthrough");
+                          "timestamp_passthrough");
   this->config->set_value("video_reader:image_list:image_reader:"
-    "timestamp_passthrough:image_reader:type", "qt");
+                          "timestamp_passthrough:image_reader:type", "qt");
 }
 
 // ----------------------------------------------------------------------------
@@ -156,18 +156,19 @@ void TestKwiverVideoSource::seek()
 
   for (int i = 0; i < seekFiles.size(); i++)
   {
+    auto const& file = seekFiles[i];
     auto const& frame = seekFrames[i];
 
-    if (!seekFiles[i].isEmpty())
+    if (!file.isEmpty())
     {
-      auto const& expected = QImage{sealtk::test::testDataPath(
-        "KwiverVideoSource/" + seekFiles[i])};
+      auto const& expected =
+        QImage{sealtk::test::testDataPath("KwiverVideoSource/" + file)};
       auto const& actual =
         sealtk::core::imageContainerToQImage(frame.image);
       QCOMPARE(actual, expected);
 
       QFileInfo fi{qtString(frame.metaData.imageName())};
-      QCOMPARE(fi.fileName(), seekFiles[i]);
+      QCOMPARE(fi.fileName(), file);
     }
     else
     {

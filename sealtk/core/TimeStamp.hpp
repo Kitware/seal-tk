@@ -40,8 +40,8 @@ private:
   int frameDomain;
 };
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
 
 #endif

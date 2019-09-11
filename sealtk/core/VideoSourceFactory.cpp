@@ -30,6 +30,6 @@ VideoSourceFactory::~VideoSourceFactory()
 {
 }
 
-}
+} // namespace core
 
-}
+} // namespace sealtk
