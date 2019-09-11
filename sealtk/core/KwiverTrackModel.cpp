@@ -235,6 +235,34 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
 }
 
 // ----------------------------------------------------------------------------
+bool KwiverTrackModel::setData(
+  QModelIndex const& index, QVariant const& value, int role)
+{
+  if (this->checkIndex(index, IndexIsValid | ParentIsInvalid))
+  {
+    QTE_D_DETACH();
+
+    auto& track = d->tracks[static_cast<uint>(index.row())];
+    switch (role)
+    {
+      case core::UserVisibilityRole:
+        if (value.canConvert<bool>())
+        {
+          track.visible = value.toBool();
+
+          auto const& canonicalIndex = this->createIndex(index.row(), 0);
+          emit this->dataChanged(canonicalIndex, canonicalIndex, {role});
+        }
+
+      default:
+        break;
+    }
+  }
+
+  return this->AbstractItemModel::setData(index, value, role);
+}
+
+// ----------------------------------------------------------------------------
 void KwiverTrackModel::addTracks(
   kv::object_track_set_sptr const& trackSet)
 {

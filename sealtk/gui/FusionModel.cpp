@@ -85,6 +85,7 @@ public:
   template <typename Fusor>
 
   static QVariant fuseData(RowData const& rowData, int role);
+  static bool setData(RowData const& rowData, QVariant const& value, int role);
 
   QSet<QAbstractItemModel*> models;
   QHash<qint64, int> items;
@@ -151,6 +152,28 @@ QVariant FusionModel::data(QModelIndex const& index, int role) const
   }
 
   return this->AbstractItemModel::data(index, role);
+}
+
+// ----------------------------------------------------------------------------
+bool FusionModel::setData(
+  QModelIndex const& index, QVariant const& value, int role)
+{
+  if (this->checkIndex(index, IndexIsValid | ParentIsInvalid))
+  {
+    QTE_D();
+
+    auto const& r = d->data[index.row()];
+    switch (role)
+    {
+      case core::UserVisibilityRole:
+        return d->setData(r, value, role);
+
+      default:
+        break;
+    }
+  }
+
+  return this->AbstractItemModel::setData(index, value, role);
 }
 
 // ----------------------------------------------------------------------------
@@ -345,6 +368,23 @@ QVariant FusionModelPrivate::fuseData(RowData const& rowData, int role)
   }
 
   return QVariant::fromValue(result);
+}
+
+// ----------------------------------------------------------------------------
+bool FusionModelPrivate::setData(
+  RowData const& rowData, QVariant const& value, int role)
+{
+  auto result = false;
+
+  for (auto const& sourceRow : rowData.rows | kvr::indirect)
+  {
+    auto* const model = sourceRow.key();
+    auto const& index = model->index(sourceRow.value(), 0);
+
+    result = model->setData(index, value, role) || result;
+  }
+
+  return result;
 }
 
 } // namespace gui

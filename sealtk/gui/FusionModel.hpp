@@ -30,6 +30,8 @@ public:
   // Reimplemented from QAbstractItemModel
   int rowCount(QModelIndex const& parent = {}) const override;
   QVariant data(QModelIndex const& index, int role) const override;
+  bool setData(
+    QModelIndex const& index, QVariant const& value, int role) override;
 
 public slots:
   void addModel(QAbstractItemModel*);

@@ -31,10 +31,13 @@ public:
 
   // Reimplemented from QAbstractItemModel
   int rowCount(QModelIndex const& parent = {}) const override;
-  QVariant data(QModelIndex const& index, int role) const override;
   QModelIndex parent(QModelIndex const& child) const override;
   QModelIndex index(
     int row, int column, QModelIndex const& parent) const override;
+
+  QVariant data(QModelIndex const& index, int role) const override;
+  bool setData(
+    QModelIndex const& index, QVariant const& value, int role) override;
 
 public slots:
   void clear();
