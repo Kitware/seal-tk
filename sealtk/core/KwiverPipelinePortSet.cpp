@@ -22,7 +22,7 @@ void bind(std::string& out, std::string const& expected, std::string const& in)
   }
 }
 
-}
+} // namespace <anonymous>
 
 // ----------------------------------------------------------------------------
 void KwiverPipelinePortSet::bind(

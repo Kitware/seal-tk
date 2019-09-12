@@ -867,8 +867,8 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
     {
       auto const& color =
         (this->selectedTracks.contains(vertexInfo.id)
-        ? this->selectionColor
-        : this->defaultColor);
+         ? this->selectionColor
+         : this->defaultColor);
       this->detectionShaderProgram.setUniformValue(
         this->detectionColorLocation,
         static_cast<float>(color.redF()),
