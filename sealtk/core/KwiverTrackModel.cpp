@@ -251,7 +251,8 @@ bool KwiverTrackModel::setData(
           track.visible = value.toBool();
 
           auto const& canonicalIndex = this->createIndex(index.row(), 0);
-          emit this->dataChanged(canonicalIndex, canonicalIndex, {role});
+          emit this->dataChanged(canonicalIndex, canonicalIndex,
+                                 {role, core::VisibilityRole});
         }
 
       default:
