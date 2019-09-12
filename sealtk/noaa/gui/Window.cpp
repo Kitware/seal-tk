@@ -120,7 +120,7 @@ public:
 
   WindowData* dataForView(int viewIndex);
   void setTrackModel(
-    WindowData *data, std::shared_ptr<QAbstractItemModel> const& model);
+    WindowData* data, std::shared_ptr<QAbstractItemModel> const& model);
 
   void updateTrackSelection(QItemSelection const& selection);
 

@@ -26,6 +26,7 @@ bool localeAwareLessThan(QString const& left, QString const& right)
 }
 
 } // namespace <anonymous>
+
 // ----------------------------------------------------------------------------
 bool AbstractProxyModel::isValidData(QVariant const& data, int role)
 {
