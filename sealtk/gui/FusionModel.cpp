@@ -82,9 +82,14 @@ public:
   void addModelData(QAbstractItemModel* model, int firstRow, int rowAfterLast);
   void shiftModelRows(QAbstractItemModel* model, int firstRow, int rowOffset);
 
-  template <typename Fusor>
+  void emitDataChanged(
+    QAbstractItemModel* model, QVector<int> const& roles,
+    QModelIndex const& first, QModelIndex const& last);
 
+  template <typename Fusor>
   static QVariant fuseData(RowData const& rowData, int role);
+
+  static bool setData(RowData const& rowData, QVariant const& value, int role);
 
   QSet<QAbstractItemModel*> models;
   QHash<qint64, int> items;
@@ -154,6 +159,28 @@ QVariant FusionModel::data(QModelIndex const& index, int role) const
 }
 
 // ----------------------------------------------------------------------------
+bool FusionModel::setData(
+  QModelIndex const& index, QVariant const& value, int role)
+{
+  if (this->checkIndex(index, IndexIsValid | ParentIsInvalid))
+  {
+    QTE_D();
+
+    auto const& r = d->data[index.row()];
+    switch (role)
+    {
+      case core::UserVisibilityRole:
+        return d->setData(r, value, role);
+
+      default:
+        break;
+    }
+  }
+
+  return this->AbstractItemModel::setData(index, value, role);
+}
+
+// ----------------------------------------------------------------------------
 void FusionModel::addModel(QAbstractItemModel* model)
 {
   QTE_D();
@@ -167,7 +194,12 @@ void FusionModel::addModel(QAbstractItemModel* model)
 
     connect(model, &QObject::destroyed, this,
             [model, this]{ this->removeModel(model); });
-    connect(model, &QAbstractItemModel::rowsInserted,
+    connect(model, &QAbstractItemModel::dataChanged, this,
+            [model, d](QModelIndex const& first, QModelIndex const& last,
+                       QVector<int> const& roles){
+              d->emitDataChanged(model, roles, first, last);
+            });
+    connect(model, &QAbstractItemModel::rowsInserted, this,
             [model, this](QModelIndex const& parent, int first, int last){
               if (!parent.isValid())
               {
@@ -188,8 +220,12 @@ void FusionModel::removeModel(QAbstractItemModel* model)
   if (d->models.contains(model))
   {
     this->beginResetModel();
+
     d->models.remove(model);
     d->removeModelData(model);
+
+    disconnect(model, nullptr, this, nullptr);
+
     this->endResetModel();
   }
 }
@@ -213,7 +249,7 @@ void FusionModelPrivate::addModelData(
   {
     auto const& index = model->index(sourceRow, 0);
     auto const iid =
-      model->data(index, core::LogicalIdentityRole).toLongLong();
+      model->data(index, core::LogicalIdentityRole).value<qint64>();
 
     // Find our row for this item (if any)
     auto const localRow = this->items.value(iid, -1);
@@ -319,6 +355,41 @@ void FusionModelPrivate::removeModelData(QAbstractItemModel* model)
 }
 
 // ----------------------------------------------------------------------------
+void FusionModelPrivate::emitDataChanged(
+  QAbstractItemModel* model, QVector<int> const& roles,
+  QModelIndex const& first, QModelIndex const& last)
+{
+  if (first.parent().isValid() || last.parent().isValid())
+  {
+    return;
+  }
+
+  auto const firstRow = first.row();
+  auto const lastRow = last.row();
+  auto modifiedRows = QSet<int>{};
+
+  for (auto sourceRow = firstRow; sourceRow <= lastRow; ++sourceRow)
+  {
+    auto const& index = model->index(sourceRow, 0);
+    auto const iid =
+      model->data(index, core::LogicalIdentityRole).value<qint64>();
+
+    // Find our row for this item (if any)
+    auto const localRow = this->items.value(iid, -1);
+    if (localRow >= 0)
+    {
+      modifiedRows.insert(localRow);
+    }
+  }
+
+  if (!modifiedRows.isEmpty())
+  {
+    QTE_Q();
+    q->emitDataChanged({}, modifiedRows.toList(), roles);
+  }
+}
+
+// ----------------------------------------------------------------------------
 template <typename Fusor>
 QVariant FusionModelPrivate::fuseData(RowData const& rowData, int role)
 {
@@ -345,6 +416,23 @@ QVariant FusionModelPrivate::fuseData(RowData const& rowData, int role)
   }
 
   return QVariant::fromValue(result);
+}
+
+// ----------------------------------------------------------------------------
+bool FusionModelPrivate::setData(
+  RowData const& rowData, QVariant const& value, int role)
+{
+  auto result = false;
+
+  for (auto const& sourceRow : rowData.rows | kvr::indirect)
+  {
+    auto* const model = sourceRow.key();
+    auto const& index = model->index(sourceRow.value(), 0);
+
+    result = model->setData(index, value, role) || result;
+  }
+
+  return result;
 }
 
 } // namespace gui

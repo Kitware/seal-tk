@@ -82,6 +82,7 @@ public:
   QVariant data(QModelIndex const& index, int role) const override;
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override;
+  void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 public slots:
   /// Set the visibility mode for "hidden" items.

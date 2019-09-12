@@ -76,6 +76,7 @@ public:
   TrackRepresentation()
   {
     this->setColumnRoles({sc::NameRole, sc::StartTimeRole});
+    this->setItemVisibilityMode(sg::OmitHidden);
   }
 
   QVariant headerData(int section, Qt::Orientation orientation,
@@ -197,6 +198,29 @@ Window::Window(QWidget* parent)
           &QItemSelectionModel::selectionChanged,
           this, [d](QItemSelection const& selection){
             d->updateTrackSelection(selection);
+          });
+
+  connect(d->ui.tracks->selectionModel(),
+          &QItemSelectionModel::selectionChanged,
+          this, [d](QItemSelection const& selection){
+            d->ui.actionDeleteDetection->setEnabled(!selection.isEmpty());
+          });
+  connect(d->ui.actionDeleteDetection, &QAction::triggered,
+          this, [d]{
+            // Get selected items
+            auto items = QModelIndexList{};
+            auto const& rows = d->ui.tracks->selectionModel()->selectedRows();
+            for (auto const& ri : rows)
+            {
+              auto const& si = d->trackRepresentation.mapToSource(ri);
+              items.append(si);
+            }
+
+            // Mark selected items as hidden
+            for (auto const& si : items)
+            {
+              d->trackModel.setData(si, false, sc::UserVisibilityRole);
+            }
           });
 
   d->registerVideoSourceFactory(

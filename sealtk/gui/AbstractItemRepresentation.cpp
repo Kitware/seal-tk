@@ -42,6 +42,7 @@ AbstractItemRepresentation::AbstractItemRepresentation(QObject* parent)
   // logical data model's data; therefore, we need to re-filter and/or re-sort
   // when the underlying data changes, and so we enable doing so by default
   this->setDynamicSortFilter(true);
+  this->setFilterRole(core::VisibilityRole);
 }
 
 // ----------------------------------------------------------------------------
@@ -251,6 +252,13 @@ QVariant AbstractItemRepresentation::headerData(
   }
 
   return this->AbstractProxyModel::headerData(section, orientation, role);
+}
+
+// ----------------------------------------------------------------------------
+void AbstractItemRepresentation::sort(int column, Qt::SortOrder order)
+{
+  this->setSortRole(this->roleForColumn(column));
+  this->QSortFilterProxyModel::sort(column, order);
 }
 
 // ----------------------------------------------------------------------------
