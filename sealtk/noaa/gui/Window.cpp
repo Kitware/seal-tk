@@ -121,6 +121,8 @@ public:
   void setTrackModel(
     WindowData *data, std::shared_ptr<QAbstractItemModel> const& model);
 
+  void updateTrackSelection(QItemSelection const& selection);
+
   Ui::Window ui;
   qtUiState uiState;
 
@@ -190,6 +192,11 @@ Window::Window(QWidget* parent)
               d->ui.control->setTime(
                 t.value<kwiver::vital::timestamp::time_t>());
             }
+          });
+  connect(d->ui.tracks->selectionModel(),
+          &QItemSelectionModel::selectionChanged,
+          this, [d](QItemSelection const& selection){
+            d->updateTrackSelection(selection);
           });
 
   d->registerVideoSourceFactory(
@@ -529,6 +536,22 @@ void WindowPrivate::setTrackModel(
     this->trackModel.addModel(model.get());
     data->player->setTrackModel(model.get());
   }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::updateTrackSelection(QItemSelection const& selection)
+{
+  auto selectedTracks = QSet<qint64>{};
+
+  for (auto const& ri : selection.indexes())
+  {
+    auto const& mi = this->trackRepresentation.mapToSource(ri);
+    auto const& data = this->trackModel.data(mi, sc::LogicalIdentityRole);
+    selectedTracks.insert(data.value<qint64>());
+  }
+
+  this->eoWindow.player->setSelectedTrackIds(selectedTracks);
+  this->irWindow.player->setSelectedTrackIds(selectedTracks);
 }
 
 } // namespace gui

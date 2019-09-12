@@ -38,16 +38,26 @@ namespace sealtk
 namespace gui
 {
 
+// ============================================================================
 struct LevelsPair
 {
   float low;
   float high;
 };
 
+// ============================================================================
 struct VertexData
 {
   QVector2D vertexCoords;
   QVector2D textureCoords;
+};
+
+// ============================================================================
+struct DetectionInfo
+{
+  qint64 id;
+  int first; // first index in vertex buffer of this detection
+  int count; // number of indices used for this detection
 };
 
 // ============================================================================
@@ -80,7 +90,7 @@ public:
   QMatrix4x4 homography;
   QSize homographyImageSize;
 
-  QVector<QPair<int, int>> detectedObjectVertexIndices;
+  QVector<DetectionInfo> detectedObjectVertexIndices;
 
   QOpenGLTexture imageTexture{QOpenGLTexture::Target2DArray};
   QOpenGLBuffer imageVertexBuffer{QOpenGLBuffer::VertexBuffer};
@@ -92,8 +102,12 @@ public:
   int imageViewHomographyLocation;
   int detectionHomographyLocation;
   int detectionViewHomographyLocation;
+  int detectionColorLocation;
   int levelShiftLocation;
   int levelScaleLocation;
+
+  QColor defaultColor = {255, 255, 0};
+  QColor selectionColor = {255, 20, 144};
 
   bool initialized = false;
 
@@ -112,6 +126,7 @@ public:
 
   core::VideoDistributor* videoSource = nullptr;
   core::ScalarFilterModel trackModelFilter;
+  QSet<qint64> selectedTracks;
 };
 
 // ----------------------------------------------------------------------------
@@ -207,6 +222,18 @@ void Player::setTrackModel(QAbstractItemModel* model)
   d->trackModelFilter.setSourceModel(model);
 
   d->updateDetections();
+}
+
+// ----------------------------------------------------------------------------
+void Player::setSelectedTrackIds(QSet<qint64> const& ids)
+{
+  QTE_D();
+
+  if (d->selectedTracks != ids)
+  {
+    d->selectedTracks = ids;
+    this->update();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -334,6 +361,48 @@ void Player::setPercentiles(double deviance, double tolerance)
 }
 
 // ----------------------------------------------------------------------------
+QColor Player::defaultColor() const
+{
+  QTE_D();
+  return d->defaultColor;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setDefaultColor(QColor const& color)
+{
+  QTE_D();
+
+  if (d->defaultColor != color)
+  {
+    d->defaultColor = color;
+    this->update();
+
+    emit this->defaultColorChanged(color);
+  }
+}
+
+// ----------------------------------------------------------------------------
+QColor Player::selectionColor() const
+{
+  QTE_D();
+  return d->selectionColor;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setSelectionColor(QColor const& color)
+{
+  QTE_D();
+
+  if (d->selectionColor != color)
+  {
+    d->selectionColor = color;
+    this->update();
+
+    emit this->selectionColorChanged(color);
+  }
+}
+
+// ----------------------------------------------------------------------------
 QSize Player::homographyImageSize() const
 {
   QTE_D();
@@ -403,6 +472,8 @@ void Player::initializeGL()
     d->detectionShaderProgram.uniformLocation("homography");
   d->detectionViewHomographyLocation =
     d->detectionShaderProgram.uniformLocation("viewHomography");
+  d->detectionColorLocation =
+    d->detectionShaderProgram.uniformLocation("color");
 
   d->initialized = true;
 }
@@ -616,18 +687,25 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
   {
     auto const first = vertexData.count() / tuple_size;
 
-    auto const& pi = this->trackModelFilter.index(pr, 0);
-    for (auto const cr : kvr::iota(this->trackModelFilter.rowCount(pi)))
+    auto const& parentIndex = this->trackModelFilter.index(pr, 0);
+    auto const& parentData =
+      this->trackModelFilter.data(parentIndex, core::LogicalIdentityRole);
+    auto const id = parentData.value<qint64>();
+
+    auto const childRows = this->trackModelFilter.rowCount(parentIndex);
+    for (auto const childRow : kvr::iota(childRows))
     {
-      auto const& ci = this->trackModelFilter.index(cr, 0, pi);
-      auto const& cv = this->trackModelFilter.data(ci, core::VisibilityRole);
-      if (cv.toBool())
+      auto const& childIndex =
+        this->trackModelFilter.index(childRow, 0, parentIndex);
+      auto const& childVisibility =
+        this->trackModelFilter.data(childIndex, core::VisibilityRole);
+      if (childVisibility.toBool())
       {
-        auto const& cd =
-          this->trackModelFilter.data(ci, core::AreaLocationRole);
-        if (cd.canConvert<QRectF>())
+        auto const& childData =
+          this->trackModelFilter.data(childIndex, core::AreaLocationRole);
+        if (childData.canConvert<QRectF>())
         {
-          auto const& box = cd.toRectF();
+          auto const& box = childData.toRectF();
           auto const minX = static_cast<float>(box.left());
           auto const maxX = static_cast<float>(box.right());
           auto const minY = static_cast<float>(box.top());
@@ -642,7 +720,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
     }
 
     auto const last = vertexData.count() / tuple_size;
-    this->detectedObjectVertexIndices.append({first, last - first});
+    this->detectedObjectVertexIndices.append({id, first, last - first});
   }
 
   if (vertexData.isEmpty())
@@ -752,10 +830,10 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
                                               sizeof(VertexData));
   this->imageShaderProgram.enableAttributeArray(1);
 
-  this->imageShaderProgram.setUniformValueArray(this->imageHomographyLocation,
-                                                &this->homography, 1);
-  this->imageShaderProgram.setUniformValueArray(
-    this->imageViewHomographyLocation, &this->viewHomography, 1);
+  this->imageShaderProgram.setUniformValue(
+    this->imageHomographyLocation, this->homography);
+  this->imageShaderProgram.setUniformValue(
+    this->imageViewHomographyLocation, this->viewHomography);
 
   this->imageShaderProgram.setUniformValue(
     this->levelShiftLocation, levelShift);
@@ -778,19 +856,31 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
   this->detectionShaderProgram.setAttributeBuffer(0, GL_FLOAT, 0, 2);
   this->detectionShaderProgram.enableAttributeArray(0);
 
-  this->detectionShaderProgram.setUniformValueArray(
-    this->detectionHomographyLocation, &this->homography, 1);
-  this->detectionShaderProgram.setUniformValueArray(
-    this->detectionViewHomographyLocation, &this->viewHomography, 1);
+  this->detectionShaderProgram.setUniformValue(
+    this->detectionHomographyLocation, this->homography);
+  this->detectionShaderProgram.setUniformValue(
+    this->detectionViewHomographyLocation, this->viewHomography);
 
   for (auto const& vertexInfo : this->detectedObjectVertexIndices)
   {
-    // TODO set color based on selection state
-
-    for (auto const n : kvr::iota(vertexInfo.second / 5))
+    if (auto const k = vertexInfo.count / 5)
     {
-      auto const offset = vertexInfo.first + (n * 5);
-      functions->glDrawArrays(GL_LINE_STRIP, offset, 5);
+      auto const& color =
+        (this->selectedTracks.contains(vertexInfo.id)
+        ? this->selectionColor
+        : this->defaultColor);
+      this->detectionShaderProgram.setUniformValue(
+        this->detectionColorLocation,
+        static_cast<float>(color.redF()),
+        static_cast<float>(color.greenF()),
+        static_cast<float>(color.blueF()),
+        static_cast<float>(color.alphaF()));
+
+      for (auto const n : kvr::iota(k))
+      {
+        auto const offset = vertexInfo.first + (n * 5);
+        functions->glDrawArrays(GL_LINE_STRIP, offset, 5);
+      }
     }
   }
 
