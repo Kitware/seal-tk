@@ -199,7 +199,7 @@ void FusionModel::addModel(QAbstractItemModel* model)
                        QVector<int> const& roles){
               d->emitDataChanged(model, roles, first, last);
             });
-    connect(model, &QAbstractItemModel::rowsInserted,
+    connect(model, &QAbstractItemModel::rowsInserted, this,
             [model, this](QModelIndex const& parent, int first, int last){
               if (!parent.isValid())
               {
@@ -220,8 +220,12 @@ void FusionModel::removeModel(QAbstractItemModel* model)
   if (d->models.contains(model))
   {
     this->beginResetModel();
+
     d->models.remove(model);
     d->removeModelData(model);
+
+    disconnect(model, nullptr, this, nullptr);
+
     this->endResetModel();
   }
 }
