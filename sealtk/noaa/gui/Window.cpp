@@ -37,7 +37,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProgressDialog>
-#include <QShortcut>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QVector>
@@ -201,9 +200,12 @@ Window::Window(QWidget* parent)
             d->updateTrackSelection(selection);
           });
 
-  auto* const deleteTrackShortcut =
-    new QShortcut{Qt::Key_Delete, d->ui.tracks};
-  connect(deleteTrackShortcut, &QShortcut::activated,
+  connect(d->ui.tracks->selectionModel(),
+          &QItemSelectionModel::selectionChanged,
+          this, [d](QItemSelection const& selection){
+            d->ui.actionDeleteDetection->setEnabled(!selection.isEmpty());
+          });
+  connect(d->ui.actionDeleteDetection, &QAction::triggered,
           this, [d]{
             // Get selected items
             auto items = QModelIndexList{};

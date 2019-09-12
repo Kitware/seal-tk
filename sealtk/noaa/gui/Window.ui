@@ -59,6 +59,7 @@
      </property>
     </widget>
     <addaction name="menuPipeline"/>
+    <addaction name="actionDeleteDetection"/>
    </widget>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
@@ -91,6 +92,20 @@
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About...</string>
+   </property>
+  </action>
+  <action name="actionDeleteDetection">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="edit-delete"/>
+   </property>
+   <property name="text">
+    <string>&amp;Delete Detection</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
    </property>
   </action>
  </widget>
