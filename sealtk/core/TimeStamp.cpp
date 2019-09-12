@@ -4,11 +4,75 @@
 
 #include <sealtk/core/TimeStamp.hpp>
 
+namespace kv = kwiver::vital;
+
 namespace sealtk
 {
 
 namespace core
 {
+
+namespace // anonymous
+{
+
+template <typename R, typename T> using comparator = R (*)(T, T);
+
+enum class ComparisonResult
+{
+  False,
+  True,
+  Indeterminate
+};
+
+// ----------------------------------------------------------------------------
+bool compare(
+  TimeStamp const& lhs, TimeStamp const& rhs,
+  comparator<ComparisonResult, kwiver::vital::time_usec_t> compareTimes,
+  comparator<bool, kwiver::vital::frame_id_t> compareFrames, bool fallback)
+{
+  bool const timeValid =
+    lhs.has_valid_time() && rhs.has_valid_time() &&
+    lhs.get_time_domain() == rhs.get_time_domain();
+  bool const frameValid =
+    lhs.has_valid_frame() && rhs.has_valid_frame() &&
+    lhs.get_frame_domain() == rhs.get_frame_domain();
+
+  if (!timeValid && !frameValid)
+  {
+    return false;
+  }
+
+  if (timeValid)
+  {
+    switch (compareTimes(lhs.get_time_usec(), rhs.get_time_usec()))
+    {
+      case ComparisonResult::False:
+        return false;
+      case ComparisonResult::True:
+        return true;
+      default:
+        break;
+    }
+  }
+
+  if (frameValid)
+  {
+    return compareFrames(lhs.get_frame(), rhs.get_frame());
+  }
+
+  return fallback;
+}
+
+// ----------------------------------------------------------------------------
+#define COMPARE_TIMES(LOGIC) \
+  [](kv::time_usec_t lhs, kv::time_usec_t rhs){ \
+    do { LOGIC } while (0); \
+    return ComparisonResult::Indeterminate; \
+  }
+#define COMPARE_FRAMES(OP) \
+  [](kv::frame_id_t lhs, kv::frame_id_t rhs){ return lhs OP rhs; }
+
+} // namespace <anonymous>
 
 // ----------------------------------------------------------------------------
 TimeStamp::TimeStamp()
@@ -18,8 +82,8 @@ TimeStamp::TimeStamp()
 }
 
 // ----------------------------------------------------------------------------
-TimeStamp::TimeStamp(kwiver::vital::time_usec_t t, kwiver::vital::frame_id_t f)
-  : kwiver::vital::timestamp{t, f},
+TimeStamp::TimeStamp(kv::time_usec_t t, kv::frame_id_t f)
+  : kv::timestamp{t, f},
     timeDomain{},
     frameDomain{}
 {
@@ -27,7 +91,7 @@ TimeStamp::TimeStamp(kwiver::vital::time_usec_t t, kwiver::vital::frame_id_t f)
 
 // ----------------------------------------------------------------------------
 TimeStamp::TimeStamp(TimeStamp const& other)
-  : kwiver::vital::timestamp{other},
+  : kv::timestamp{other},
     timeDomain{other.timeDomain},
     frameDomain{other.frameDomain}
 {
@@ -60,69 +124,59 @@ TimeStamp& TimeStamp::set_frame_domain(int frame_domain)
 }
 
 // ----------------------------------------------------------------------------
-#define COMPARE(OP, TIME_CHECK, FALLBACK)                                     \
-bool TimeStamp                                                                \
-::operator OP(TimeStamp const& rhs) const                                     \
-{                                                                             \
-  bool const timeValid = this->has_valid_time() && rhs.has_valid_time() &&    \
-    this->timeDomain == rhs.timeDomain;                                       \
-  bool const frameValid = this->has_valid_frame() && rhs.has_valid_frame()    \
-    && this->frameDomain == rhs.frameDomain;                                  \
-                                                                              \
-  if (!timeValid && !frameValid)                                              \
-  {                                                                           \
-    return false;                                                             \
-  }                                                                           \
-                                                                              \
-  if (timeValid)                                                              \
-  {                                                                           \
-    TIME_CHECK                                                                \
-  }                                                                           \
-                                                                              \
-  if (frameValid)                                                             \
-  {                                                                           \
-    return this->get_frame() OP rhs.get_frame();                              \
-  }                                                                           \
-                                                                              \
-  return FALLBACK;                                                            \
+bool TimeStamp::operator==(TimeStamp const& rhs) const
+{
+  return compare(
+    *this, rhs,
+    COMPARE_TIMES(
+      if (lhs != rhs)
+      {
+        return ComparisonResult::False;
+      }),
+    COMPARE_FRAMES(==),
+    true);
 }
 
-COMPARE(==,
-    if (this->get_time_usec() != rhs.get_time_usec())
-    {
-      return false;
-    }
-, true)
+// ----------------------------------------------------------------------------
+bool TimeStamp::operator>=(TimeStamp const& rhs) const
+{
+  return compare(
+    *this, rhs,
+    COMPARE_TIMES(
+      return (lhs >= rhs) ? ComparisonResult::True : ComparisonResult::False;),
+    COMPARE_FRAMES(>=),
+    true);
+}
 
-COMPARE(>=,
-    return this->get_time_usec() >= rhs.get_time_usec();
-, true)
+// ----------------------------------------------------------------------------
+bool TimeStamp::operator>(TimeStamp const& rhs) const
+{
+  return compare(
+    *this, rhs,
+    COMPARE_TIMES(
+      if (lhs > rhs)
+      {
+        return ComparisonResult::True;
+      }
+      if (lhs < rhs)
+      {
+        return ComparisonResult::False;
+      }),
+    COMPARE_FRAMES(>),
+    false);
+}
 
-COMPARE(<=,
-    return this->get_time_usec() <= rhs.get_time_usec();
-, true)
+// ----------------------------------------------------------------------------
+bool TimeStamp::operator<=(TimeStamp const& rhs) const
+{
+  return rhs >= *this;
+}
 
-COMPARE(>,
-    if (this->get_time_usec() > rhs.get_time_usec())
-    {
-      return true;
-    }
-    else if (this->get_time_usec() < rhs.get_time_usec())
-    {
-      return false;
-    }
-, false)
-
-COMPARE(<,
-    if (this->get_time_usec() < rhs.get_time_usec())
-    {
-      return true;
-    }
-    else if (this->get_time_usec() > rhs.get_time_usec())
-    {
-      return false;
-    }
-, false)
+// ----------------------------------------------------------------------------
+bool TimeStamp::operator<(TimeStamp const& rhs) const
+{
+  return rhs > *this;
+}
 
 // ----------------------------------------------------------------------------
 bool TimeStamp::operator!=(TimeStamp const& rhs) const
