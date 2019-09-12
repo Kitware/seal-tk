@@ -82,9 +82,13 @@ public:
   void addModelData(QAbstractItemModel* model, int firstRow, int rowAfterLast);
   void shiftModelRows(QAbstractItemModel* model, int firstRow, int rowOffset);
 
-  template <typename Fusor>
+  void emitDataChanged(
+    QAbstractItemModel* model, QVector<int> const& roles,
+    QModelIndex const& first, QModelIndex const& last);
 
+  template <typename Fusor>
   static QVariant fuseData(RowData const& rowData, int role);
+
   static bool setData(RowData const& rowData, QVariant const& value, int role);
 
   QSet<QAbstractItemModel*> models;
@@ -190,6 +194,11 @@ void FusionModel::addModel(QAbstractItemModel* model)
 
     connect(model, &QObject::destroyed, this,
             [model, this]{ this->removeModel(model); });
+    connect(model, &QAbstractItemModel::dataChanged, this,
+            [model, d](QModelIndex const& first, QModelIndex const& last,
+                       QVector<int> const& roles){
+              d->emitDataChanged(model, roles, first, last);
+            });
     connect(model, &QAbstractItemModel::rowsInserted,
             [model, this](QModelIndex const& parent, int first, int last){
               if (!parent.isValid())
@@ -236,7 +245,7 @@ void FusionModelPrivate::addModelData(
   {
     auto const& index = model->index(sourceRow, 0);
     auto const iid =
-      model->data(index, core::LogicalIdentityRole).toLongLong();
+      model->data(index, core::LogicalIdentityRole).value<qint64>();
 
     // Find our row for this item (if any)
     auto const localRow = this->items.value(iid, -1);
@@ -338,6 +347,41 @@ void FusionModelPrivate::removeModelData(QAbstractItemModel* model)
         this->items[i->id] = row;
       }
     }
+  }
+}
+
+// ----------------------------------------------------------------------------
+void FusionModelPrivate::emitDataChanged(
+  QAbstractItemModel* model, QVector<int> const& roles,
+  QModelIndex const& first, QModelIndex const& last)
+{
+  if (first.parent().isValid() || last.parent().isValid())
+  {
+    return;
+  }
+
+  auto const firstRow = first.row();
+  auto const lastRow = last.row();
+  auto modifiedRows = QSet<int>{};
+
+  for (auto sourceRow = firstRow; sourceRow <= lastRow; ++sourceRow)
+  {
+    auto const& index = model->index(sourceRow, 0);
+    auto const iid =
+      model->data(index, core::LogicalIdentityRole).value<qint64>();
+
+    // Find our row for this item (if any)
+    auto const localRow = this->items.value(iid, -1);
+    if (localRow >= 0)
+    {
+      modifiedRows.insert(localRow);
+    }
+  }
+
+  if (!modifiedRows.isEmpty())
+  {
+    QTE_Q();
+    q->emitDataChanged({}, modifiedRows.toList(), roles);
   }
 }
 
