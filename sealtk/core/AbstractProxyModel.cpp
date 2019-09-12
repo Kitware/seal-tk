@@ -16,6 +16,16 @@ namespace sealtk
 namespace core
 {
 
+namespace // anonymous
+{
+
+// ----------------------------------------------------------------------------
+bool localeAwareLessThan(QString const& left, QString const& right)
+{
+  return QString::localeAwareCompare(left, right) < 0;
+}
+
+} // namespace <anonymous>
 // ----------------------------------------------------------------------------
 bool AbstractProxyModel::isValidData(QVariant const& data, int role)
 {
@@ -58,8 +68,7 @@ bool AbstractProxyModel::lessThan(
     // String comparisons
     case core::NameRole:
     case core::UniqueIdentityRole:
-      return QString::localeAwareCompare(left.toString(),
-                                         right.toString());
+      return localeAwareLessThan(left.toString(), right.toString());
 
     // Boolean comparisons
     case core::VisibilityRole:

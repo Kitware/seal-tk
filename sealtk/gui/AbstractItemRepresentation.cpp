@@ -327,40 +327,6 @@ bool AbstractItemRepresentation::filterAcceptsColumn(
     sourceColumn, sourceParent);
 }
 
-// ----------------------------------------------------------------------------
-void AbstractItemRepresentation::sort(int column, Qt::SortOrder order)
-{
-  QTE_D();
-
-  this->AbstractProxyModel::sort(column, order);
-
-  // Determine, if we are sorting (column >= 0), if QSortFilterProxyModel
-  // figured out what column to sort; if not, we may need to force a sort later
-  d->sortNeeded =
-    column >= 0 && !this->mapToSource(this->index(0, column, {})).isValid();
-}
-
-// ----------------------------------------------------------------------------
-void AbstractItemRepresentation::updateSort()
-{
-  QTE_D();
-
-  // Our data has changed; if we previously failed to sort...
-  if (d->sortNeeded)
-  {
-    // ...then attempt to do so now (if dynamic sorting is enabled)
-    if (this->dynamicSortFilter())
-    {
-      // NOTE: Must clear dynamic sort filter first or sort() will decline to
-      //       actually do anything; this ends up sorting twice, but there
-      //       doesn't seem to be any way around that
-      this->setDynamicSortFilter(false);
-      this->sort(this->sortColumn(), this->sortOrder());
-      this->setDynamicSortFilter(true);
-    }
-  }
-}
-
 } // namespace gui
 
 } // namespace sealtk
