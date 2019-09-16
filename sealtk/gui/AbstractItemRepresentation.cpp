@@ -7,11 +7,14 @@
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DateUtils.hpp>
 
+#include <vital/range/indirect.h>
+
 #include <QHash>
 #include <QPalette>
 #include <QUuid>
 
 namespace kv = kwiver::vital;
+namespace kvr = kwiver::vital::range;
 
 namespace sealtk
 {
@@ -164,7 +167,31 @@ QVariant AbstractItemRepresentation::data(
           return QStringLiteral("%1 %2").arg(ds, ts);
         }
 
-        // TODO classification, confidence
+        case core::ClassificationTypeRole:
+        case core::ClassificationScoreRole:
+        {
+          static auto const tableTemplate =
+            QStringLiteral("<table>%1</table>");
+          static auto const rowTemplate =
+            QStringLiteral("<tr>"
+                           "<td>%1</td>"
+                           "<td>&nbsp;</td>"
+                           "<td style=\"align: right;\">%2</td>"
+                           "</tr>");
+
+          auto const& c = sm->data(sourceIndex, core::ClassificationRole);
+
+          auto rows = QString{};
+          for (auto const& i : c.toHash() | kvr::indirect)
+          {
+            auto const s = QString::number(i.value().toDouble());
+            rows += rowTemplate.arg(i.key(), s);
+          }
+
+          return tableTemplate.arg(rows);
+        }
+
+        // TODO confidence
 
         default:
           break;
@@ -181,6 +208,8 @@ QVariant AbstractItemRepresentation::data(
           break; // TODO
 
         case core::NameRole:
+        case core::ClassificationTypeRole:
+        case core::ClassificationScoreRole:
           return sm->data(sourceIndex, dataRole);
 
         case core::UniqueIdentityRole:
@@ -196,7 +225,7 @@ QVariant AbstractItemRepresentation::data(
             sm->data(sourceIndex, dataRole).value<kv::timestamp::time_t>());
         }
 
-        // TODO classification, confidence
+        // TODO confidence
 
         default:
           break;
@@ -208,8 +237,14 @@ QVariant AbstractItemRepresentation::data(
       break;
 
     case Qt::TextAlignmentRole:
-      // TODO
-      break;
+      switch (dataRole)
+      {
+        case core::ClassificationScoreRole:
+          return Qt::AlignRight;
+
+        default:
+          break;
+      }
 
     default:
       break;
@@ -232,13 +267,17 @@ QVariant AbstractItemRepresentation::headerData(
       case Qt::DisplayRole:
         switch (d->columnRoles[section])
         {
-          case core::ItemTypeRole:        return QStringLiteral("Type");
-          case core::NameRole:            return QStringLiteral("Name");
-          case core::LogicalIdentityRole: return QStringLiteral("ID");
-          case core::UniqueIdentityRole:  return QStringLiteral("UUID");
-          case core::StartTimeRole:       return QStringLiteral("Start Time");
-          case core::EndTimeRole:         return QStringLiteral("End Time");
+#define QSL QStringLiteral
+          case core::ItemTypeRole:            return QSL("Type");
+          case core::NameRole:                return QSL("Name");
+          case core::LogicalIdentityRole:     return QSL("ID");
+          case core::UniqueIdentityRole:      return QSL("UUID");
+          case core::StartTimeRole:           return QSL("Start Time");
+          case core::EndTimeRole:             return QSL("End Time");
+          case core::ClassificationTypeRole:  return QSL("Type");
+          case core::ClassificationScoreRole: return QSL("Score");
           default: return {};
+#undef QSL
         }
         Q_UNREACHABLE();
         break;
