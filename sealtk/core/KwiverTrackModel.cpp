@@ -10,6 +10,7 @@
 #include <vital/types/object_track_set.h>
 #include <vital/types/track.h>
 
+#include <vital/range/indirect.h>
 #include <vital/range/transform.h>
 #include <vital/range/valid.h>
 
@@ -48,6 +49,22 @@ struct Classifier
   QVariant type;  // nominally QString
   QVariant score; // nominally double
 };
+
+// ----------------------------------------------------------------------------
+kv::detected_object_type_sptr makeType(QVariantHash const& in)
+{
+  if (in.isEmpty())
+  {
+    return nullptr;
+  }
+
+  auto out = std::make_shared<kv::detected_object_type>();
+  for (auto const& c : in | kvr::indirect)
+  {
+    out->set_score(stdString(c.key()), c.value().toDouble());
+  }
+  return out;
+}
 
 // ----------------------------------------------------------------------------
 kv::track_sptr cleanTrack(kv::track_sptr const& in)
@@ -323,6 +340,22 @@ bool KwiverTrackModel::setData(
     auto& track = d->tracks[static_cast<uint>(index.row())];
     switch (role)
     {
+      case core::ClassificationRole:
+        if (value.canConvert<QVariantHash>())
+        {
+          auto const dot = makeType(value.toHash());
+          for (auto const& s : *track.track | kv::as_object_track)
+          {
+            if (s->detection)
+            {
+              s->detection->set_type(dot);
+            }
+          }
+
+          auto const& canonicalIndex = this->createIndex(index.row(), 0);
+          emit this->dataChanged(canonicalIndex, canonicalIndex, {role});
+        }
+
       case core::UserVisibilityRole:
         if (value.canConvert<bool>())
         {
