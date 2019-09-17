@@ -30,6 +30,27 @@ namespace sealtk
 namespace core
 {
 
+namespace // anonymous
+{
+
+// ----------------------------------------------------------------------------
+kv::detected_object_type_sptr makeType(QVariantHash const& in)
+{
+  if (in.isEmpty())
+  {
+    return nullptr;
+  }
+
+  auto out = std::make_shared<kv::detected_object_type>();
+  for (auto const& c : in | kvr::indirect)
+  {
+    out->set_score(stdString(c.key()), c.value().toDouble());
+  }
+  return out;
+}
+
+} // namespace <anonymous>
+
 // ============================================================================
 class KwiverDetectionsSinkPrivate
 {
@@ -152,10 +173,12 @@ void KwiverDetectionsSink::writeData(QUrl const& uri) const
       for (auto const& i : f.detections)
       {
         auto const& qbox = d->model->data(i, AreaLocationRole).toRectF();
+        auto const& type = d->model->data(i, ClassificationRole).toHash();
         auto kbox = kv::bounding_box_d{{qbox.left(), qbox.top()},
                                        qbox.width(), qbox.height()};
+        auto kdot = makeType(type);
 
-        ds->add(std::make_shared<kv::detected_object>(kbox));
+        ds->add(std::make_shared<kv::detected_object>(kbox, 1.0, kdot));
       }
 
       writer->write_set(ds, f.name);
