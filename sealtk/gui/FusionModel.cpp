@@ -35,8 +35,26 @@ struct RowData
   QMultiHash<QAbstractItemModel*, int> rows;
 };
 
-// ----------------------------------------------------------------------------
-struct MinTime
+// ============================================================================
+template <typename T>
+struct GenericFusor
+{
+  using data_t = T;
+
+  inline static data_t getData(
+    QAbstractItemModel* model, QModelIndex const& index, int role)
+  {
+    return model->data(index, role).value<data_t>();
+  }
+
+  inline static QVariant convertResult(data_t const& result)
+  {
+    return QVariant::fromValue(result);
+  }
+};
+
+// ============================================================================
+struct MinTime : GenericFusor<kv::timestamp::time_t>
 {
   using data_t = kv::timestamp::time_t;
 
@@ -46,25 +64,89 @@ struct MinTime
   }
 };
 
-// ----------------------------------------------------------------------------
-struct MaxTime
+// ============================================================================
+struct MaxTime : GenericFusor<kv::timestamp::time_t>
 {
-  using data_t = kv::timestamp::time_t;
-
   inline static data_t fuse(data_t a, data_t b)
   {
     return std::max(a, b);
   }
 };
 
-// ----------------------------------------------------------------------------
-struct BooleanOr
+// ============================================================================
+struct BooleanOr : GenericFusor<bool>
 {
-  using data_t = bool;
-
   inline static data_t fuse(data_t a, data_t b)
   {
     return a || b;
+  }
+};
+
+// ============================================================================
+struct BestClassification
+{
+  using data_t = QPair<QVariant, QVariant>;
+
+  inline static data_t getData(
+    QAbstractItemModel* model, QModelIndex const& index, int role)
+  {
+    Q_UNUSED(role);
+    return {model->data(index, core::ClassificationTypeRole),
+            model->data(index, core::ClassificationScoreRole)};
+  }
+
+  inline static data_t fuse(data_t const& a, data_t const& b)
+  {
+    if (!a.second.isValid())
+    {
+      return b;
+    }
+    if (!b.second.isValid())
+    {
+      return a;
+    }
+    return (a.second.toDouble() >= b.second.toDouble() ? a : b);
+  }
+};
+
+// ============================================================================
+struct BestClassificationType : BestClassification
+{
+  inline static QVariant convertResult(data_t const& result)
+  {
+    return result.first;
+  }
+};
+
+// ============================================================================
+struct BestClassificationScore : BestClassification
+{
+  inline static QVariant convertResult(data_t const& result)
+  {
+    return result.second;
+  }
+};
+
+// ============================================================================
+struct MergeClassifications : GenericFusor<QVariantHash>
+{
+  inline static data_t fuse(data_t const& a, data_t const& b)
+  {
+    auto out = a;
+    for (auto const& bi : b | kvr::indirect)
+    {
+      auto const& i = out.find(bi.key());
+      if (i == out.end())
+      {
+        out.insert(bi.key(), bi.value());
+      }
+      else if (i.value().toDouble() < bi.value().toDouble())
+      {
+        i.value() = bi.value();
+      }
+    }
+
+    return out;
   }
 };
 
@@ -147,6 +229,15 @@ QVariant FusionModel::data(QModelIndex const& index, int role) const
       case core::EndTimeRole:
         return d->fuseData<MaxTime>(r, role);
 
+      case core::ClassificationTypeRole:
+        return d->fuseData<BestClassificationType>(r, role);
+
+      case core::ClassificationScoreRole:
+        return d->fuseData<BestClassificationScore>(r, role);
+
+      case core::ClassificationRole:
+        return d->fuseData<MergeClassifications>(r, role);
+
       case core::UserVisibilityRole:
         return d->fuseData<BooleanOr>(r, role);
 
@@ -169,6 +260,7 @@ bool FusionModel::setData(
     auto const& r = d->data[index.row()];
     switch (role)
     {
+      case core::ClassificationRole:
       case core::UserVisibilityRole:
         return d->setData(r, value, role);
 
@@ -402,7 +494,7 @@ QVariant FusionModelPrivate::fuseData(RowData const& rowData, int role)
   {
     auto* const model = sourceRow.key();
     auto const& index = model->index(sourceRow.value(), 0);
-    auto const data = model->data(index, role).value<data_t>();
+    auto const data = Fusor::getData(model, index, role);
 
     if (first)
     {
@@ -415,7 +507,7 @@ QVariant FusionModelPrivate::fuseData(RowData const& rowData, int role)
     }
   }
 
-  return QVariant::fromValue(result);
+  return Fusor::convertResult(result);
 }
 
 // ----------------------------------------------------------------------------

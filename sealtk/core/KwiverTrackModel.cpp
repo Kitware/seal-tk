@@ -10,10 +10,12 @@
 #include <vital/types/object_track_set.h>
 #include <vital/types/track.h>
 
+#include <vital/range/indirect.h>
 #include <vital/range/transform.h>
 #include <vital/range/valid.h>
 
 #include <qtScopedValueChange.h>
+#include <qtStlUtil.h>
 
 #include <QRectF>
 
@@ -40,6 +42,29 @@ struct KwiverTrack
   core::UnsharedPointer<kv::track> track;
   bool visible = true;
 };
+
+// ============================================================================
+struct Classifier
+{
+  QVariant type;  // nominally QString
+  QVariant score; // nominally double
+};
+
+// ----------------------------------------------------------------------------
+kv::detected_object_type_sptr makeType(QVariantHash const& in)
+{
+  if (in.isEmpty())
+  {
+    return nullptr;
+  }
+
+  auto out = std::make_shared<kv::detected_object_type>();
+  for (auto const& c : in | kvr::indirect)
+  {
+    out->set_score(stdString(c.key()), c.value().toDouble());
+  }
+  return out;
+}
 
 // ----------------------------------------------------------------------------
 kv::track_sptr cleanTrack(kv::track_sptr const& in)
@@ -76,6 +101,49 @@ kv::track_sptr cleanTrack(kv::track_sptr const& in)
   }
 
   return out;
+}
+
+// ----------------------------------------------------------------------------
+Classifier bestClassifier(std::shared_ptr<kv::object_track_state> const& state)
+{
+  if (state->detection)
+  {
+    if (auto const& c = state->detection->type())
+    {
+      try
+      {
+        std::string type;
+        double confidence;
+
+        c->get_most_likely(type, confidence);
+        return {qtString(type), confidence};
+      }
+      catch (...)
+      {
+      }
+    }
+  }
+
+  return {};
+}
+
+// ----------------------------------------------------------------------------
+QVariant fullClassifier(std::shared_ptr<kv::object_track_state> const& state)
+{
+  if (state->detection)
+  {
+    if (auto const& c = state->detection->type())
+    {
+      QVariantHash classifier;
+      for (auto const& s : *c)
+      {
+        classifier.insert(qtString(*s.first), s.second);
+      }
+      return classifier;
+    }
+  }
+
+  return {};
 }
 
 } // namespace <anonymous>
@@ -185,6 +253,15 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
           }
           return {};
 
+        case ClassificationTypeRole:
+          return bestClassifier(state).type;
+
+        case ClassificationScoreRole:
+          return bestClassifier(state).score;
+
+        case ClassificationRole:
+          return fullClassifier(state);
+
         case core::UserVisibilityRole:
           return track.visible;
 
@@ -222,6 +299,24 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
           }
           return {};
 
+        case ClassificationTypeRole:
+        case ClassificationScoreRole:
+        case ClassificationRole:
+          if (!track.track->empty())
+          {
+            auto const& s =
+              std::static_pointer_cast<kv::object_track_state>(
+                track.track->back());
+            switch (role)
+            {
+              case ClassificationTypeRole:  return bestClassifier(s).type;
+              case ClassificationScoreRole: return bestClassifier(s).score;
+              case ClassificationRole:      return fullClassifier(s);
+              default: Q_UNREACHABLE();
+            }
+          }
+          return {};
+
         case core::UserVisibilityRole:
           return track.visible;
 
@@ -245,6 +340,22 @@ bool KwiverTrackModel::setData(
     auto& track = d->tracks[static_cast<uint>(index.row())];
     switch (role)
     {
+      case core::ClassificationRole:
+        if (value.canConvert<QVariantHash>())
+        {
+          auto const dot = makeType(value.toHash());
+          for (auto const& s : *track.track | kv::as_object_track)
+          {
+            if (s->detection)
+            {
+              s->detection->set_type(dot);
+            }
+          }
+
+          auto const& canonicalIndex = this->createIndex(index.row(), 0);
+          emit this->dataChanged(canonicalIndex, canonicalIndex, {role});
+        }
+
       case core::UserVisibilityRole:
         if (value.canConvert<bool>())
         {

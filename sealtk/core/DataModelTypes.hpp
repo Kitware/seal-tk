@@ -89,6 +89,33 @@ enum ItemDataRole
   /// children of higher-level items.)
   AreaLocationRole,
 
+  /// (QString) Best applicable classification type of the item.
+  ///
+  /// This provides the type of the best classification of the item which is
+  /// currently applicable. "Best" is defined as the applicable classification
+  /// with the highest score. Classification filters will affect which
+  /// classifications are considered "applicable".
+  ///
+  /// \sa ClassificationScoreRole, ClassificationRole
+  ClassificationTypeRole,
+
+  /// (double) Best applicable classification score of the item.
+  ///
+  /// This provides the score of the best classification of the item which is
+  /// currently applicable. "Best" is defined as the applicable classification
+  /// with the highest score. Classification filters will affect which
+  /// classifications are considered "applicable".
+  ///
+  /// \sa ClassificationTypeRole, ClassificationRole
+  ClassificationScoreRole,
+
+  /// (QVariantHash) Complete classification of the item.
+  ///
+  /// This provides or sets a map of \em all classifications that have been
+  /// applied to the item. The keys in the map are classification types; the
+  /// values are the corresponding scores, and are of \c double type.
+  ClassificationRole,
+
   /// First role that can be used for model-specific purposes.
   UserRole = Qt::UserRole + 224
 };
