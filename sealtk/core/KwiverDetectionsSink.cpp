@@ -5,6 +5,7 @@
 #include <sealtk/core/KwiverDetectionsSink.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
+#include <sealtk/core/TrackUtils.hpp>
 #include <sealtk/core/TimeMap.hpp>
 #include <sealtk/core/VideoMetaData.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -152,10 +153,12 @@ void KwiverDetectionsSink::writeData(QUrl const& uri) const
       for (auto const& i : f.detections)
       {
         auto const& qbox = d->model->data(i, AreaLocationRole).toRectF();
+        auto const& type = d->model->data(i, ClassificationRole).toHash();
         auto kbox = kv::bounding_box_d{{qbox.left(), qbox.top()},
                                        qbox.width(), qbox.height()};
+        auto kdot = classificationToDetectedObjectType(type);
 
-        ds->add(std::make_shared<kv::detected_object>(kbox));
+        ds->add(std::make_shared<kv::detected_object>(kbox, 1.0, kdot));
       }
 
       writer->write_set(ds, f.name);
