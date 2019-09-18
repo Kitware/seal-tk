@@ -99,18 +99,6 @@ void testTrackData(QAbstractItemModel const& model, kv::track_id_t id,
   QFAIL(qPrintable(failTemplate.arg(id)));
 }
 
-// ----------------------------------------------------------------------------
-void testTrackData(QAbstractItemModel const& model, int row,
-                   kv::track_id_t id, TimeMap<QRectF> const& boxes)
-{
-  auto const& index = model.index(row, 0);
-
-  QVERIFY(model.data(index, LogicalIdentityRole).canConvert<kv::track_id_t>());
-  QCOMPARE(model.data(index, LogicalIdentityRole).value<kv::track_id_t>(), id);
-
-  testTrackData(model, index, boxes);
-}
-
 } // namespace test
 
 } // namespace core

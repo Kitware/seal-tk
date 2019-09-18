@@ -117,11 +117,11 @@ void TestKwiverTrackModel::data()
       }));
   QCOMPARE(model.rowCount(), 5);
 
-  testTrackData(model, 0, 1, data::track1);
-  testTrackData(model, 1, 2, data::track2);
-  testTrackData(model, 2, 3, data::track3);
-  testTrackData(model, 3, 4, data::track4);
-  testTrackData(model, 4, 5, data::track5);
+  testTrackData(model, 1, data::track1);
+  testTrackData(model, 2, data::track2);
+  testTrackData(model, 3, data::track3);
+  testTrackData(model, 4, data::track4);
+  testTrackData(model, 5, data::track5);
 }
 
 } // namespace test
