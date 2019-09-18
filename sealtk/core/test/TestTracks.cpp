@@ -29,15 +29,29 @@ namespace test
 
 // ----------------------------------------------------------------------------
 void testTrackData(QAbstractItemModel const& model,
-                   QModelIndex const& index, QRectF const& box)
+                   QModelIndex const& index, TrackState const& state)
 {
   QVERIFY(model.data(index, AreaLocationRole).canConvert<QRectF>());
-  QCOMPARE(model.data(index, AreaLocationRole).value<QRectF>(), box);
+  QCOMPARE(model.data(index, AreaLocationRole).toRectF(),
+           state.location);
+
+  auto const modelHasClassification =
+    model.data(index, ClassificationRole).isValid();
+  if (!modelHasClassification)
+  {
+    QVERIFY(state.classification.isEmpty());
+  }
+  else
+  {
+    QVERIFY(model.data(index, ClassificationRole).canConvert<QVariantHash>());
+    QCOMPARE(model.data(index, ClassificationRole).toHash(),
+             state.classification);
+  }
 }
 
 // ----------------------------------------------------------------------------
 void testTrackData(QAbstractItemModel const& model, QModelIndex const& parent,
-                   time_us_t time, QRectF const& box)
+                   time_us_t time, TrackState const& state)
 {
   for (auto const row : kvr::iota(model.rowCount(parent)))
   {
@@ -49,7 +63,7 @@ void testTrackData(QAbstractItemModel const& model, QModelIndex const& parent,
       QVERIFY(model.data(index, EndTimeRole).canConvert<time_us_t>());
       QCOMPARE(model.data(index, EndTimeRole).value<time_us_t>(), time);
 
-      testTrackData(model, index, box);
+      testTrackData(model, index, state);
       return;
     }
   }
@@ -61,18 +75,18 @@ void testTrackData(QAbstractItemModel const& model, QModelIndex const& parent,
 
 // ----------------------------------------------------------------------------
 void testTrackData(QAbstractItemModel const& model, QModelIndex const& index,
-                   TimeMap<QRectF> const& boxes)
+                   TimeMap<TrackState> const& states)
 {
   QVERIFY(model.data(index, StartTimeRole).canConvert<time_us_t>());
   QCOMPARE(model.data(index, StartTimeRole).value<time_us_t>(),
-           boxes.firstKey());
+           states.firstKey());
 
   QVERIFY(model.data(index, EndTimeRole).canConvert<time_us_t>());
   QCOMPARE(model.data(index, EndTimeRole).value<time_us_t>(),
-           boxes.lastKey());
+           states.lastKey());
 
-  QCOMPARE(model.rowCount(index), boxes.count());
-  for (auto const& iter : boxes | kvr::indirect)
+  QCOMPARE(model.rowCount(index), states.count());
+  for (auto const& iter : states | kvr::indirect)
   {
     testTrackData(model, index, iter.key(), iter.value());
   }
@@ -80,7 +94,7 @@ void testTrackData(QAbstractItemModel const& model, QModelIndex const& index,
 
 // ----------------------------------------------------------------------------
 void testTrackData(QAbstractItemModel const& model, kv::track_id_t id,
-                   TimeMap<QRectF> const& boxes)
+                   TimeMap<TrackState> const& states)
 {
   for (auto const row : kvr::iota(model.rowCount()))
   {
@@ -89,7 +103,7 @@ void testTrackData(QAbstractItemModel const& model, kv::track_id_t id,
     QVERIFY(model.data(index, LogicalIdentityRole).canConvert<qint64>());
     if (model.data(index, LogicalIdentityRole).value<qint64>() == id)
     {
-      testTrackData(model, index, boxes);
+      testTrackData(model, index, states);
       return;
     }
   }

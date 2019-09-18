@@ -10,6 +10,7 @@
 #include <vital/types/track.h>
 
 #include <QRectF>
+#include <QVariantHash>
 
 class QAbstractItemModel;
 class QModelIndex;
@@ -23,43 +24,49 @@ namespace core
 namespace test
 {
 
+struct TrackState
+{
+  QRectF location;
+  QVariantHash classification;
+};
+
 void testTrackData(
   QAbstractItemModel const& model,
   kwiver::vital::track_id_t id,
-  TimeMap<QRectF> const& boxes);
+  TimeMap<TrackState> const& states);
 
 void testTrackData(
   QAbstractItemModel const& model,
   QModelIndex const& parent,
   kwiver::vital::timestamp::time_t time,
-  QRectF const& box);
+  TrackState const& state);
 
 namespace data
 {
 
-auto const track1 = TimeMap<QRectF>{
-  {100, {0, 0, 10, 10}},
+auto const track1 = TimeMap<TrackState>{
+  {100, {{0, 0, 10, 10}, {{"Dab", 0.2}}}},
 };
 
-auto const track2 = TimeMap<QRectF>{
-  {300, {420, 130, 30, 20}},
-  {400, {440, 160, 40, 50}},
+auto const track2 = TimeMap<TrackState>{
+  {300, {{420, 130, 30, 20}, {{"Eel", 0.3}, {"Gar", 0.4}}}},
+  {400, {{440, 160, 40, 50}, {{"Eel", 0.2}, {"Gar", 0.6}}}},
 };
 
-auto const track3 = TimeMap<QRectF>{
-  {700, {160, 190, 50, 70}},
+auto const track3 = TimeMap<TrackState>{
+  {700, {{160, 190, 50, 70}, {{"Cod", 0.7}}}},
 };
 
-auto const track4 = TimeMap<QRectF>{
-  {1800, {460, 410, 60, 30}},
-  {1900, {450, 380, 65, 35}},
-  {2000, {480, 370, 55, 35}},
-  {2200, {440, 390, 50, 30}},
+auto const track4 = TimeMap<TrackState>{
+  {1800, {{460, 410, 60, 30}, {}}},
+  {1900, {{450, 380, 65, 35}, {}}},
+  {2000, {{480, 370, 55, 35}, {}}},
+  {2200, {{440, 390, 50, 30}, {}}},
 };
 
-auto const track5 = TimeMap<QRectF>{
-  {1100, {120, 560, 50, 20}},
-  {1300, {140, 570, 40, 30}},
+auto const track5 = TimeMap<TrackState>{
+  {1100, {{120, 560, 50, 20}, {{"Koi", 0.2}, {"Sar", 0.3}}}},
+  {1300, {{140, 570, 40, 30}, {{"Koi", 0.9}, {"Sar", 0.1}}}},
 };
 
 } // namespace data

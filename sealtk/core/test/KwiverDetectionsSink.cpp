@@ -107,7 +107,7 @@ private:
 class TestModel : public core::AbstractItemModel
 {
 public:
-  TestModel(QVector<TimeMap<QRectF>> data) : rowData{data} {}
+  TestModel(QVector<TimeMap<TrackState>> data) : rowData{data} {}
 
   int rowCount(QModelIndex const& parent = {}) const override;
 
@@ -117,7 +117,7 @@ public:
                     QModelIndex const& parent) const override;
 
 private:
-  QVector<TimeMap<QRectF>> const rowData;
+  QVector<TimeMap<TrackState>> const rowData;
 };
 
 // ----------------------------------------------------------------------------
@@ -173,7 +173,7 @@ QVariant TestModel::data(QModelIndex const& index, int role) const
           return QVariant::fromValue(track.keys()[index.row()]);
 
         case AreaLocationRole:
-          return QVariant::fromValue(track.values()[index.row()]);
+          return track.values()[index.row()].location;
 
         default:
           break;

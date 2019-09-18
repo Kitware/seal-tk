@@ -9,13 +9,14 @@
 
 #include <sealtk/core/KwiverTrackSource.hpp>
 
+#include <vital/range/indirect.h>
+
 #include <QEventLoop>
 #include <QUrlQuery>
 
 #include <QtTest>
 
-// namespace kv = kwiver::vital;
-// namespace kvr = kwiver::vital::range;
+namespace kvr = kwiver::vital::range;
 
 using ModelPointer = std::shared_ptr<QAbstractItemModel>;
 
@@ -27,6 +28,26 @@ namespace core
 
 namespace test
 {
+
+namespace // anonymous
+{
+
+// ----------------------------------------------------------------------------
+TimeMap<TrackState> stripClassification(TimeMap<TrackState> const& in)
+{
+  auto out = TimeMap<TrackState>{};
+
+  for (auto const& i : in | kvr::indirect)
+  {
+    auto s = i.value();
+    s.classification.clear();
+    out.insert(i.key(), std::move(s));
+  }
+
+  return out;
+}
+
+} // namespace <anonymous>
 
 // ============================================================================
 class TestKwiverTrackSource : public QObject
@@ -75,11 +96,11 @@ void TestKwiverTrackSource::loadTracks()
   QVERIFY(model);
   QCOMPARE(model->rowCount(), 5);
 
-  testTrackData(*model, 1, data::track1);
-  testTrackData(*model, 2, data::track2);
-  testTrackData(*model, 3, data::track3);
-  testTrackData(*model, 4, data::track4);
-  testTrackData(*model, 5, data::track5);
+  testTrackData(*model, 1, stripClassification(data::track1));
+  testTrackData(*model, 2, stripClassification(data::track2));
+  testTrackData(*model, 3, stripClassification(data::track3));
+  testTrackData(*model, 4, stripClassification(data::track4));
+  testTrackData(*model, 5, stripClassification(data::track5));
 }
 
 } // namespace test
