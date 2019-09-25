@@ -107,7 +107,7 @@ private:
 class TestModel : public core::AbstractItemModel
 {
 public:
-  TestModel(QVector<TimeMap<QRectF>> data) : rowData{data} {}
+  TestModel(QVector<TimeMap<TrackState>> data) : rowData{data} {}
 
   int rowCount(QModelIndex const& parent = {}) const override;
 
@@ -117,7 +117,7 @@ public:
                     QModelIndex const& parent) const override;
 
 private:
-  QVector<TimeMap<QRectF>> const rowData;
+  QVector<TimeMap<TrackState>> const rowData;
 };
 
 // ----------------------------------------------------------------------------
@@ -173,7 +173,10 @@ QVariant TestModel::data(QModelIndex const& index, int role) const
           return QVariant::fromValue(track.keys()[index.row()]);
 
         case AreaLocationRole:
-          return QVariant::fromValue(track.values()[index.row()]);
+          return track.values()[index.row()].location;
+
+        case ClassificationRole:
+          return track.values()[index.row()].classification;
 
         default:
           break;
@@ -193,7 +196,15 @@ class TestKwiverDetectionsSink : public QObject
 
 private slots:
   void initTestCase();
-  void write();
+  void init();
+  void cleanup();
+
+  void kw18();
+  void csv();
+
+private:
+  std::unique_ptr<TestSource> source;
+  std::unique_ptr<TestModel> model;
 };
 
 // ----------------------------------------------------------------------------
@@ -203,11 +214,11 @@ void TestKwiverDetectionsSink::initTestCase()
 }
 
 // ----------------------------------------------------------------------------
-void TestKwiverDetectionsSink::write()
+void TestKwiverDetectionsSink::init()
 {
   using vmd = core::VideoMetaData;
 
-  TestSource source{{
+  this->source.reset(new TestSource{{
     {100, vmd{kv::timestamp{100, 1}, "frame0001.png"}},
     {300, vmd{kv::timestamp{300, 3}, "frame0003.png"}},
     {400, vmd{kv::timestamp{400, 4}, "frame0004.png"}},
@@ -218,16 +229,27 @@ void TestKwiverDetectionsSink::write()
     {1900, vmd{kv::timestamp{1900, 19}, "frame0019.png"}},
     {2000, vmd{kv::timestamp{2000, 20}, "frame0020.png"}},
     {2200, vmd{kv::timestamp{2200, 22}, "frame0022.png"}},
-  }};
+  }});
 
-  TestModel model{{
+  this->model.reset(new TestModel{{
     data::track1,
     data::track2,
     data::track3,
     data::track4,
     data::track5,
-  }};
+  }});
+}
 
+// ----------------------------------------------------------------------------
+void TestKwiverDetectionsSink::cleanup()
+{
+  this->source.reset();
+  this->model.reset();
+}
+
+// ----------------------------------------------------------------------------
+void TestKwiverDetectionsSink::kw18()
+{
   KwiverDetectionsSink sink;
 
   connect(&sink, &AbstractDataSink::failed,
@@ -235,7 +257,7 @@ void TestKwiverDetectionsSink::write()
             QFAIL(qPrintable(message));
           });
 
-  QVERIFY(sink.setData(&source, &model));
+  QVERIFY(sink.setData(this->source.get(), this->model.get()));
 
   QTemporaryFile out;
   QVERIFY(out.open());
@@ -250,6 +272,34 @@ void TestKwiverDetectionsSink::write()
 
   auto const& expected =
     SEALTK_TEST_DATA_PATH("KwiverDetectionsSink/expected.kw18");
+  compareFiles(out, expected, QRegularExpression{QStringLiteral("^#")});
+}
+
+// ----------------------------------------------------------------------------
+void TestKwiverDetectionsSink::csv()
+{
+  KwiverDetectionsSink sink;
+
+  connect(&sink, &AbstractDataSink::failed,
+          this, [](QString const& message){
+            QFAIL(qPrintable(message));
+          });
+
+  QVERIFY(sink.setData(this->source.get(), this->model.get()));
+
+  QTemporaryFile out;
+  QVERIFY(out.open());
+
+  auto uri = QUrl::fromLocalFile(out.fileName());
+  auto params = QUrlQuery{};
+
+  params.addQueryItem("output:type", "csv");
+  uri.setQuery(params);
+
+  sink.writeData(uri);
+
+  auto const& expected =
+    SEALTK_TEST_DATA_PATH("KwiverDetectionsSink/expected.csv");
   compareFiles(out, expected, QRegularExpression{QStringLiteral("^#")});
 }
 

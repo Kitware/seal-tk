@@ -75,7 +75,11 @@ class TrackRepresentation : public sg::AbstractItemRepresentation
 public:
   TrackRepresentation()
   {
-    this->setColumnRoles({sc::NameRole, sc::StartTimeRole});
+    this->setColumnRoles({
+      sc::NameRole,
+      sc::StartTimeRole,
+      sc::ClassificationTypeRole,
+      sc::ClassificationScoreRole});
     this->setItemVisibilityMode(sg::OmitHidden);
   }
 
