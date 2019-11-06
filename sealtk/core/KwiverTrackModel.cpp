@@ -89,9 +89,9 @@ kv::track_sptr cleanTrack(kv::track_sptr const& in)
 // ----------------------------------------------------------------------------
 Classifier bestClassifier(std::shared_ptr<kv::object_track_state> const& state)
 {
-  if (state->detection)
+  if (auto const& detection = state->detection())
   {
-    if (auto const& c = state->detection->type())
+    if (auto const& c = detection->type())
     {
       try
       {
@@ -113,9 +113,9 @@ Classifier bestClassifier(std::shared_ptr<kv::object_track_state> const& state)
 // ----------------------------------------------------------------------------
 QVariant fullClassifier(std::shared_ptr<kv::object_track_state> const& state)
 {
-  if (state->detection)
+  if (auto const& detection = state->detection())
   {
-    if (auto const& c = state->detection->type())
+    if (auto const& c = detection->type())
     {
       QVariantHash classifier;
       for (auto const& s : *c)
@@ -229,9 +229,9 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
           return QVariant::fromValue(state->time());
 
         case AreaLocationRole:
-          if (state->detection)
+          if (auto const& detection = state->detection())
           {
-            auto const& bb = state->detection->bounding_box();
+            auto const& bb = detection->bounding_box();
             return QRectF{bb.min_x(), bb.min_y(), bb.width(), bb.height()};
           }
           return {};
