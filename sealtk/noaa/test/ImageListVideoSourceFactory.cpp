@@ -100,9 +100,10 @@ void TestImageListVideoSourceFactory::loadVideoSource()
   connect(this->videoSourceFactory,
           &sealtk::core::FileVideoSourceFactory::fileRequested,
           [this](void* handle){
-            this->videoSourceFactory->loadFile(
-              handle,
-              SEALTK_TEST_DATA_PATH("ImageListVideoSourceFactory/list.txt"));
+            auto const& uri =
+              QUrl::fromLocalFile(
+                SEALTK_TEST_DATA_PATH("ImageListVideoSourceFactory/list.txt"));
+            this->videoSourceFactory->loadVideoSource(handle, uri);
           });
   connect(this->videoSourceFactory,
           &sealtk::core::VideoSourceFactory::videoSourceLoaded,
@@ -110,7 +111,7 @@ void TestImageListVideoSourceFactory::loadVideoSource()
             Q_UNUSED(handle);
             videoSource = vs;
           });
-  this->videoSourceFactory->loadVideoSource(nullptr);
+  this->videoSourceFactory->requestVideoSource(nullptr);
 
   auto requestor = std::make_shared<sealtk::core::test::TestVideoRequestor>();
 

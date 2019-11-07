@@ -438,7 +438,8 @@ void WindowPrivate::registerVideoSourceFactory(
 
         if (!filename.isNull())
         {
-          fileFactory->loadFile(handle, filename);
+          auto const& uri = QUrl::fromLocalFile(filename);
+          fileFactory->loadVideoSource(handle, uri);
         }
       });
   }

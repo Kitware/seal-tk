@@ -47,7 +47,7 @@ bool ImageListVideoSourceFactory::expectsDirectory() const
 
 // ----------------------------------------------------------------------------
 kwiver::vital::config_block_sptr ImageListVideoSourceFactory::config(
-  QString const& path) const
+  QUrl const& uri) const
 {
   auto config = kwiver::vital::config_block::empty_config();
   config->set_value("video_reader:type", "image_list");

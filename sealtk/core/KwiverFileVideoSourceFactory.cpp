@@ -38,14 +38,15 @@ KwiverFileVideoSourceFactory::~KwiverFileVideoSourceFactory()
 }
 
 // ----------------------------------------------------------------------------
-void KwiverFileVideoSourceFactory::loadFile(void* handle, QString const& path)
+void KwiverFileVideoSourceFactory::loadVideoSource(
+  void* handle, QUrl const& uri)
 {
   kwiver::vital::algo::video_input_sptr vi;
   kwiver::vital::algo::video_input::set_nested_algo_configuration(
-    "video_reader", this->config(path), vi);
+    "video_reader", this->config(uri), vi);
   if (vi)
   {
-    vi->open(stdString(path));
+    vi->open(stdString(uri.toLocalFile()));
 
     auto* vs = new KwiverVideoSource{vi, this->parent()};
     emit this->videoSourceLoaded(handle, vs);

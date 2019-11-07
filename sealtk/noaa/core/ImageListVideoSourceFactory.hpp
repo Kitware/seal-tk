@@ -46,7 +46,7 @@ public:
 protected:
   QTE_DECLARE_PRIVATE(ImageListVideoSourceFactory)
 
-  kwiver::vital::config_block_sptr config(QString const& path) const override;
+  kwiver::vital::config_block_sptr config(QUrl const& uri) const override;
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(ImageListVideoSourceFactory)
