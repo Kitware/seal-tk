@@ -16,6 +16,7 @@
 #include <sealtk/gui/AbstractItemRepresentation.hpp>
 #include <sealtk/gui/CreateDetectionPlayerTool.hpp>
 #include <sealtk/gui/FusionModel.hpp>
+#include <sealtk/gui/GlobInputDialog.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DirectoryListing.hpp>
@@ -436,10 +437,29 @@ void WindowPrivate::registerVideoSourceFactory(
            ? QFileDialog::getExistingDirectory(q)
            : QFileDialog::getOpenFileName(q));
 
-        if (!filename.isNull())
+        if (!filename.isEmpty())
         {
-          auto const& uri = QUrl::fromLocalFile(filename);
-          fileFactory->loadVideoSource(handle, uri);
+          if (fileFactory->expectsDirectory())
+          {
+            static auto const key =
+              QStringLiteral("FileVideoSource/NameFilter");
+
+            sg::GlobInputDialog gid{key, q};
+            if (gid.exec() == QDialog::Accepted)
+            {
+              auto uri = QUrl::fromLocalFile(filename);
+              auto params = QUrlQuery{};
+              params.addQueryItem("filter", gid.globString());
+              uri.setQuery(params);
+
+              fileFactory->loadVideoSource(handle, uri);
+            }
+          }
+          else
+          {
+            auto const& uri = QUrl::fromLocalFile(filename);
+            fileFactory->loadVideoSource(handle, uri);
+          }
         }
       });
   }
