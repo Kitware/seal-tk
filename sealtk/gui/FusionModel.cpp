@@ -260,6 +260,7 @@ bool FusionModel::setData(
     auto const& r = d->data[index.row()];
     switch (role)
     {
+      case core::ClassificationRole:
       case core::UserVisibilityRole:
         return d->setData(r, value, role);
 
