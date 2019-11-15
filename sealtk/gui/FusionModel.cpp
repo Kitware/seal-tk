@@ -150,6 +150,17 @@ struct MergeClassifications : GenericFusor<QVariantHash>
   }
 };
 
+// ============================================================================
+struct MergeStringLists : GenericFusor<QStringList>
+{
+  inline static data_t fuse(data_t const& a, data_t const& b)
+  {
+    auto out = a + b;
+    out.removeDuplicates();
+    return out;
+  }
+};
+
 } // namespace <anonymous>
 
 // ============================================================================
@@ -238,6 +249,9 @@ QVariant FusionModel::data(QModelIndex const& index, int role) const
       case core::ClassificationRole:
         return d->fuseData<MergeClassifications>(r, role);
 
+      case core::NotesRole:
+        return d->fuseData<MergeStringLists>(r, role);
+
       case core::UserVisibilityRole:
         return d->fuseData<BooleanOr>(r, role);
 
@@ -261,6 +275,7 @@ bool FusionModel::setData(
     switch (role)
     {
       case core::ClassificationRole:
+      case core::NotesRole:
       case core::UserVisibilityRole:
         return d->setData(r, value, role);
 

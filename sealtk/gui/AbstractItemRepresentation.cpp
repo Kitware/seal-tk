@@ -193,6 +193,22 @@ QVariant AbstractItemRepresentation::data(
 
         // TODO confidence
 
+        case core::NotesRole:
+        {
+          auto const& notes = sm->data(sourceIndex, dataRole).toStringList();
+          if (!notes.isEmpty())
+          {
+            auto out = QString{};
+            for (auto const& n : notes)
+            {
+              out += QStringLiteral("<p>%1</p>").arg(n);
+            }
+            return out;
+          }
+
+          return {};
+        }
+
         default:
           break;
       }
@@ -215,6 +231,16 @@ QVariant AbstractItemRepresentation::data(
         {
           auto const score = sm->data(sourceIndex, dataRole).toDouble();
           return QString::number(score, 'f', 5);
+        }
+
+        case core::NotesRole:
+        {
+          auto const& notes = sm->data(sourceIndex, dataRole).toStringList();
+          if (!notes.isEmpty())
+          {
+            return notes.join(QStringLiteral(u" \u241e "));
+          }
+          return {};
         }
 
         case core::UniqueIdentityRole:
@@ -281,6 +307,7 @@ QVariant AbstractItemRepresentation::headerData(
           case core::EndTimeRole:             return QSL("End Time");
           case core::ClassificationTypeRole:  return QSL("Type");
           case core::ClassificationScoreRole: return QSL("Score");
+          case core::NotesRole:               return QSL("Notes");
           default: return {};
 #undef QSL
         }

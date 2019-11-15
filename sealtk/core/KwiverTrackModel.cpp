@@ -131,6 +131,26 @@ QVariant fullClassifier(std::shared_ptr<kv::object_track_state> const& state)
   return {};
 }
 
+// ----------------------------------------------------------------------------
+QVariant notes(std::shared_ptr<kv::object_track_state> const& state)
+{
+  if (auto const& detection = state->detection())
+  {
+    auto const& in = detection->notes();
+    auto out = QStringList{};
+
+    out.reserve(static_cast<int>(in.size()));
+    for (auto const& n : in)
+    {
+      out.append(qtString(n));
+    }
+
+    return out;
+  }
+
+  return {};
+}
+
 } // namespace <anonymous>
 
 // ============================================================================
@@ -247,6 +267,9 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
         case ClassificationRole:
           return fullClassifier(state);
 
+        case NotesRole:
+          return notes(state);
+
         case core::UserVisibilityRole:
           return track.visible;
 
@@ -287,6 +310,7 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
         case ClassificationTypeRole:
         case ClassificationScoreRole:
         case ClassificationRole:
+        case NotesRole:
           if (!track.track->empty())
           {
             auto const& s =
@@ -297,6 +321,7 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
               case ClassificationTypeRole:  return bestClassifier(s).type;
               case ClassificationScoreRole: return bestClassifier(s).score;
               case ClassificationRole:      return fullClassifier(s);
+              case NotesRole:               return notes(s);
               default: Q_UNREACHABLE();
             }
           }
@@ -339,6 +364,25 @@ bool KwiverTrackModel::setData(
 
           auto const& canonicalIndex = this->createIndex(index.row(), 0);
           emit this->dataChanged(canonicalIndex, canonicalIndex, {role});
+        }
+
+      case core::NotesRole:
+        if (value.canConvert<QStringList>())
+        {
+          auto notes = value.toStringList();
+
+          for (auto const& s : *track.track | kv::as_object_track)
+          {
+            if (auto const& detection = s->detection())
+            {
+              detection->clear_notes();
+
+              for (auto const& n : notes)
+              {
+                detection->add_note(stdString(n));
+              }
+            }
+          }
         }
 
       case core::UserVisibilityRole:
