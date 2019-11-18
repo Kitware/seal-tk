@@ -240,7 +240,7 @@ QVariant AbstractItemRepresentation::data(
       switch (dataRole)
       {
         case core::ClassificationScoreRole:
-          return Qt::AlignRight;
+          return static_cast<int>(Qt::AlignRight | Qt::AlignVCenter);
 
         default:
           break;
