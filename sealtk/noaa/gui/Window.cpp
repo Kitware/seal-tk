@@ -6,6 +6,7 @@
 #include "ui_Window.h"
 
 #include <sealtk/noaa/gui/About.hpp>
+#include <sealtk/noaa/gui/NotesDelegate.hpp>
 #include <sealtk/noaa/gui/Player.hpp>
 #include <sealtk/noaa/gui/TrackTypeDelegate.hpp>
 
@@ -80,7 +81,9 @@ public:
       sc::NameRole,
       sc::StartTimeRole,
       sc::ClassificationTypeRole,
-      sc::ClassificationScoreRole});
+      sc::ClassificationScoreRole,
+      sc::NotesRole,
+    });
     this->setItemVisibilityMode(sg::OmitHidden);
   }
 
@@ -89,7 +92,7 @@ public:
     auto const defaultFlags =
       this->sg::AbstractItemRepresentation::flags(index);
 
-    if (index.column() == 2)
+    if (index.column() == 2 || index.column() == 4)
     {
       return defaultFlags | Qt::ItemIsEditable;
     }
@@ -148,6 +151,7 @@ public:
   sg::FusionModel trackModel;
   TrackRepresentation trackRepresentation;
   TrackTypeDelegate typeDelegate;
+  NotesDelegate notesDelegate;
 
   std::unique_ptr<sc::VideoController> videoController;
 
@@ -183,6 +187,7 @@ Window::Window(QWidget* parent)
   d->trackRepresentation.setSourceModel(&d->trackModel);
   d->ui.tracks->setModel(&d->trackRepresentation);
   d->ui.tracks->setItemDelegateForColumn(2, &d->typeDelegate);
+  d->ui.tracks->setItemDelegateForColumn(4, &d->notesDelegate);
 
   constexpr auto Master = sealtk::noaa::gui::Player::Role::Master;
   constexpr auto Slave = sealtk::noaa::gui::Player::Role::Slave;

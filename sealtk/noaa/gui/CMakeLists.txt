@@ -7,6 +7,7 @@ include(SEALTKUtils)
 sealtk_add_library(sealtk::noaa_gui
   SOURCES
     About.cpp
+    NotesDelegate.cpp
     Player.cpp
     Resources.cpp
     TrackTypeDelegate.cpp
@@ -15,6 +16,7 @@ sealtk_add_library(sealtk::noaa_gui
 
   HEADERS
     About.hpp
+    NotesDelegate.hpp
     Player.hpp
     Resources.hpp
     TrackTypeDelegate.hpp
