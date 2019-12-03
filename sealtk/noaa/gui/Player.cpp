@@ -40,6 +40,7 @@ class PlayerPrivate
 public:
   QList<QAction*> videoSourceActions;
   QAction* loadTransformAction = nullptr;
+  QAction* resetTransformAction = nullptr;
   QAction* loadDetectionsAction = nullptr;
   QAction* saveDetectionsAction = nullptr;
 
@@ -47,6 +48,7 @@ public:
   QSizeF imageSize;
 
   void loadTransform(Player* q);
+  void resetTransform(Player* q);
   void updateTransform(Player* q);
 };
 
@@ -63,6 +65,8 @@ Player::Player(Role role, QWidget* parent)
   if (role == Role::Slave)
   {
     d->loadTransformAction = new QAction{"Load &Transformation...", this};
+    d->resetTransformAction = new QAction{"&Reset Transformation...", this};
+    d->resetTransformAction->setEnabled(false);
 
     connect(d->loadTransformAction, &QAction::triggered,
             this, [this, d]{ d->loadTransform(this); });
@@ -130,6 +134,10 @@ void Player::contextMenuEvent(QContextMenuEvent* event)
   {
     menu->addAction(d->loadTransformAction);
   }
+  if (d->resetTransformAction)
+  {
+    menu->addAction(d->resetTransformAction);
+  }
   menu->addAction(d->loadDetectionsAction);
   menu->addAction(d->saveDetectionsAction);
 
@@ -177,6 +185,13 @@ void PlayerPrivate::loadTransform(Player* q)
 }
 
 // ----------------------------------------------------------------------------
+void PlayerPrivate::resetTransform(Player* q)
+{
+  this->transform.reset();
+  this->updateTransform(q);
+}
+
+// ----------------------------------------------------------------------------
 void PlayerPrivate::updateTransform(Player* q)
 {
   if (this->imageSize.isValid() && this->transform)
@@ -200,12 +215,20 @@ void PlayerPrivate::updateTransform(Player* q)
     if (QTransform::quadToQuad(in, out, xf))
     {
       q->setHomography(xf);
+      if (this->resetTransformAction)
+      {
+        this->resetTransformAction->setEnabled(true);
+      }
       return;
     }
   }
 
   // Did not successfully set homography; use identity
   q->setHomography({});
+  if (this->resetTransformAction)
+  {
+    this->resetTransformAction->setEnabled(false);
+  }
 }
 
 } // namespace gui
