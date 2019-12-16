@@ -209,8 +209,13 @@ QVariant AbstractItemRepresentation::data(
 
         case core::NameRole:
         case core::ClassificationTypeRole:
-        case core::ClassificationScoreRole:
           return sm->data(sourceIndex, dataRole);
+
+        case core::ClassificationScoreRole:
+        {
+          auto const score = sm->data(sourceIndex, dataRole).toDouble();
+          return QString::number(score, 'f', 5);
+        }
 
         case core::UniqueIdentityRole:
         {
