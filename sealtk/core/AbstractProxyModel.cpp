@@ -49,7 +49,8 @@ bool AbstractProxyModel::isValidData(QVariant const& data, int role)
 
     // Floating-point comparisons
     // TODO confidence
-    //   return data.canConvert<double>();
+    case core::ClassificationScoreRole:
+      return data.canConvert<double>();
 
     case core::StartTimeRole:
     case core::EndTimeRole:
@@ -83,7 +84,8 @@ bool AbstractProxyModel::lessThan(
 
     // Floating-point comparisons
     // TODO confidence
-    //   return left.toDouble() < right.toDouble();
+    case core::ClassificationScoreRole:
+      return left.toDouble() < right.toDouble();
 
     // Timestamp comparisons
     case core::StartTimeRole:
