@@ -99,6 +99,13 @@ void KwiverTrackSourcePrivate::run()
     kva::read_object_track_set_sptr input;
     kva::read_object_track_set::set_nested_algo_configuration(
       "input", config, input);
+
+    if (!input)
+    {
+      emit q->failed(QStringLiteral("Failed to initialize reader"));
+      return;
+    }
+
     input->open(stdString(this->tracksUri.toLocalFile()));
 
     // Read tracks
