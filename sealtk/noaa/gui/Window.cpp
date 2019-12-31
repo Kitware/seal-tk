@@ -190,6 +190,9 @@ Window::Window(QWidget* parent)
   connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
           d->irWindow.player, &sg::Player::setHomographyImageSize);
 
+  connect(d->ui.actionShowIrPane, &QAction::toggled,
+          d->irWindow.window, &QWidget::setVisible);
+
   d->videoController = make_unique<sc::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
@@ -254,6 +257,7 @@ Window::Window(QWidget* parent)
   d->uiState.mapGeometry("Window/geometry", this);
   d->uiState.mapState("Window/splitter", d->ui.centralwidget);
   d->uiState.mapState("Tracks/state", d->ui.tracks->header());
+  d->uiState.mapChecked("View/showIR", d->ui.actionShowIrPane);
 
   d->uiState.restore();
 }
