@@ -5,11 +5,13 @@
 #include <sealtk/core/KwiverTrackModel.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
+#include <sealtk/core/TrackUtils.hpp>
 #include <sealtk/core/UnsharedPointer.hpp>
 
 #include <vital/types/object_track_set.h>
 #include <vital/types/track.h>
 
+#include <vital/range/indirect.h>
 #include <vital/range/transform.h>
 #include <vital/range/valid.h>
 
@@ -323,6 +325,22 @@ bool KwiverTrackModel::setData(
     auto& track = d->tracks[static_cast<uint>(index.row())];
     switch (role)
     {
+      case core::ClassificationRole:
+        if (value.canConvert<QVariantHash>())
+        {
+          auto const dot = classificationToDetectedObjectType(value.toHash());
+          for (auto const& s : *track.track | kv::as_object_track)
+          {
+            if (auto const& detection = s->detection())
+            {
+              detection->set_type(dot);
+            }
+          }
+
+          auto const& canonicalIndex = this->createIndex(index.row(), 0);
+          emit this->dataChanged(canonicalIndex, canonicalIndex, {role});
+        }
+
       case core::UserVisibilityRole:
         if (value.canConvert<bool>())
         {

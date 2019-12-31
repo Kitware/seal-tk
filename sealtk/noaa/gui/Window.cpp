@@ -7,6 +7,7 @@
 
 #include <sealtk/noaa/gui/About.hpp>
 #include <sealtk/noaa/gui/Player.hpp>
+#include <sealtk/noaa/gui/TrackTypeDelegate.hpp>
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 #include <sealtk/noaa/core/NoaaPipelineWorker.hpp>
@@ -83,6 +84,19 @@ public:
     this->setItemVisibilityMode(sg::OmitHidden);
   }
 
+  Qt::ItemFlags flags(QModelIndex const& index) const override
+  {
+    auto const defaultFlags =
+      this->sg::AbstractItemRepresentation::flags(index);
+
+    if (index.column() == 2)
+    {
+      return defaultFlags | Qt::ItemIsEditable;
+    }
+
+    return defaultFlags;
+  }
+
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override
   {
@@ -133,6 +147,7 @@ public:
 
   sg::FusionModel trackModel;
   TrackRepresentation trackRepresentation;
+  TrackTypeDelegate typeDelegate;
 
   std::unique_ptr<sc::VideoController> videoController;
 
@@ -160,6 +175,7 @@ Window::Window(QWidget* parent)
 
   d->trackRepresentation.setSourceModel(&d->trackModel);
   d->ui.tracks->setModel(&d->trackRepresentation);
+  d->ui.tracks->setItemDelegateForColumn(2, &d->typeDelegate);
 
   constexpr auto Master = sealtk::noaa::gui::Player::Role::Master;
   constexpr auto Slave = sealtk::noaa::gui::Player::Role::Slave;
