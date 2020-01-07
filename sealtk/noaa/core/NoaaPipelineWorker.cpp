@@ -23,6 +23,9 @@ namespace kvr = kwiver::vital::range;
 using ts_time_t = kv::timestamp::time_t;
 
 #define DETECTIONS_PORT "detected_object_set"
+#define TRACKS_PORT "object_track_set"
+
+#define RE_ANY_OUTPUT_PORT "(" DETECTIONS_PORT "|" TRACKS_PORT ")"
 
 using sealtk::core::KwiverTrackModel;
 
@@ -65,6 +68,7 @@ public:
 
 private:
   std::string detectionsPort;
+  std::string tracksPort;
 
   kv::track_id_t nextTrack = 0;
 };
@@ -77,6 +81,7 @@ PortSet::PortSet(kwiver::embedded_pipeline& pipeline, int index)
     pipeline, index, PortType::Output,
     {
       {this->detectionsPort, this->portName(DETECTIONS_PORT, index)},
+      {this->tracksPort, this->portName(TRACKS_PORT, index)},
     });
 }
 
@@ -132,6 +137,26 @@ void PortSet::extractOutput(ka::adapter_data_set_t const& dataSet)
         }
       }
     }
+
+    if (auto* const tracksDatum = qtGet(*dataSet, this->tracksPort))
+    {
+      auto&& trackSet =
+        tracksDatum->second->get_datum<kv::object_track_set_sptr>();
+
+      if (trackSet && !trackSet->empty())
+      {
+        auto&& mwp = weakRef(model);
+
+        QMetaObject::invokeMethod(
+          model.get(),
+          [trackSet = std::move(trackSet), mwp = std::move(mwp)]{
+            if (auto const& model = mwp.lock())
+            {
+              model->mergeTracks(trackSet);
+            }
+          });
+      }
+    }
   }
 }
 
@@ -141,6 +166,7 @@ void PortSet::extractOutput(ka::adapter_data_set_t const& dataSet)
 class NoaaPipelineWorkerPrivate
 {
 public:
+  QSet<int> outputSets;
   std::vector<PortSet> outputs;
 };
 
@@ -171,17 +197,21 @@ void NoaaPipelineWorker::initializeInput(kwiver::embedded_pipeline& pipeline)
 
   // Find output ports
   auto portNameTemplate =
-    QRegularExpression{QStringLiteral(DETECTIONS_PORT "([0-9]+)?")};
+    QRegularExpression{QStringLiteral(RE_ANY_OUTPUT_PORT "([0-9]+)?")};
 
   for (auto const& p : PortSet::portNames(pipeline))
   {
     auto const& m = portNameTemplate.match(qtString(p));
     if (m.hasMatch())
     {
-      auto const& n = m.captured(1);
+      auto const& n = m.captured(2);
       auto const i = (n.isEmpty() ? 0 : n.toInt() - 1);
 
-      d->outputs.emplace_back(pipeline, i);
+      if (!d->outputSets.contains(i))
+      {
+        d->outputs.emplace_back(pipeline, i);
+        d->outputSets.insert(i);
+      }
     }
   }
 

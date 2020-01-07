@@ -15,6 +15,7 @@
 #include <vital/range/transform.h>
 #include <vital/range/valid.h>
 
+#include <qtGet.h>
 #include <qtScopedValueChange.h>
 #include <qtStlUtil.h>
 
@@ -82,7 +83,7 @@ kv::track_sptr cleanTrack(kv::track_sptr const& in)
 
   for (auto const& s : *in | kv::as_object_track | kvr::valid)
   {
-    out->append(s->clone());
+    out->append(s->clone(kv::clone_type::SHALLOW));
   }
 
   return out;
@@ -137,6 +138,7 @@ QVariant fullClassifier(std::shared_ptr<kv::object_track_state> const& state)
 class KwiverTrackModelData : public QSharedData
 {
 public:
+  QHash<kv::track_id_t, size_t> trackMap;
   std::vector<KwiverTrack> tracks;
 };
 
@@ -374,22 +376,7 @@ void KwiverTrackModel::addTracks(
     }
   }
 
-  if (!newTracks.isEmpty())
-  {
-    QTE_D_DETACH();
-
-    auto const oldRows = this->rowCount({});
-    auto const newRows = newTracks.size();
-
-    this->beginInsertRows({}, oldRows, oldRows + newRows - 1);
-
-    for (auto& track : newTracks)
-    {
-      d->tracks.emplace_back(std::move(track));
-    }
-
-    this->endInsertRows();
-  }
+  this->addTracks(std::move(newTracks));
 }
 
 // ----------------------------------------------------------------------------
@@ -405,6 +392,94 @@ void KwiverTrackModel::setTracks(
   }
 
   this->endResetModel();
+}
+
+// ----------------------------------------------------------------------------
+void KwiverTrackModel::mergeTracks(
+  kv::object_track_set_sptr const& trackSet)
+{
+  QTE_D_SHARED();
+
+  QVector<kv::track_sptr> newTracks;
+
+  if (trackSet)
+  {
+    auto const& tracks = trackSet->tracks();
+    for (auto&& track : tracks | kvr::transform(cleanTrack) | kvr::valid)
+    {
+      auto const id = track->id();
+
+      auto* const row = qtGet(d->trackMap, id);
+      if (row)
+      {
+        this->mergeTracks(*row, *track);
+      }
+      else
+      {
+        newTracks.append(std::move(track));
+      }
+    }
+  }
+
+  this->addTracks(std::move(newTracks));
+}
+
+// ----------------------------------------------------------------------------
+void KwiverTrackModel::addTracks(QVector<kv::track_sptr>&& tracks)
+{
+  if (!tracks.isEmpty())
+  {
+    QTE_D_DETACH();
+
+    auto const oldRows = this->rowCount({});
+    auto const newRows = tracks.size();
+
+    this->beginInsertRows({}, oldRows, oldRows + newRows - 1);
+
+    for (auto&& track : tracks)
+    {
+      d->trackMap.insert(track->id(), d->tracks.size());
+      d->tracks.emplace_back(std::move(track));
+    }
+
+    this->endInsertRows();
+  }
+}
+
+// ----------------------------------------------------------------------------
+void KwiverTrackModel::mergeTracks(
+  size_t existingTrackIndex, kv::track const& track)
+{
+  QTE_D_DETACH();
+
+  auto const& parent = this->index(static_cast<int>(existingTrackIndex), 0);
+  auto& existingTrack = *(d->tracks[existingTrackIndex].track);
+
+  // TODO properly merge; right now this just appends states
+  auto iter = track.begin();
+  auto end = track.end();
+
+  auto const lastFrame = existingTrack.back()->frame();
+  while (iter != end && (*iter)->frame() <= lastFrame)
+  {
+    ++iter;
+  }
+
+  if (iter != end)
+  {
+    auto const k = static_cast<int>(existingTrack.size());
+    this->beginInsertRows(parent, k, k + static_cast<int>(end - iter) - 1);
+
+    while (iter != end)
+    {
+      existingTrack.append((*iter)->clone(kv::clone_type::SHALLOW));
+      ++iter;
+    }
+
+    this->endInsertRows();
+
+    emit this->dataChanged(parent, parent);
+  }
 }
 
 // ----------------------------------------------------------------------------
