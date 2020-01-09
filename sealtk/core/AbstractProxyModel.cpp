@@ -8,6 +8,8 @@
 
 #include <vital/types/timestamp.h>
 
+#include <QUuid>
+
 namespace kv = kwiver::vital;
 
 namespace sealtk
@@ -32,10 +34,20 @@ bool AbstractProxyModel::isValidData(QVariant const& data, int role)
 {
   switch (role)
   {
-    // String comparisons
-    case core::NameRole:
     case core::UniqueIdentityRole:
-      return data.canConvert<QString>();
+      return data.canConvert<QUuid>();
+
+    case core::NameRole:
+      switch (data.type())
+      {
+      case QVariant::Int:
+      case QVariant::UInt:
+      case QVariant::LongLong:
+      case QVariant::ULongLong:
+        return true;
+      default:
+        return data.canConvert<QString>();
+      }
 
     // Boolean comparisons
     case core::VisibilityRole:
@@ -67,10 +79,21 @@ bool AbstractProxyModel::lessThan(
 {
   switch (role)
   {
-    // String comparisons
-    case core::NameRole:
     case core::UniqueIdentityRole:
-      return localeAwareLessThan(left.toString(), right.toString());
+      return left.toUuid() < right.toUuid();
+
+    case core::NameRole:
+      switch (left.type())
+      {
+        case QVariant::Int:
+        case QVariant::LongLong:
+          return left.toLongLong() < right.toLongLong();
+        case QVariant::UInt:
+        case QVariant::ULongLong:
+          return left.toULongLong() < right.toULongLong();
+        default:
+          return localeAwareLessThan(left.toString(), right.toString());
+      }
 
     // Boolean comparisons
     case core::VisibilityRole:
