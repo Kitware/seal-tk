@@ -66,6 +66,7 @@
      <string>&amp;View</string>
     </property>
     <addaction name="actionShowIrPane"/>
+    <addaction name="actionShowUvPane"/>
    </widget>
    <addaction name="menuTools"/>
    <addaction name="menuView"/>
@@ -127,6 +128,17 @@
    </property>
    <property name="text">
     <string>&amp;IR Pane</string>
+   </property>
+  </action>
+  <action name="actionShowUvPane">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;UV Pane</string>
    </property>
   </action>
  </widget>

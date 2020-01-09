@@ -153,6 +153,13 @@ public:
 
   WindowData eoWindow;
   WindowData irWindow;
+  WindowData uvWindow;
+
+  WindowData* const allWindows[3] = {
+    &this->eoWindow,
+    &this->irWindow,
+    &this->uvWindow,
+  };
 
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
@@ -182,16 +189,25 @@ Window::Window(QWidget* parent)
 
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
+  d->createWindow(&d->uvWindow, QStringLiteral("UV Imagery"), Slave);
 
   d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
   d->irWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->irWindow.player->setPercentiles(0.0, 1.0);
 
+  d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
+  d->uvWindow.player->setContrastMode(sg::ContrastMode::Percentile);
+  d->uvWindow.player->setPercentiles(0.0, 1.0);
+
   connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
           d->irWindow.player, &sg::Player::setHomographyImageSize);
+  connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
+          d->uvWindow.player, &sg::Player::setHomographyImageSize);
 
   connect(d->ui.actionShowIrPane, &QAction::toggled,
           d->irWindow.window, &QWidget::setVisible);
+  connect(d->ui.actionShowUvPane, &QAction::toggled,
+          d->uvWindow.window, &QWidget::setVisible);
 
   d->videoController = make_unique<sc::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
@@ -258,6 +274,7 @@ Window::Window(QWidget* parent)
   d->uiState.mapState("Window/splitter", d->ui.centralwidget);
   d->uiState.mapState("Tracks/state", d->ui.tracks->header());
   d->uiState.mapChecked("View/showIR", d->ui.actionShowIrPane);
+  d->uiState.mapChecked("View/showUV", d->ui.actionShowUvPane);
 
   d->uiState.restore();
 }
@@ -353,10 +370,10 @@ void WindowPrivate::registerVideoSourceFactory(
 {
   QTE_Q();
 
-  this->eoWindow.player->registerVideoSourceFactory(
-    name, factory, &this->eoWindow);
-  this->irWindow.player->registerVideoSourceFactory(
-    name, factory, &this->irWindow);
+  for (auto* const w : this->allWindows)
+  {
+    w->player->registerVideoSourceFactory(name, factory, w);
+  }
 
   QObject::connect(
     factory, &sc::VideoSourceFactory::videoSourceLoaded,
@@ -522,7 +539,17 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
 {
   QTE_Q();
 
-  if (!this->eoWindow.videoSource && !this->irWindow.videoSource)
+  auto const haveVideoSource = [&]{
+    for (auto* const w : this->allWindows)
+    {
+      if (w->videoSource)
+      {
+        return true;
+      }
+    }
+    return false;
+  }();
+  if (!haveVideoSource)
   {
     // This should never happen
     qDebug() << "Eek! No video sources loaded?!";
@@ -536,8 +563,10 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
 
   core::NoaaPipelineWorker worker{q};
 
-  worker.addVideoSource(this->eoWindow.videoSource);
-  worker.addVideoSource(this->irWindow.videoSource);
+  for (auto* const w : this->allWindows)
+  {
+    worker.addVideoSource(w->videoSource);
+  }
 
   QObject::connect(
     &worker, &sc::KwiverPipelineWorker::progressRangeChanged,
@@ -566,6 +595,7 @@ WindowData* WindowPrivate::dataForView(int viewIndex)
   {
     case 0: return &this->eoWindow;
     case 1: return &this->irWindow;
+    case 2: return &this->uvWindow;
     default: return nullptr;
   }
 }
@@ -599,8 +629,10 @@ void WindowPrivate::updateTrackSelection(QItemSelection const& selection)
     selectedTracks.insert(data.value<qint64>());
   }
 
-  this->eoWindow.player->setSelectedTrackIds(selectedTracks);
-  this->irWindow.player->setSelectedTrackIds(selectedTracks);
+  for (auto* const w : this->allWindows)
+  {
+    w->player->setSelectedTrackIds(selectedTracks);
+  }
 }
 
 } // namespace gui
