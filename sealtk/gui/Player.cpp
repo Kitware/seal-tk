@@ -13,6 +13,8 @@
 
 #include <vital/range/iota.h>
 
+#include <qtGet.h>
+
 #include <QApplication>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
@@ -77,6 +79,13 @@ struct CenterRequest
 };
 
 // ============================================================================
+struct ShadowData
+{
+  kv::transform_2d_sptr transform;
+  std::unique_ptr<core::ScalarFilterModel> trackModelFilter;
+};
+
+// ============================================================================
 class PlayerPrivate
 {
 public:
@@ -88,12 +97,16 @@ public:
   void updateDetectedObjectVertexBuffers();
   void updateDetections();
 
+  void connectDetectionSource(QAbstractItemModel* source);
+
   void drawImage(float levelShift, float levelScale,
                  QOpenGLFunctions* functions);
   void drawDetections(QOpenGLFunctions* functions);
 
   LevelsPair levels();
   void computeLevels(LevelsPair const& temporaryLevels);
+
+  ShadowData& getShadowData(QObject* source);
 
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
@@ -145,6 +158,8 @@ public:
   core::VideoDistributor* videoSource = nullptr;
   core::ScalarFilterModel trackModelFilter;
   QSet<qint64> selectedTracks;
+
+  std::unordered_map<QObject*, ShadowData> shadowData;
 };
 
 // ----------------------------------------------------------------------------
@@ -156,17 +171,7 @@ Player::Player(QWidget* parent)
     d_ptr{new PlayerPrivate{this}}
 {
   QTE_D();
-
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsInserted,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsRemoved,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsMoved,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::dataChanged,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::modelReset,
-          this, [d]{ d->updateDetections(); });
+  d->connectDetectionSource(&d->trackModelFilter);
 }
 
 // ----------------------------------------------------------------------------
@@ -214,6 +219,14 @@ void Player::setImage(kv::image_container_sptr const& image,
   auto const t = QVariant::fromValue(d->timeStamp.get_time_usec());
   d->trackModelFilter.setUpperBound(core::StartTimeRole, t);
   d->trackModelFilter.setLowerBound(core::EndTimeRole, t);
+  for (auto const& s : d->shadowData)
+  {
+    if (auto* const smf = s.second.trackModelFilter.get())
+    {
+      smf->setUpperBound(core::StartTimeRole, t);
+      smf->setLowerBound(core::EndTimeRole, t);
+    }
+  }
 
   this->makeCurrent();
   d->createTexture();
@@ -247,8 +260,14 @@ void Player::setTrackModel(QAbstractItemModel* model)
 {
   QTE_D();
 
+  if (auto* const oldModel = d->trackModelFilter.sourceModel())
+  {
+    disconnect(oldModel, &QObject::destroyed, this, nullptr);
+  }
+
   connect(model, &QObject::destroyed, this,
           [d]{ d->trackModelFilter.setSourceModel(nullptr); });
+
   d->trackModelFilter.setSourceModel(model);
 
   d->updateDetections();
@@ -664,6 +683,51 @@ void Player::wheelEvent(QWheelEvent* event)
 }
 
 // ----------------------------------------------------------------------------
+void Player::setShadowTrackModel(QObject* source, QAbstractItemModel* model)
+{
+  QTE_D();
+
+  auto& data = d->getShadowData(source);
+  if (!data.trackModelFilter)
+  {
+    data.trackModelFilter.reset(new core::ScalarFilterModel);
+    d->connectDetectionSource(data.trackModelFilter.get());
+
+    if (d->timeStamp.has_valid_time())
+    {
+      auto const t = QVariant::fromValue(d->timeStamp.get_time_usec());
+      data.trackModelFilter->setUpperBound(core::StartTimeRole, t);
+      data.trackModelFilter->setLowerBound(core::EndTimeRole, t);
+    }
+  }
+
+  auto* const modelFilter = data.trackModelFilter.get();
+  if (auto* const oldModel = modelFilter->sourceModel())
+  {
+    disconnect(oldModel, &QObject::destroyed, modelFilter, nullptr);
+  }
+
+  connect(model, &QObject::destroyed, modelFilter,
+          [modelFilter]{ modelFilter->setSourceModel(nullptr); });
+
+  modelFilter->setSourceModel(model);
+
+  d->updateDetections();
+}
+
+// ----------------------------------------------------------------------------
+void Player::setShadowTransform(
+  QObject* source, kwiver::vital::transform_2d_sptr const& transform)
+{
+  QTE_D();
+
+  auto& data = d->getShadowData(source);
+  data.transform = transform;
+
+  d->updateDetections();
+}
+
+// ----------------------------------------------------------------------------
 PlayerPrivate::PlayerPrivate(Player* parent)
   : q_ptr{parent}
 {
@@ -962,6 +1026,20 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
 }
 
 // ----------------------------------------------------------------------------
+void PlayerPrivate::connectDetectionSource(QAbstractItemModel* source)
+{
+  QTE_Q();
+
+  auto slot = [this]{ this->updateDetections(); };
+
+  QObject::connect(source, &QAbstractItemModel::rowsInserted, q, slot);
+  QObject::connect(source, &QAbstractItemModel::rowsRemoved,  q, slot);
+  QObject::connect(source, &QAbstractItemModel::rowsMoved,    q, slot);
+  QObject::connect(source, &QAbstractItemModel::dataChanged,  q, slot);
+  QObject::connect(source, &QAbstractItemModel::modelReset,   q, slot);
+}
+
+// ----------------------------------------------------------------------------
 void PlayerPrivate::updateDetections()
 {
   QTE_Q();
@@ -971,6 +1049,23 @@ void PlayerPrivate::updateDetections()
   q->doneCurrent();
 
   q->update();
+}
+
+// ----------------------------------------------------------------------------
+ShadowData& PlayerPrivate::getShadowData(QObject* source)
+{
+  if (auto* const pdata = qtGet(this->shadowData, source))
+  {
+    return pdata->second;
+  }
+
+  QTE_Q();
+
+  QObject::connect(
+    source, &QObject::destroyed, q,
+    [source, this]{ this->shadowData.erase(source); });
+
+  return this->shadowData[source];
 }
 
 } // namespace gui

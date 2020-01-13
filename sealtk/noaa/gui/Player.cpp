@@ -166,6 +166,8 @@ void PlayerPrivate::loadTransform(Player* q)
       {
         this->transform = ti->load(stdString(path));
         this->updateTransform(q);
+
+        emit q->transformChanged(this->transform);
       }
       else
       {
@@ -191,6 +193,8 @@ void PlayerPrivate::resetTransform(Player* q)
 {
   this->transform.reset();
   this->updateTransform(q);
+
+  emit q->transformChanged(nullptr);
 }
 
 // ----------------------------------------------------------------------------
