@@ -340,6 +340,7 @@ bool KwiverTrackModel::setData(
           auto const& canonicalIndex = this->createIndex(index.row(), 0);
           emit this->dataChanged(canonicalIndex, canonicalIndex, {role});
         }
+        break;
 
       case core::UserVisibilityRole:
         if (value.canConvert<bool>())
@@ -350,6 +351,7 @@ bool KwiverTrackModel::setData(
           emit this->dataChanged(canonicalIndex, canonicalIndex,
                                  {role, core::VisibilityRole});
         }
+        break;
 
       default:
         break;

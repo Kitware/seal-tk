@@ -6,6 +6,8 @@
 
 #include <sealtk/core/DataModelTypes.hpp>
 
+#include <algorithm>
+
 namespace sealtk
 {
 
@@ -70,7 +72,7 @@ QVariant AbstractItemModel::data(QModelIndex const& index, int role) const
 void AbstractItemModel::emitDataChanged(
   QModelIndex const& parent, QList<int>&& rows, QVector<int> const& roles)
 {
-  qSort(rows.begin(), rows.end());
+  std::sort(rows.begin(), rows.end());
 
   auto first = rows.takeFirst();
   auto last = first;
