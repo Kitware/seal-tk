@@ -38,7 +38,7 @@ About::About(QWidget* parent)
     QStringLiteral(
       u"SEAL-TK " SEALTK_VERSION "\n\n"
       u"SEAL-TK, the Stereoscopic Examination of Aquatic Life Toolkit\n\n"
-      u"Copyright \u00A9 2018-2019 Kitware, Inc."));
+      u"Copyright \u00A9 2018-2020 Kitware, Inc."));
 }
 
 // ----------------------------------------------------------------------------
