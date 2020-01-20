@@ -207,14 +207,25 @@ Window::Window(QWidget* parent)
             d->videoController->nextFrame(0);
           });
   connect(d->ui.tracks, &QAbstractItemView::doubleClicked,
-          this, [d](QModelIndex const& index){
-            auto const& t =
-              d->trackModel.data(d->trackRepresentation.mapToSource(index),
-                                 sc::StartTimeRole);
-            if (t.isValid())
+          this, [d](QModelIndex const& repIndex){
+            auto const& modelIndex =
+              d->trackRepresentation.mapToSource(repIndex);
+
+            auto const& idData =
+              d->trackModel.data(modelIndex, sc::LogicalIdentityRole);
+            auto const& timeData =
+              d->trackModel.data(modelIndex, sc::StartTimeRole);
+            if (idData.isValid() && timeData.isValid())
             {
-              d->ui.control->setTime(
-                t.value<kwiver::vital::timestamp::time_t>());
+              auto const id = idData.value<qint64>();
+              auto const time =
+                timeData.value<kwiver::vital::timestamp::time_t>();
+
+              d->ui.control->setTime(time);
+              for (auto* const w : d->allWindows)
+              {
+                w->player->setCenterToTrack(id, time);
+              }
             }
           });
   connect(d->ui.tracks->selectionModel(),
