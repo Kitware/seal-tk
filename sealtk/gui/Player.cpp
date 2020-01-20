@@ -97,6 +97,11 @@ public:
   void updateDetectedObjectVertexBuffers();
   void updateDetections();
 
+  QSet<qint64> addDetectionVertices(
+    QAbstractItemModel& model, kv::transform_2d_sptr const& transform,
+    QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore,
+    QVector<float>& vertexData);
+
   void connectDetectionSource(QAbstractItemModel* source);
 
   void drawImage(float levelShift, float levelScale,
@@ -117,6 +122,7 @@ public:
   kv::image_container_sptr image;
   QMatrix4x4 viewHomography;
   QMatrix4x4 homography;
+  QMatrix4x4 inverseHomography;
   QSize homographyImageSize;
 
   QVector<DetectionInfo> detectedObjectVertexIndices;
@@ -291,6 +297,7 @@ void Player::setHomography(QMatrix4x4 const& homography)
   QTE_D();
 
   d->homography = homography;
+  d->inverseHomography = homography.inverted();
   d->updateViewHomography();
 }
 
@@ -816,48 +823,27 @@ void PlayerPrivate::updateViewHomography()
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
   QVector<float> vertexData;
-  static constexpr decltype(vertexData.count()) tuple_size = 2;
-
-  // Get bounding boxes of all "active" detected objects
   this->detectedObjectVertexIndices.clear();
-  for (auto const parentRow : kvr::iota(this->trackModelFilter.rowCount()))
+
+  // Add detections from local model
+  auto const& primaryDetections =
+    this->addDetectionVertices(this->trackModelFilter,
+                               nullptr, {}, {}, vertexData);
+
+  // Add detections from shadow models
+  if (!this->inverseHomography.isIdentity() || this->homography.isIdentity())
   {
-    auto const first = vertexData.count() / tuple_size;
-
-    auto const& parentIndex = this->trackModelFilter.index(parentRow, 0);
-    auto const& parentData =
-      this->trackModelFilter.data(parentIndex, core::LogicalIdentityRole);
-    auto const id = parentData.value<qint64>();
-
-    auto const childRows = this->trackModelFilter.rowCount(parentIndex);
-    for (auto const childRow : kvr::iota(childRows))
+    for (auto const& i : this->shadowData)
     {
-      auto const& childIndex =
-        this->trackModelFilter.index(childRow, 0, parentIndex);
-      auto const& childVisibility =
-        this->trackModelFilter.data(childIndex, core::VisibilityRole);
-      if (childVisibility.toBool())
+      auto const& sd = i.second;
+      if (sd.transform && sd.trackModelFilter &&
+          sd.trackModelFilter->sourceModel())
       {
-        auto const& childData =
-          this->trackModelFilter.data(childIndex, core::AreaLocationRole);
-        if (childData.canConvert<QRectF>())
-        {
-          auto const& box = childData.toRectF();
-          auto const minX = static_cast<float>(box.left());
-          auto const maxX = static_cast<float>(box.right());
-          auto const minY = static_cast<float>(box.top());
-          auto const maxY = static_cast<float>(box.bottom());
-          vertexData.append(minX); vertexData.append(minY);
-          vertexData.append(maxX); vertexData.append(minY);
-          vertexData.append(maxX); vertexData.append(maxY);
-          vertexData.append(minX); vertexData.append(maxY);
-          vertexData.append(minX); vertexData.append(minY);
-        }
+        this->addDetectionVertices(*sd.trackModelFilter,
+                                   sd.transform, this->inverseHomography,
+                                   primaryDetections, vertexData);
       }
     }
-
-    auto const last = vertexData.count() / tuple_size;
-    this->detectedObjectVertexIndices.append({id, first, last - first});
   }
 
   if (vertexData.isEmpty())
@@ -875,6 +861,90 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
   this->detectedObjectVertexBuffer.allocate(
     vertexData.data(), vertexData.size() * static_cast<int>(sizeof(float)));
   this->detectedObjectVertexBuffer.release();
+}
+
+// ----------------------------------------------------------------------------
+QSet<qint64> PlayerPrivate::addDetectionVertices(
+  QAbstractItemModel& model, kv::transform_2d_sptr const& transform,
+  QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore,
+  QVector<float>& vertexData)
+{
+  static constexpr decltype(vertexData.count()) tupleSize = 2;
+  QSet<qint64> idsUsed;
+
+  // Get bounding boxes of all "active" detected objects
+  for (auto const parentRow : kvr::iota(model.rowCount()))
+  {
+    auto const first = vertexData.count() / tupleSize;
+
+    auto const& parentIndex = model.index(parentRow, 0);
+    auto const& parentData =
+      model.data(parentIndex, core::LogicalIdentityRole);
+    auto const id = parentData.value<qint64>();
+
+    if (idsToIgnore.contains(id))
+    {
+      continue;
+    }
+
+    auto const childRows = model.rowCount(parentIndex);
+    for (auto const childRow : kvr::iota(childRows))
+    {
+      auto const& childIndex =
+        model.index(childRow, 0, parentIndex);
+      auto const& childVisibility =
+        model.data(childIndex, core::VisibilityRole);
+      if (childVisibility.toBool())
+      {
+        auto const& childData =
+          model.data(childIndex, core::AreaLocationRole);
+        if (childData.canConvert<QRectF>())
+        {
+          idsUsed.insert(id);
+
+          auto const& box = childData.toRectF();
+          if (transform)
+          {
+            auto const minX = box.left();
+            auto const maxX = box.right();
+            auto const minY = box.top();
+            auto const maxY = box.bottom();
+
+            auto addVertex = [&](qreal x, qreal y){
+              auto const& v = transform->map({x, y});
+              auto const& p = inverseTransform.map(QPointF{v.x(), v.y()});
+              vertexData.append(static_cast<float>(p.x()));
+              vertexData.append(static_cast<float>(p.y()));
+            };
+
+            addVertex(minX, minY);
+            addVertex(maxX, minY);
+            addVertex(maxX, maxY);
+            addVertex(minX, maxY);
+            addVertex(minX, minY);
+          }
+          else
+          {
+            auto const minX = static_cast<float>(box.left());
+            auto const maxX = static_cast<float>(box.right());
+            auto const minY = static_cast<float>(box.top());
+            auto const maxY = static_cast<float>(box.bottom());
+
+            vertexData.append(minX); vertexData.append(minY);
+            vertexData.append(maxX); vertexData.append(minY);
+            vertexData.append(maxX); vertexData.append(maxY);
+            vertexData.append(minX); vertexData.append(maxY);
+            vertexData.append(minX); vertexData.append(minY);
+          }
+        }
+      }
+    }
+
+    auto const last = vertexData.count() / tupleSize;
+    this->detectedObjectVertexIndices.append({id, first, last - first});
+  }
+
+  return idsUsed;
 }
 
 // ----------------------------------------------------------------------------
