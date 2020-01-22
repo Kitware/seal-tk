@@ -61,6 +61,22 @@ struct DetectionInfo
 };
 
 // ============================================================================
+struct CenterRequest
+{
+  kv::timestamp time;
+  QPointF location;
+
+  operator bool() const { return this->time.has_valid_time(); }
+  void reset() { this->time.set_invalid(); }
+
+  bool matches(kv::timestamp const& ts)
+  {
+    return (this->time.has_valid_time() && ts.has_valid_time() &&
+            this->time.get_time_usec() == ts.get_time_usec());
+  }
+};
+
+// ============================================================================
 class PlayerPrivate
 {
 public:
@@ -123,6 +139,8 @@ public:
 
   QPoint dragStart;
   bool dragging = false;
+
+  CenterRequest centerRequest;
 
   core::VideoDistributor* videoSource = nullptr;
   core::ScalarFilterModel trackModelFilter;
@@ -202,7 +220,19 @@ void Player::setImage(kv::image_container_sptr const& image,
   d->updateDetectedObjectVertexBuffers();
   this->doneCurrent();
 
-  d->updateViewHomography();
+  if (d->centerRequest.matches(d->timeStamp))
+  {
+    auto const w = d->image->width();
+    auto const h = d->image->height();
+    auto const offset = QPointF{0.5 * w, 0.5 * h};
+    this->setCenter(d->centerRequest.location - offset);
+    // d->updateViewHomography() will be called by this->setCenter(...)
+  }
+  else
+  {
+    d->updateViewHomography();
+  }
+  d->centerRequest.reset();
   this->update();
 
   if (d->image)
@@ -269,6 +299,49 @@ void Player::setCenter(QPointF center)
     d->updateViewHomography();
 
     emit this->centerChanged(center);
+  }
+}
+
+// ----------------------------------------------------------------------------
+void Player::setCenterToTrack(qint64 id, kv::timestamp::time_t time)
+{
+  QTE_D();
+
+  if (auto* const model = d->trackModelFilter.sourceModel())
+  {
+    for (auto const parentRow : kvr::iota(model->rowCount()))
+    {
+      auto const& parentIndex = model->index(parentRow, 0);
+      auto const& parentData =
+        model->data(parentIndex, core::LogicalIdentityRole);
+
+      if (parentData.value<qint64>() == id)
+      {
+        auto const childRows = model->rowCount(parentIndex);
+        for (auto const childRow : kvr::iota(childRows))
+        {
+          auto const& childIndex = model->index(childRow, 0, parentIndex);
+          auto const& childData =
+            model->data(childIndex, core::AreaLocationRole);
+          if (childData.canConvert<QRectF>())
+          {
+            auto const& rect = childData.toRectF();
+
+            d->centerRequest.time.set_time_usec(time);
+            d->centerRequest.location = d->homography.map(rect.center());
+
+            if (d->image && d->centerRequest.matches(d->timeStamp))
+            {
+              auto const w = d->image->width();
+              auto const h = d->image->height();
+              auto const offset = QPointF{0.5 * w, 0.5 * h};
+              this->setCenter(d->centerRequest.location - offset);
+              d->centerRequest.reset();
+            }
+          }
+        }
+      }
+    }
   }
 }
 
@@ -683,11 +756,11 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
 
   // Get bounding boxes of all "active" detected objects
   this->detectedObjectVertexIndices.clear();
-  for (auto const pr : kvr::iota(this->trackModelFilter.rowCount()))
+  for (auto const parentRow : kvr::iota(this->trackModelFilter.rowCount()))
   {
     auto const first = vertexData.count() / tuple_size;
 
-    auto const& parentIndex = this->trackModelFilter.index(pr, 0);
+    auto const& parentIndex = this->trackModelFilter.index(parentRow, 0);
     auto const& parentData =
       this->trackModelFilter.data(parentIndex, core::LogicalIdentityRole);
     auto const id = parentData.value<qint64>();

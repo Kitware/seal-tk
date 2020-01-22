@@ -95,6 +95,8 @@ public slots:
   void setDefaultColor(QColor const& color);
   void setSelectionColor(QColor const& color);
 
+  void setCenterToTrack(qint64 id, kwiver::vital::timestamp::time_t time);
+
 protected:
   QTE_DECLARE_PRIVATE(Player)
 
