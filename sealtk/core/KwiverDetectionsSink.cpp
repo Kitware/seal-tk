@@ -158,7 +158,16 @@ void KwiverDetectionsSink::writeData(QUrl const& uri) const
                                        qbox.width(), qbox.height()};
         auto kdot = classificationToDetectedObjectType(type);
 
-        ds->add(std::make_shared<kv::detected_object>(kbox, 1.0, kdot));
+        auto detection =
+          std::make_shared<kv::detected_object>(kbox, 1.0, kdot);
+
+        auto const& notes = d->model->data(i, NotesRole).toStringList();
+        for (auto const& n : notes)
+        {
+          detection->add_note(stdString(n));
+        }
+
+        ds->add(detection);
       }
 
       writer->write_set(ds, f.name);

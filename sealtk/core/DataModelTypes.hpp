@@ -116,6 +116,9 @@ enum ItemDataRole
   /// values are the corresponding scores, and are of \c double type.
   ClassificationRole,
 
+  /// (QStringList) User notes associated with the item.
+  NotesRole,
+
   /// First role that can be used for model-specific purposes.
   UserRole = Qt::UserRole + 224
 };
