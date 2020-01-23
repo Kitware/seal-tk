@@ -70,6 +70,8 @@ Player::Player(Role role, QWidget* parent)
 
     connect(d->loadTransformAction, &QAction::triggered,
             this, [this, d]{ d->loadTransform(this); });
+    connect(d->resetTransformAction, &QAction::triggered,
+            this, [this, d]{ d->resetTransform(this); });
   }
 
   d->loadDetectionsAction = new QAction{"&Load Detections...", this};
