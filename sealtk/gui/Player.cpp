@@ -143,6 +143,8 @@ public:
 
   QColor defaultColor = {255, 255, 0};
   QColor selectionColor = {255, 20, 144};
+  static constexpr qreal primaryAlpha = 1.0;
+  static constexpr qreal shadowAlpha = 0.6;
 
   bool initialized = false;
 
@@ -163,6 +165,7 @@ public:
 
   core::VideoDistributor* videoSource = nullptr;
   core::ScalarFilterModel trackModelFilter;
+  QSet<qint64> primaryTracks;
   QSet<qint64> selectedTracks;
 
   std::unordered_map<QObject*, ShadowData> shadowData;
@@ -589,6 +592,9 @@ void Player::paintGL()
     functions->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    functions->glEnable(GL_BLEND);
+    functions->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     auto const levels = d->levels();
     auto const levelShift = levels.low;
     auto const levelScale = 1.0f / (levels.high - levels.low);
@@ -826,7 +832,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
   this->detectedObjectVertexIndices.clear();
 
   // Add detections from local model
-  auto const& primaryDetections =
+  this->primaryTracks =
     this->addDetectionVertices(this->trackModelFilter,
                                nullptr, {}, {}, vertexData);
 
@@ -841,7 +847,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
       {
         this->addDetectionVertices(*sd.trackModelFilter,
                                    sd.transform, this->inverseHomography,
-                                   primaryDetections, vertexData);
+                                   this->primaryTracks, vertexData);
       }
     }
   }
@@ -1076,12 +1082,16 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
         (this->selectedTracks.contains(vertexInfo.id)
          ? this->selectionColor
          : this->defaultColor);
+      auto const alpha =
+        (this->primaryTracks.contains(vertexInfo.id)
+         ? this->primaryAlpha
+         : this->shadowAlpha);
       this->detectionShaderProgram.setUniformValue(
         this->detectionColorLocation,
         static_cast<float>(color.redF()),
         static_cast<float>(color.greenF()),
         static_cast<float>(color.blueF()),
-        static_cast<float>(color.alphaF()));
+        static_cast<float>(color.alphaF() * alpha));
 
       for (auto const n : kvr::iota(k))
       {
