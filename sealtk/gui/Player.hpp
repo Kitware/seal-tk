@@ -97,6 +97,8 @@ public slots:
 
   void setCenterToTrack(qint64 id, kwiver::vital::timestamp::time_t time);
 
+  void mergeSelectedTracks();
+
 protected:
   QTE_DECLARE_PRIVATE(Player)
 

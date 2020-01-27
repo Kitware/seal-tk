@@ -43,6 +43,7 @@ public:
   QAction* resetTransformAction = nullptr;
   QAction* loadDetectionsAction = nullptr;
   QAction* saveDetectionsAction = nullptr;
+  QAction* mergeDetectionsAction = nullptr;
 
   kv::transform_2d_sptr transform;
   QSizeF imageSize;
@@ -76,11 +77,14 @@ Player::Player(Role role, QWidget* parent)
 
   d->loadDetectionsAction = new QAction{"&Load Detections...", this};
   d->saveDetectionsAction = new QAction{"&Save Detections...", this};
+  d->mergeDetectionsAction = new QAction{"&Merge Detections", this};
 
   connect(d->loadDetectionsAction, &QAction::triggered,
           this, &Player::loadDetectionsTriggered);
   connect(d->saveDetectionsAction, &QAction::triggered,
           this, &Player::saveDetectionsTriggered);
+  connect(d->mergeDetectionsAction, &QAction::triggered,
+          this, [this] { this->mergeSelectedTracks(); });
 }
 
 // ----------------------------------------------------------------------------
@@ -142,6 +146,7 @@ void Player::contextMenuEvent(QContextMenuEvent* event)
   }
   menu->addAction(d->loadDetectionsAction);
   menu->addAction(d->saveDetectionsAction);
+  menu->addAction(d->mergeDetectionsAction);
 
   d->saveDetectionsAction->setEnabled(this->videoSource());
 

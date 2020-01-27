@@ -39,6 +39,9 @@ public:
   bool setData(
     QModelIndex const& index, QVariant const& value, int role) override;
 
+  enum MergeTracksResult { Success, OverlappingStates, NothingToDo };
+  MergeTracksResult mergeTracks(QSet<qint64> const& ids);
+
 public slots:
   void clear();
 
