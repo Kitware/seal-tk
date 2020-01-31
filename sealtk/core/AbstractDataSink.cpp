@@ -4,6 +4,8 @@
 
 #include <sealtk/core/AbstractDataSink.hpp>
 
+namespace kv = kwiver::vital;
+
 namespace sealtk
 {
 
@@ -18,6 +20,24 @@ AbstractDataSink::AbstractDataSink(QObject* parent) : QObject{parent}
 // ----------------------------------------------------------------------------
 AbstractDataSink::~AbstractDataSink()
 {
+}
+
+// ----------------------------------------------------------------------------
+bool AbstractDataSink::setTransform(kv::transform_2d_sptr const& transform)
+{
+  Q_UNUSED(transform)
+  return false;
+}
+
+// ----------------------------------------------------------------------------
+bool AbstractDataSink::addData(
+  QAbstractItemModel* model, kwiver::vital::transform_2d_sptr const& transform,
+  bool includeHidden)
+{
+  Q_UNUSED(model)
+  Q_UNUSED(transform)
+  Q_UNUSED(includeHidden)
+  return false;
 }
 
 } // namespace core
