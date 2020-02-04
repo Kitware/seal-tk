@@ -20,8 +20,8 @@
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
 #include <sealtk/core/IdentityTransform.hpp>
-#include <sealtk/core/KwiverDetectionsSink.hpp>
 #include <sealtk/core/KwiverTrackSource.hpp>
+#include <sealtk/core/KwiverTracksSink.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -70,6 +70,8 @@ struct WindowData
 
   std::shared_ptr<sc::AbstractDataSource> trackSource;
   std::shared_ptr<QAbstractItemModel> trackModel;
+
+  kwiver::vital::transform_2d_sptr transform;
 };
 
 // ============================================================================
@@ -445,13 +447,16 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
     data->player, &sealtk::noaa::gui::Player::saveDetectionsTriggered,
     q, [data, this]{ this->saveDetections(data); });
 
-  if (role == sealtk::noaa::gui::Player::Role::Slave)
+  if (role == sealtk::noaa::gui::Player::Role::Master)
+  {
+    data->transform = std::make_shared<sealtk::core::IdentityTransform>();
+  }
+  else
   {
     using kwiver::vital::transform_2d_sptr;
 
     data->player->setShadowTransform(
-      this->eoWindow.player,
-      std::make_shared<sealtk::core::IdentityTransform>());
+      this->eoWindow.player, this->eoWindow.transform);
 
     QObject::connect(
       data->player, &sealtk::noaa::gui::Player::transformChanged,
@@ -459,7 +464,11 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
       {
         for (auto* const w : this->allWindows)
         {
-          if (w->player != s)
+          if (w->player == s)
+          {
+            w->transform = xf;
+          }
+          else
           {
             w->player->setShadowTransform(s, xf);
           }
@@ -520,8 +529,22 @@ void WindowPrivate::saveDetections(WindowData* data)
   }
 
   // Set up writer
-  sc::KwiverDetectionsSink writer;
-  if (writer.setData(data->videoSource, data->trackModel.get()))
+  sc::KwiverTracksSink writer;
+
+  auto haveData = writer.setData(data->videoSource, data->trackModel.get());
+  if (writer.setTransform(data->transform))
+  {
+    for (auto* const w : this->allWindows)
+    {
+      if (w != data)
+      {
+        haveData =
+          writer.addData(w->trackModel.get(), w->transform) || haveData;
+      }
+    }
+  }
+
+  if (haveData)
   {
     auto const& filename = QFileDialog::getSaveFileName(q);
     if (!filename.isNull())
