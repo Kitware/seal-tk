@@ -143,7 +143,7 @@ public:
   void setTrackModel(
     WindowData* data, std::shared_ptr<QAbstractItemModel> const& model);
 
-  void updateTrackSelection(QItemSelection const& selection);
+  void updateTrackSelection(QModelIndexList const &selectedIndexes);
 
   Ui::Window ui;
   qtUiState uiState;
@@ -251,14 +251,16 @@ Window::Window(QWidget* parent)
           });
   connect(d->ui.tracks->selectionModel(),
           &QItemSelectionModel::selectionChanged,
-          this, [d](QItemSelection const& selection){
-            d->updateTrackSelection(selection);
+          this, [d]{
+            d->updateTrackSelection(
+              d->ui.tracks->selectionModel()->selectedIndexes());
           });
 
   connect(d->ui.tracks->selectionModel(),
           &QItemSelectionModel::selectionChanged,
-          this, [d](QItemSelection const& selection){
-            d->ui.actionDeleteDetection->setEnabled(!selection.isEmpty());
+          this, [d](){
+            d->ui.actionDeleteDetection->setEnabled(
+              d->ui.tracks->selectionModel()->hasSelection());
           });
   connect(d->ui.actionDeleteDetection, &QAction::triggered,
           this, [d]{
@@ -634,11 +636,12 @@ void WindowPrivate::setTrackModel(
 }
 
 // ----------------------------------------------------------------------------
-void WindowPrivate::updateTrackSelection(QItemSelection const& selection)
+void WindowPrivate::updateTrackSelection(
+  QModelIndexList const &selectedIndexes)
 {
   auto selectedTracks = QSet<qint64>{};
 
-  for (auto const& ri : selection.indexes())
+  for (auto const& ri : selectedIndexes)
   {
     auto const& mi = this->trackRepresentation.mapToSource(ri);
     auto const& data = this->trackModel.data(mi, sc::LogicalIdentityRole);
