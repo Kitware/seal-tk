@@ -387,6 +387,7 @@ bool KwiverTrackModel::setData(
             }
           }
         }
+        break;
 
       case core::UserVisibilityRole:
         if (value.canConvert<bool>())
