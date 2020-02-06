@@ -42,7 +42,9 @@ namespace gui
 class PlayerPrivate
 {
 public:
-  QList<QAction*> videoSourceActions;
+  QMenu* contextMenu = nullptr;
+  QMenu* loadVideoMenu = nullptr;
+
   QAction* loadTransformAction = nullptr;
   QAction* resetTransformAction = nullptr;
   QAction* loadDetectionsAction = nullptr;
@@ -72,6 +74,11 @@ Player::Player(Role role, QWidget* parent)
 {
   QTE_D();
 
+  d->contextMenu = new QMenu{this};
+  d->contextMenu->addSection(QStringLiteral("Video"));
+
+  d->loadVideoMenu = d->contextMenu->addMenu("Load &Video");
+
   if (role == Role::Slave)
   {
     d->loadTransformAction = new QAction{"Load &Transformation...", this};
@@ -82,7 +89,12 @@ Player::Player(Role role, QWidget* parent)
             this, [this, d]{ d->loadTransform(this); });
     connect(d->resetTransformAction, &QAction::triggered,
             this, [this, d]{ d->resetTransform(this); });
+
+    d->contextMenu->addAction(d->loadTransformAction);
+    d->contextMenu->addAction(d->resetTransformAction);
   }
+
+  d->contextMenu->addSection(QStringLiteral("Detections"));
 
   d->loadDetectionsAction = new QAction{"&Load Detections...", this};
   d->saveDetectionsAction = new QAction{"&Save Detections...", this};
@@ -94,6 +106,10 @@ Player::Player(Role role, QWidget* parent)
           this, &Player::saveDetectionsTriggered);
   connect(d->mergeDetectionsAction, &QAction::triggered,
           this, [this, d] { d->mergeSelectedTracks(this); });
+
+    d->contextMenu->addAction(d->loadDetectionsAction);
+    d->contextMenu->addAction(d->saveDetectionsAction);
+    d->contextMenu->addAction(d->mergeDetectionsAction);
 }
 
 // ----------------------------------------------------------------------------
@@ -111,7 +127,7 @@ void Player::registerVideoSourceFactory(
   connect(action, &QAction::triggered, factory,
           [factory, handle]{ factory->loadVideoSource(handle); });
 
-  d->videoSourceActions.append(action);
+  d->loadVideoMenu->addAction(action);
 }
 
 // ----------------------------------------------------------------------------
@@ -160,28 +176,11 @@ void Player::contextMenuEvent(QContextMenuEvent* event)
 {
   QTE_D();
 
-  auto* menu = new QMenu;
-
-  auto* submenu = menu->addMenu("Load &Video");
-  submenu->addActions(d->videoSourceActions);
-
-  if (d->loadTransformAction)
-  {
-    menu->addAction(d->loadTransformAction);
-  }
-  if (d->resetTransformAction)
-  {
-    menu->addAction(d->resetTransformAction);
-  }
-  menu->addAction(d->loadDetectionsAction);
-  menu->addAction(d->saveDetectionsAction);
-  menu->addAction(d->mergeDetectionsAction);
-
   d->saveDetectionsAction->setEnabled(this->videoSource());
   d->mergeDetectionsAction->setEnabled(
     d->trackModel && d->selectedTrackIds.count() > 1);
 
-  menu->exec(event->globalPos());
+  d->contextMenu->exec(event->globalPos());
 }
 
 // ----------------------------------------------------------------------------
