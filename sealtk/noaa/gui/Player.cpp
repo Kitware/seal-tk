@@ -4,6 +4,7 @@
 
 #include <sealtk/noaa/gui/Player.hpp>
 
+#include <sealtk/core/KwiverTrackModel.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 
 #include <vital/algo/transform_2d_io.h>
@@ -17,6 +18,7 @@
 #include <QMatrix4x4>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPointer>
 #include <QTransform>
 
 #include <memory>
@@ -24,6 +26,8 @@
 
 namespace kv = kwiver::vital;
 namespace kva = kwiver::vital::algo;
+
+namespace sc = sealtk::core;
 
 namespace sealtk
 {
@@ -45,12 +49,17 @@ public:
   QAction* saveDetectionsAction = nullptr;
   QAction* mergeDetectionsAction = nullptr;
 
+  QPointer<QAbstractItemModel> trackModel;
+  QSet<qint64> selectedTrackIds;
+
   kv::transform_2d_sptr transform;
   QSizeF imageSize;
 
   void loadTransform(Player* q);
   void resetTransform(Player* q);
   void updateTransform(Player* q);
+
+  void mergeSelectedTracks(Player* q);
 };
 
 // ----------------------------------------------------------------------------
@@ -84,7 +93,7 @@ Player::Player(Role role, QWidget* parent)
   connect(d->saveDetectionsAction, &QAction::triggered,
           this, &Player::saveDetectionsTriggered);
   connect(d->mergeDetectionsAction, &QAction::triggered,
-          this, [this] { this->mergeSelectedTracks(); });
+          this, [this, d] { d->mergeSelectedTracks(this); });
 }
 
 // ----------------------------------------------------------------------------
@@ -127,6 +136,26 @@ void Player::setImage(kv::image_container_sptr const& image,
 }
 
 // ----------------------------------------------------------------------------
+void Player::setTrackModel(QAbstractItemModel* model)
+{
+  QTE_D();
+
+  sealtk::gui::Player::setTrackModel(model);
+
+  d->trackModel = model;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setSelectedTrackIds(QSet<qint64> const& selectedIds)
+{
+  QTE_D();
+
+  sealtk::gui::Player::setSelectedTrackIds(selectedIds);
+
+  d->selectedTrackIds = selectedIds;
+}
+
+// ----------------------------------------------------------------------------
 void Player::contextMenuEvent(QContextMenuEvent* event)
 {
   QTE_D();
@@ -149,6 +178,8 @@ void Player::contextMenuEvent(QContextMenuEvent* event)
   menu->addAction(d->mergeDetectionsAction);
 
   d->saveDetectionsAction->setEnabled(this->videoSource());
+  d->mergeDetectionsAction->setEnabled(
+    d->trackModel && d->selectedTrackIds.count() > 1);
 
   menu->exec(event->globalPos());
 }
@@ -235,6 +266,40 @@ void PlayerPrivate::updateTransform(Player* q)
   if (this->resetTransformAction)
   {
     this->resetTransformAction->setEnabled(false);
+  }
+}
+
+// ----------------------------------------------------------------------------
+void PlayerPrivate::mergeSelectedTracks(Player* q)
+{
+  auto* const model =
+    qobject_cast<sc::KwiverTrackModel*>(this->trackModel);
+
+  if (!model)
+  {
+    QMessageBox::warning(
+      q, QStringLiteral("Failed to merge tracks"),
+      QStringLiteral("No model; are detections loaded?"));
+    return;
+  }
+
+  using Result = sc::KwiverTrackModel::MergeTracksResult;
+  switch (model->mergeTracks(this->selectedTrackIds))
+  {
+    case Result::NothingToDo:
+      QMessageBox::warning(
+        q, QStringLiteral("Failed to merge tracks"),
+        QStringLiteral("Select two or more tracks to merge."));
+      break;
+
+    case Result::OverlappingStates:
+      QMessageBox::warning(
+        q, QStringLiteral("Failed to merge tracks"),
+        QStringLiteral("Tracks with overlapping states cannot be merged."));
+      break;
+
+    default:
+      break;
   }
 }
 

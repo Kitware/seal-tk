@@ -7,7 +7,6 @@
 #include <sealtk/core/AutoLevelsTask.hpp>
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/ImageUtils.hpp>
-#include <sealtk/core/KwiverTrackModel.hpp>
 #include <sealtk/core/ScalarFilterModel.hpp>
 
 #include <sealtk/util/unique.hpp>
@@ -17,7 +16,6 @@
 #include <QApplication>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
-#include <QMessageBox>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -33,8 +31,6 @@
 
 namespace kv = kwiver::vital;
 namespace kvr = kwiver::vital::range;
-
-namespace sc = sealtk::core;
 
 namespace sealtk
 {
@@ -346,41 +342,6 @@ void Player::setCenterToTrack(qint64 id, kv::timestamp::time_t time)
         }
       }
     }
-  }
-}
-
-// ----------------------------------------------------------------------------
-void Player::mergeSelectedTracks()
-{
-  QTE_D();
-
-  auto* const trackModel = qobject_cast<sc::KwiverTrackModel*>(
-    d->trackModelFilter.sourceModel());
-
-  if (!trackModel)
-  {
-    QMessageBox::warning(
-      this, QStringLiteral("Failed to merge tracks"),
-      QStringLiteral("Select two or more tracks to merge."));
-  }
-
-  switch (trackModel->mergeTracks(d->selectedTracks))
-  {
-  case sc::KwiverTrackModel::NothingToDo:
-    QMessageBox::warning(
-      this, QStringLiteral("Failed to merge tracks"),
-      QStringLiteral("Select two or more tracks to merge."));
-    break;
-
-  case sc::KwiverTrackModel::OverlappingStates:
-    QMessageBox::warning(
-      this, QStringLiteral("Failed to merge tracks"),
-      QStringLiteral("Overlapping tracks cannot be merged."));
-    break;
-
-  case sc::KwiverTrackModel::Success:
-  default:
-    break;
   }
 }
 

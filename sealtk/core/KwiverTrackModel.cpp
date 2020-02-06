@@ -466,7 +466,7 @@ KwiverTrackModel::MergeTracksResult KwiverTrackModel::mergeTracks(
 
   if (rows.count() < 2)
   {
-    return NothingToDo;
+    return MergeTracksResult::NothingToDo;
   }
 
   QTE_D_DETACH();
@@ -490,7 +490,7 @@ KwiverTrackModel::MergeTracksResult KwiverTrackModel::mergeTracks(
     {
       if (tempHistory.contains(s->frame()))
       {
-        return OverlappingStates;
+        return MergeTracksResult::OverlappingStates;
       }
       tempHistory.insert(s->frame(), s);
     }
@@ -536,7 +536,7 @@ KwiverTrackModel::MergeTracksResult KwiverTrackModel::mergeTracks(
   }
   this->endInsertRows();
 
-  return Success;
+  return MergeTracksResult::Success;
 }
 
 // ----------------------------------------------------------------------------

@@ -39,7 +39,16 @@ public:
   bool setData(
     QModelIndex const& index, QVariant const& value, int role) override;
 
-  enum MergeTracksResult { Success, OverlappingStates, NothingToDo };
+  enum class MergeTracksResult
+  {
+    /// The operation completed successfully.
+    Success,
+    /// The operation failed because the input track set contains at least one
+    /// pair of track states which overlap (have the same time stamp).
+    OverlappingStates,
+    /// The operation failed; at least two tracks are required
+    NothingToDo
+  };
   MergeTracksResult mergeTracks(QSet<qint64> const& ids);
 
 public slots:
