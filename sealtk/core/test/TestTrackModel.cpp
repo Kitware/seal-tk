@@ -22,6 +22,12 @@ SimpleTrackModel::SimpleTrackModel(QVector<TimeMap<TrackState>> data)
 }
 
 // ----------------------------------------------------------------------------
+void SimpleTrackModel::setFirstId(qint64 id)
+{
+  this->firstId = id;
+}
+
+// ----------------------------------------------------------------------------
 int SimpleTrackModel::rowCount(QModelIndex const& parent) const
 {
   if (parent.isValid())
@@ -69,6 +75,9 @@ QVariant SimpleTrackModel::data(QModelIndex const& index, int role) const
 
       switch (role)
       {
+        case LogicalIdentityRole:
+          return this->firstId + pr;
+
         case StartTimeRole:
         case EndTimeRole:
           return QVariant::fromValue(track.keys()[index.row()]);
@@ -82,6 +91,10 @@ QVariant SimpleTrackModel::data(QModelIndex const& index, int role) const
         default:
           break;
       }
+    }
+    else if (role == LogicalIdentityRole)
+    {
+      return this->firstId + index.row();
     }
   }
 

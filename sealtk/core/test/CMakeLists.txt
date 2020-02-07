@@ -33,6 +33,15 @@ sealtk_add_test(KwiverDetectionsSink
     sealtk::core_test_common
   )
 
+sealtk_add_test(KwiverTracksSink
+  SOURCES
+    KwiverTracksSink.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+    sealtk::core_test_common
+  )
+
 sealtk_add_test(KwiverPipelineWorker
   SOURCES
     KwiverPipelineWorker.cpp

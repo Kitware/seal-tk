@@ -32,8 +32,11 @@ public:
   QModelIndex index(int row, int column,
                     QModelIndex const& parent) const override;
 
+  void setFirstId(qint64 id);
+
 private:
   QVector<TimeMap<TrackState>> const rowData;
+  qint64 firstId = 0;
 };
 
 } // namespace test
