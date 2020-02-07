@@ -10,8 +10,10 @@ sealtk_add_library(sealtk::core_test_common
 
   SOURCES
     TestCommon.cpp
+    TestTrackModel.cpp
     TestTracks.cpp
     TestVideo.cpp
+    TestVideoSource.cpp
 
   PRIVATE_LINK_LIBRARIES
     qtExtensionsHeaders
