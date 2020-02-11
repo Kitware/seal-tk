@@ -14,9 +14,12 @@
 
 #include <vital/plugin_loader/plugin_manager.h>
 
+#include <qtColorScheme.h>
+
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
+#include <QSettings>
 
 #include <memory>
 
@@ -47,7 +50,23 @@ int main(int argc, char** argv)
     QStringLiteral("directory")};
   parser.addOption(pipelineDirectoryOption);
 
+  QCommandLineOption applicationThemeOption{
+    QStringLiteral("theme"),
+    QStringLiteral(
+      "Path to application theme to be used (instead of the system theme)."),
+    QStringLiteral("file")};
+  parser.addOption(applicationThemeOption);
+
   parser.process(app);
+
+  if (parser.isSet(applicationThemeOption))
+  {
+    QSettings settings{parser.value(applicationThemeOption),
+                       QSettings::IniFormat};
+
+    QApplication::setStyle(settings.value("WidgetStyle").toString());
+    QApplication::setPalette(qtColorScheme::fromSettings(settings));
+  }
 
   QString pipelineDirectory;
   if (parser.isSet(pipelineDirectoryOption))
