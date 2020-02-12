@@ -227,7 +227,7 @@ Window::Window(QWidget* parent)
           this, [d]{
             d->videoController->nextFrame(0);
           });
-  connect(d->ui.tracks, &QAbstractItemView::doubleClicked,
+  connect(d->ui.tracks->selectionModel(), &QItemSelectionModel::currentChanged,
           this, [d](QModelIndex const& repIndex){
             auto const& modelIndex =
               d->trackRepresentation.mapToSource(repIndex);
