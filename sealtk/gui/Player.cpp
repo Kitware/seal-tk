@@ -321,11 +321,24 @@ void Player::setCenterToTrack(qint64 id, kv::timestamp::time_t time)
         for (auto const childRow : kvr::iota(childRows))
         {
           auto const& childIndex = model->index(childRow, 0, parentIndex);
-          auto const& childData =
-            model->data(childIndex, core::AreaLocationRole);
-          if (childData.canConvert<QRectF>())
+
+          auto const& childTimeData =
+            model->data(childIndex, core::StartTimeRole);
+          if (childTimeData.canConvert<kv::timestamp::time_t>())
           {
-            auto const& rect = childData.toRectF();
+            auto const childTime =
+              childTimeData.value<kv::timestamp::time_t>();
+            if (childTime != time)
+            {
+              continue;
+            }
+          }
+
+          auto const& childLocationData =
+            model->data(childIndex, core::AreaLocationRole);
+          if (childLocationData.canConvert<QRectF>())
+          {
+            auto const& rect = childLocationData.toRectF();
 
             d->centerRequest.time.set_time_usec(time);
             d->centerRequest.location = d->homography.map(rect.center());
