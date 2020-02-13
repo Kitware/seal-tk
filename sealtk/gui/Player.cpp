@@ -13,6 +13,8 @@
 
 #include <vital/range/iota.h>
 
+#include <qtGet.h>
+
 #include <QApplication>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
@@ -77,6 +79,13 @@ struct CenterRequest
 };
 
 // ============================================================================
+struct ShadowData
+{
+  kv::transform_2d_sptr transform;
+  std::unique_ptr<core::ScalarFilterModel> trackModelFilter;
+};
+
+// ============================================================================
 class PlayerPrivate
 {
 public:
@@ -88,12 +97,21 @@ public:
   void updateDetectedObjectVertexBuffers();
   void updateDetections();
 
+  QSet<qint64> addDetectionVertices(
+    QAbstractItemModel& model, kv::transform_2d_sptr const& transform,
+    QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore,
+    QVector<float>& vertexData);
+
+  void connectDetectionSource(QAbstractItemModel* source);
+
   void drawImage(float levelShift, float levelScale,
                  QOpenGLFunctions* functions);
   void drawDetections(QOpenGLFunctions* functions);
 
   LevelsPair levels();
   void computeLevels(LevelsPair const& temporaryLevels);
+
+  ShadowData& getShadowData(QObject* source);
 
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
@@ -104,6 +122,7 @@ public:
   kv::image_container_sptr image;
   QMatrix4x4 viewHomography;
   QMatrix4x4 homography;
+  QMatrix4x4 inverseHomography;
   QSize homographyImageSize;
 
   QVector<DetectionInfo> detectedObjectVertexIndices;
@@ -124,6 +143,8 @@ public:
 
   QColor defaultColor = {255, 255, 0};
   QColor selectionColor = {255, 20, 144};
+  static constexpr qreal primaryAlpha = 1.0;
+  static constexpr qreal shadowAlpha = 0.6;
 
   bool initialized = false;
 
@@ -144,7 +165,10 @@ public:
 
   core::VideoDistributor* videoSource = nullptr;
   core::ScalarFilterModel trackModelFilter;
+  QSet<qint64> primaryTracks;
   QSet<qint64> selectedTracks;
+
+  std::unordered_map<QObject*, ShadowData> shadowData;
 };
 
 // ----------------------------------------------------------------------------
@@ -156,17 +180,7 @@ Player::Player(QWidget* parent)
     d_ptr{new PlayerPrivate{this}}
 {
   QTE_D();
-
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsInserted,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsRemoved,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsMoved,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::dataChanged,
-          this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::modelReset,
-          this, [d]{ d->updateDetections(); });
+  d->connectDetectionSource(&d->trackModelFilter);
 }
 
 // ----------------------------------------------------------------------------
@@ -214,6 +228,14 @@ void Player::setImage(kv::image_container_sptr const& image,
   auto const t = QVariant::fromValue(d->timeStamp.get_time_usec());
   d->trackModelFilter.setUpperBound(core::StartTimeRole, t);
   d->trackModelFilter.setLowerBound(core::EndTimeRole, t);
+  for (auto const& s : d->shadowData)
+  {
+    if (auto* const smf = s.second.trackModelFilter.get())
+    {
+      smf->setUpperBound(core::StartTimeRole, t);
+      smf->setLowerBound(core::EndTimeRole, t);
+    }
+  }
 
   this->makeCurrent();
   d->createTexture();
@@ -247,8 +269,14 @@ void Player::setTrackModel(QAbstractItemModel* model)
 {
   QTE_D();
 
+  if (auto* const oldModel = d->trackModelFilter.sourceModel())
+  {
+    disconnect(oldModel, &QObject::destroyed, this, nullptr);
+  }
+
   connect(model, &QObject::destroyed, this,
           [d]{ d->trackModelFilter.setSourceModel(nullptr); });
+
   d->trackModelFilter.setSourceModel(model);
 
   d->updateDetections();
@@ -272,6 +300,7 @@ void Player::setHomography(QMatrix4x4 const& homography)
   QTE_D();
 
   d->homography = homography;
+  d->inverseHomography = homography.inverted();
   d->updateViewHomography();
 }
 
@@ -563,6 +592,9 @@ void Player::paintGL()
     functions->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    functions->glEnable(GL_BLEND);
+    functions->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     auto const levels = d->levels();
     auto const levelShift = levels.low;
     auto const levelScale = 1.0f / (levels.high - levels.low);
@@ -664,6 +696,51 @@ void Player::wheelEvent(QWheelEvent* event)
 }
 
 // ----------------------------------------------------------------------------
+void Player::setShadowTrackModel(QObject* source, QAbstractItemModel* model)
+{
+  QTE_D();
+
+  auto& data = d->getShadowData(source);
+  if (!data.trackModelFilter)
+  {
+    data.trackModelFilter.reset(new core::ScalarFilterModel);
+    d->connectDetectionSource(data.trackModelFilter.get());
+
+    if (d->timeStamp.has_valid_time())
+    {
+      auto const t = QVariant::fromValue(d->timeStamp.get_time_usec());
+      data.trackModelFilter->setUpperBound(core::StartTimeRole, t);
+      data.trackModelFilter->setLowerBound(core::EndTimeRole, t);
+    }
+  }
+
+  auto* const modelFilter = data.trackModelFilter.get();
+  if (auto* const oldModel = modelFilter->sourceModel())
+  {
+    disconnect(oldModel, &QObject::destroyed, modelFilter, nullptr);
+  }
+
+  connect(model, &QObject::destroyed, modelFilter,
+          [modelFilter]{ modelFilter->setSourceModel(nullptr); });
+
+  modelFilter->setSourceModel(model);
+
+  d->updateDetections();
+}
+
+// ----------------------------------------------------------------------------
+void Player::setShadowTransform(
+  QObject* source, kwiver::vital::transform_2d_sptr const& transform)
+{
+  QTE_D();
+
+  auto& data = d->getShadowData(source);
+  data.transform = transform;
+
+  d->updateDetections();
+}
+
+// ----------------------------------------------------------------------------
 PlayerPrivate::PlayerPrivate(Player* parent)
   : q_ptr{parent}
 {
@@ -752,48 +829,27 @@ void PlayerPrivate::updateViewHomography()
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
   QVector<float> vertexData;
-  static constexpr decltype(vertexData.count()) tuple_size = 2;
-
-  // Get bounding boxes of all "active" detected objects
   this->detectedObjectVertexIndices.clear();
-  for (auto const parentRow : kvr::iota(this->trackModelFilter.rowCount()))
+
+  // Add detections from local model
+  this->primaryTracks =
+    this->addDetectionVertices(this->trackModelFilter,
+                               nullptr, {}, {}, vertexData);
+
+  // Add detections from shadow models
+  if (!this->inverseHomography.isIdentity() || this->homography.isIdentity())
   {
-    auto const first = vertexData.count() / tuple_size;
-
-    auto const& parentIndex = this->trackModelFilter.index(parentRow, 0);
-    auto const& parentData =
-      this->trackModelFilter.data(parentIndex, core::LogicalIdentityRole);
-    auto const id = parentData.value<qint64>();
-
-    auto const childRows = this->trackModelFilter.rowCount(parentIndex);
-    for (auto const childRow : kvr::iota(childRows))
+    for (auto const& i : this->shadowData)
     {
-      auto const& childIndex =
-        this->trackModelFilter.index(childRow, 0, parentIndex);
-      auto const& childVisibility =
-        this->trackModelFilter.data(childIndex, core::VisibilityRole);
-      if (childVisibility.toBool())
+      auto const& sd = i.second;
+      if (sd.transform && sd.trackModelFilter &&
+          sd.trackModelFilter->sourceModel())
       {
-        auto const& childData =
-          this->trackModelFilter.data(childIndex, core::AreaLocationRole);
-        if (childData.canConvert<QRectF>())
-        {
-          auto const& box = childData.toRectF();
-          auto const minX = static_cast<float>(box.left());
-          auto const maxX = static_cast<float>(box.right());
-          auto const minY = static_cast<float>(box.top());
-          auto const maxY = static_cast<float>(box.bottom());
-          vertexData.append(minX); vertexData.append(minY);
-          vertexData.append(maxX); vertexData.append(minY);
-          vertexData.append(maxX); vertexData.append(maxY);
-          vertexData.append(minX); vertexData.append(maxY);
-          vertexData.append(minX); vertexData.append(minY);
-        }
+        this->addDetectionVertices(*sd.trackModelFilter,
+                                   sd.transform, this->inverseHomography,
+                                   this->primaryTracks, vertexData);
       }
     }
-
-    auto const last = vertexData.count() / tuple_size;
-    this->detectedObjectVertexIndices.append({id, first, last - first});
   }
 
   if (vertexData.isEmpty())
@@ -811,6 +867,90 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
   this->detectedObjectVertexBuffer.allocate(
     vertexData.data(), vertexData.size() * static_cast<int>(sizeof(float)));
   this->detectedObjectVertexBuffer.release();
+}
+
+// ----------------------------------------------------------------------------
+QSet<qint64> PlayerPrivate::addDetectionVertices(
+  QAbstractItemModel& model, kv::transform_2d_sptr const& transform,
+  QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore,
+  QVector<float>& vertexData)
+{
+  static constexpr decltype(vertexData.count()) tupleSize = 2;
+  QSet<qint64> idsUsed;
+
+  // Get bounding boxes of all "active" detected objects
+  for (auto const parentRow : kvr::iota(model.rowCount()))
+  {
+    auto const first = vertexData.count() / tupleSize;
+
+    auto const& parentIndex = model.index(parentRow, 0);
+    auto const& parentData =
+      model.data(parentIndex, core::LogicalIdentityRole);
+    auto const id = parentData.value<qint64>();
+
+    if (idsToIgnore.contains(id))
+    {
+      continue;
+    }
+
+    auto const childRows = model.rowCount(parentIndex);
+    for (auto const childRow : kvr::iota(childRows))
+    {
+      auto const& childIndex =
+        model.index(childRow, 0, parentIndex);
+      auto const& childVisibility =
+        model.data(childIndex, core::VisibilityRole);
+      if (childVisibility.toBool())
+      {
+        auto const& childData =
+          model.data(childIndex, core::AreaLocationRole);
+        if (childData.canConvert<QRectF>())
+        {
+          idsUsed.insert(id);
+
+          auto const& box = childData.toRectF();
+          if (transform)
+          {
+            auto const minX = box.left();
+            auto const maxX = box.right();
+            auto const minY = box.top();
+            auto const maxY = box.bottom();
+
+            auto addVertex = [&](qreal x, qreal y){
+              auto const& v = transform->map({x, y});
+              auto const& p = inverseTransform.map(QPointF{v.x(), v.y()});
+              vertexData.append(static_cast<float>(p.x()));
+              vertexData.append(static_cast<float>(p.y()));
+            };
+
+            addVertex(minX, minY);
+            addVertex(maxX, minY);
+            addVertex(maxX, maxY);
+            addVertex(minX, maxY);
+            addVertex(minX, minY);
+          }
+          else
+          {
+            auto const minX = static_cast<float>(box.left());
+            auto const maxX = static_cast<float>(box.right());
+            auto const minY = static_cast<float>(box.top());
+            auto const maxY = static_cast<float>(box.bottom());
+
+            vertexData.append(minX); vertexData.append(minY);
+            vertexData.append(maxX); vertexData.append(minY);
+            vertexData.append(maxX); vertexData.append(maxY);
+            vertexData.append(minX); vertexData.append(maxY);
+            vertexData.append(minX); vertexData.append(minY);
+          }
+        }
+      }
+    }
+
+    auto const last = vertexData.count() / tupleSize;
+    this->detectedObjectVertexIndices.append({id, first, last - first});
+  }
+
+  return idsUsed;
 }
 
 // ----------------------------------------------------------------------------
@@ -942,12 +1082,16 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
         (this->selectedTracks.contains(vertexInfo.id)
          ? this->selectionColor
          : this->defaultColor);
+      auto const alpha =
+        (this->primaryTracks.contains(vertexInfo.id)
+         ? this->primaryAlpha
+         : this->shadowAlpha);
       this->detectionShaderProgram.setUniformValue(
         this->detectionColorLocation,
         static_cast<float>(color.redF()),
         static_cast<float>(color.greenF()),
         static_cast<float>(color.blueF()),
-        static_cast<float>(color.alphaF()));
+        static_cast<float>(color.alphaF() * alpha));
 
       for (auto const n : kvr::iota(k))
       {
@@ -962,6 +1106,20 @@ void PlayerPrivate::drawDetections(QOpenGLFunctions* functions)
 }
 
 // ----------------------------------------------------------------------------
+void PlayerPrivate::connectDetectionSource(QAbstractItemModel* source)
+{
+  QTE_Q();
+
+  auto slot = [this]{ this->updateDetections(); };
+
+  QObject::connect(source, &QAbstractItemModel::rowsInserted, q, slot);
+  QObject::connect(source, &QAbstractItemModel::rowsRemoved,  q, slot);
+  QObject::connect(source, &QAbstractItemModel::rowsMoved,    q, slot);
+  QObject::connect(source, &QAbstractItemModel::dataChanged,  q, slot);
+  QObject::connect(source, &QAbstractItemModel::modelReset,   q, slot);
+}
+
+// ----------------------------------------------------------------------------
 void PlayerPrivate::updateDetections()
 {
   QTE_Q();
@@ -971,6 +1129,23 @@ void PlayerPrivate::updateDetections()
   q->doneCurrent();
 
   q->update();
+}
+
+// ----------------------------------------------------------------------------
+ShadowData& PlayerPrivate::getShadowData(QObject* source)
+{
+  if (auto* const pdata = qtGet(this->shadowData, source))
+  {
+    return pdata->second;
+  }
+
+  QTE_Q();
+
+  QObject::connect(
+    source, &QObject::destroyed, q,
+    [source, this]{ this->shadowData.erase(source); });
+
+  return this->shadowData[source];
 }
 
 } // namespace gui

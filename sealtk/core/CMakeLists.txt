@@ -20,6 +20,7 @@ sealtk_add_library(sealtk::core
     DateUtils.cpp
     DirectoryListing.cpp
     FileVideoSourceFactory.cpp
+    IdentityTransform.cpp
     ImageUtils.cpp
     KwiverFileVideoSourceFactory.cpp
     KwiverDetectionsSink.cpp
@@ -49,6 +50,7 @@ sealtk_add_library(sealtk::core
     DateUtils.hpp
     DirectoryListing.hpp
     FileVideoSourceFactory.hpp
+    IdentityTransform.hpp
     ImageUtils.hpp
     KwiverFileVideoSourceFactory.hpp
     KwiverDetectionsSink.hpp

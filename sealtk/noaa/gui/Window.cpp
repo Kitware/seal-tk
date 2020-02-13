@@ -19,6 +19,7 @@
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
+#include <sealtk/core/IdentityTransform.hpp>
 #include <sealtk/core/KwiverDetectionsSink.hpp>
 #include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
@@ -461,6 +462,28 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
     data->player, &sealtk::noaa::gui::Player::saveDetectionsTriggered,
     q, [data, this]{ this->saveDetections(data); });
 
+  if (role == sealtk::noaa::gui::Player::Role::Slave)
+  {
+    using kwiver::vital::transform_2d_sptr;
+
+    data->player->setShadowTransform(
+      this->eoWindow.player,
+      std::make_shared<sealtk::core::IdentityTransform>());
+
+    QObject::connect(
+      data->player, &sealtk::noaa::gui::Player::transformChanged,
+      q, [s = data->player, this](transform_2d_sptr const& xf)
+      {
+        for (auto* const w : this->allWindows)
+        {
+          if (w->player != s)
+          {
+            w->player->setShadowTransform(s, xf);
+          }
+        }
+      });
+  }
+
   this->ui.centralwidget->addWidget(data->window);
 }
 
@@ -620,16 +643,21 @@ WindowData* WindowPrivate::dataForView(int viewIndex)
 void WindowPrivate::setTrackModel(
   WindowData* data, std::shared_ptr<QAbstractItemModel> const& model)
 {
-  if (data)
+  if (data->trackModel)
   {
-    if (data->trackModel)
-    {
-      this->trackModel.removeModel(data->trackModel.get());
-    }
+    this->trackModel.removeModel(data->trackModel.get());
+  }
 
-    data->trackModel = model;
-    this->trackModel.addModel(model.get());
-    data->player->setTrackModel(model.get());
+  data->trackModel = model;
+  this->trackModel.addModel(model.get());
+  data->player->setTrackModel(model.get());
+
+  for (auto* const w : this->allWindows)
+  {
+    if (w != data)
+    {
+      w->player->setShadowTrackModel(data->player, model.get());
+    }
   }
 }
 

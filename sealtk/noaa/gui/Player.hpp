@@ -49,6 +49,8 @@ signals:
   void loadDetectionsTriggered() const;
   void saveDetectionsTriggered() const;
 
+  void transformChanged(kwiver::vital::transform_2d_sptr const&);
+
 protected:
   QTE_DECLARE_PRIVATE(Player)
 

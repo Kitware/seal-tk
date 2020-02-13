@@ -11,6 +11,7 @@
 
 #include <vital/types/detected_object_set.h>
 #include <vital/types/image_container.h>
+#include <vital/types/transform_2d.h>
 
 #include <qtGlobal.h>
 
@@ -96,6 +97,10 @@ public slots:
   void setSelectionColor(QColor const& color);
 
   void setCenterToTrack(qint64 id, kwiver::vital::timestamp::time_t time);
+
+  void setShadowTrackModel(QObject* source, QAbstractItemModel* model);
+  void setShadowTransform(
+    QObject* source, kwiver::vital::transform_2d_sptr const& transform);
 
 protected:
   QTE_DECLARE_PRIVATE(Player)
