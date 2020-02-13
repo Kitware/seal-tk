@@ -81,6 +81,7 @@ public:
     this->setColumnRoles({
       sc::NameRole,
       sc::StartTimeRole,
+      sc::EndTimeRole,
       sc::ClassificationTypeRole,
       sc::ClassificationScoreRole,
       sc::NotesRole,
@@ -93,32 +94,12 @@ public:
     auto const defaultFlags =
       this->sg::AbstractItemRepresentation::flags(index);
 
-    if (index.column() == 2 || index.column() == 4)
+    if (index.column() == 3 || index.column() == 5)
     {
       return defaultFlags | Qt::ItemIsEditable;
     }
 
     return defaultFlags;
-  }
-
-  QVariant headerData(int section, Qt::Orientation orientation,
-                      int role = Qt::DisplayRole) const override
-  {
-    if (orientation == Qt::Horizontal && role == Qt::DisplayRole &&
-        section >= 0 && section < this->columnCount())
-    {
-      switch (this->roleForColumn(section))
-      {
-        case sc::StartTimeRole:
-        case sc::EndTimeRole:
-          return QStringLiteral("Time");
-        default:
-          break;
-      }
-    }
-
-    return this->AbstractItemRepresentation::headerData(
-      section, orientation, role);
   }
 };
 
@@ -187,8 +168,8 @@ Window::Window(QWidget* parent)
 
   d->trackRepresentation.setSourceModel(&d->trackModel);
   d->ui.tracks->setModel(&d->trackRepresentation);
-  d->ui.tracks->setItemDelegateForColumn(2, &d->typeDelegate);
-  d->ui.tracks->setItemDelegateForColumn(4, &d->notesDelegate);
+  d->ui.tracks->setItemDelegateForColumn(3, &d->typeDelegate);
+  d->ui.tracks->setItemDelegateForColumn(5, &d->notesDelegate);
 
   constexpr auto Master = sealtk::noaa::gui::Player::Role::Master;
   constexpr auto Slave = sealtk::noaa::gui::Player::Role::Slave;
@@ -232,11 +213,13 @@ Window::Window(QWidget* parent)
           this, [d](QModelIndex const& repIndex){
             auto const& modelIndex =
               d->trackRepresentation.mapToSource(repIndex);
+            auto const role =
+              (repIndex.column() == 2 ? sc::EndTimeRole : sc::StartTimeRole);
 
             auto const& idData =
               d->trackModel.data(modelIndex, sc::LogicalIdentityRole);
             auto const& timeData =
-              d->trackModel.data(modelIndex, sc::StartTimeRole);
+              d->trackModel.data(modelIndex, role);
             if (idData.isValid() && timeData.isValid())
             {
               auto const id = idData.value<qint64>();
