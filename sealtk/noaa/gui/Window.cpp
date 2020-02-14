@@ -165,7 +165,7 @@ public:
   TrackTypeDelegate typeDelegate;
   NotesDelegate notesDelegate;
 
-  std::unique_ptr<sc::VideoController> videoController;
+  sc::VideoController* videoController;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -229,8 +229,8 @@ Window::Window(QWidget* parent)
   connect(d->ui.actionShowUvPane, &QAction::toggled,
           d->uvWindow.window, &QWidget::setVisible);
 
-  d->videoController = make_unique<sc::VideoController>(this);
-  d->ui.control->setVideoController(d->videoController.get());
+  d->videoController = new sc::VideoController{this};
+  d->ui.control->setVideoController(d->videoController);
 
   connect(d->ui.actionShowImageFilename, &QAction::toggled,
           this, [d](bool show){
@@ -308,10 +308,10 @@ Window::Window(QWidget* parent)
 
   d->registerVideoSourceFactory(
     QStringLiteral("Image List File..."),
-    new core::ImageListVideoSourceFactory{false, d->videoController.get()});
+    new core::ImageListVideoSourceFactory{false, d->videoController});
   d->registerVideoSourceFactory(
     QStringLiteral("Image Directory..."),
-    new core::ImageListVideoSourceFactory{true, d->videoController.get()});
+    new core::ImageListVideoSourceFactory{true, d->videoController});
 
   d->uiState.mapState("Window/state", this);
   d->uiState.mapGeometry("Window/geometry", this);
