@@ -9,6 +9,7 @@ sealtk_add_library(sealtk::gui
     AbstractItemRepresentation.cpp
     CreateDetectionPlayerTool.cpp
     DetectionRepresentation.cpp
+    FilterWidget.cpp
     FusionModel.cpp
     Player.cpp
     PlayerControl.cpp
@@ -22,6 +23,7 @@ sealtk_add_library(sealtk::gui
     AbstractItemRepresentation.hpp
     CreateDetectionPlayerTool.hpp
     DetectionRepresentation.hpp
+    FilterWidget.hpp
     FusionModel.hpp
     Player.hpp
     PlayerControl.hpp
