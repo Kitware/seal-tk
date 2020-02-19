@@ -1183,11 +1183,13 @@ QSet<qint64> PlayerPrivate::addDetectionVertices(
     auto const first = vertexData.count() / tupleSize;
 
     auto const& parentIndex = model.index(parentRow, 0);
-    auto const& parentData =
+    auto const& parentVisibility =
+      model.data(parentIndex, core::VisibilityRole);
+    auto const& parentIdData =
       model.data(parentIndex, core::LogicalIdentityRole);
-    auto const id = parentData.value<qint64>();
+    auto const id = parentIdData.value<qint64>();
 
-    if (idsToIgnore.contains(id))
+    if (!parentVisibility.toBool() || idsToIgnore.contains(id))
     {
       continue;
     }
@@ -1246,7 +1248,10 @@ QSet<qint64> PlayerPrivate::addDetectionVertices(
     }
 
     auto const last = vertexData.count() / tupleSize;
-    this->detectedObjectVertexIndices.append({id, first, last - first});
+    if (last - first)
+    {
+      this->detectedObjectVertexIndices.append({id, first, last - first});
+    }
   }
 
   return idsUsed;
