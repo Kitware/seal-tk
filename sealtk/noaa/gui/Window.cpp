@@ -181,8 +181,6 @@ Window::Window(QWidget* parent)
   d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
   d->irWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->irWindow.player->setPercentiles(0.0, 1.0);
-
-  d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
   d->uvWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->uvWindow.player->setPercentiles(0.0, 1.0);
 
