@@ -115,6 +115,8 @@ public slots:
   void setPercentiles(double deviance, double tolerance);
   void setActiveTool(PlayerTool* tool);
 
+  void setTrackFilter(int role, QVariant const& low, QVariant const& high);
+
   void setDefaultColor(QColor const& color);
   void setSelectionColor(QColor const& color);
   void setPendingColor(QColor const& color);
