@@ -269,14 +269,6 @@ void Player::setTrackModel(QAbstractItemModel* model)
 {
   QTE_D();
 
-  if (auto* const oldModel = d->trackModelFilter.sourceModel())
-  {
-    disconnect(oldModel, &QObject::destroyed, this, nullptr);
-  }
-
-  connect(model, &QObject::destroyed, this,
-          [d]{ d->trackModelFilter.setSourceModel(nullptr); });
-
   d->trackModelFilter.setSourceModel(model);
 
   d->updateDetections();
@@ -728,14 +720,6 @@ void Player::setShadowTrackModel(QObject* source, QAbstractItemModel* model)
   }
 
   auto* const modelFilter = data.trackModelFilter.get();
-  if (auto* const oldModel = modelFilter->sourceModel())
-  {
-    disconnect(oldModel, &QObject::destroyed, modelFilter, nullptr);
-  }
-
-  connect(model, &QObject::destroyed, modelFilter,
-          [modelFilter]{ modelFilter->setSourceModel(nullptr); });
-
   modelFilter->setSourceModel(model);
 
   d->updateDetections();
