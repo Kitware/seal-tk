@@ -22,6 +22,7 @@ class FilterWidgetPrivate;
 class SEALTK_GUI_EXPORT FilterWidget : public QWidget
 {
   Q_OBJECT
+  Q_PROPERTY(double value READ value WRITE setValue NOTIFY valueChanged)
 
 public:
   explicit FilterWidget(QWidget* parent = nullptr);
@@ -29,6 +30,8 @@ public:
 
   enum Mode { LowPass, HighPass };
   void setFilter(int role, Mode mode = LowPass);
+
+  double value() const;
 
 signals:
   void valueChanged(double value);

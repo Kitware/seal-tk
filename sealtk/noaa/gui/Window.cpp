@@ -627,15 +627,25 @@ void WindowPrivate::saveDetections(WindowData* data)
   // Set up writer
   sc::KwiverTracksSink writer;
 
-  auto haveData = writer.setData(data->videoSource, data->trackModel.get());
+  auto* const primaryFilter = new sc::ScalarFilterModel{&writer};
+  primaryFilter->setSourceModel(data->trackModel.get());
+  primaryFilter->setLowerBound(sc::ClassificationScoreRole,
+                               this->scoreFilter->value());
+
+  auto haveData = writer.setData(data->videoSource, primaryFilter);
   if (writer.setTransform(data->transform))
   {
     for (auto* const w : this->allWindows)
     {
       if (w != data)
       {
+        auto* const shadowFilter = new sc::ScalarFilterModel{&writer};
+        shadowFilter->setSourceModel(w->trackModel.get());
+        shadowFilter->setLowerBound(sc::ClassificationScoreRole,
+                                    this->scoreFilter->value());
+
         haveData =
-          writer.addData(w->trackModel.get(), w->transform) || haveData;
+          writer.addData(shadowFilter, w->transform) || haveData;
       }
     }
   }

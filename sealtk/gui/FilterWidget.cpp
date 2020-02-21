@@ -104,6 +104,13 @@ void FilterWidget::setRange(double minimum, double maximum)
 }
 
 // ----------------------------------------------------------------------------
+double FilterWidget::value() const
+{
+  QTE_D();
+  return d->ui.slider->value();
+}
+
+// ----------------------------------------------------------------------------
 void FilterWidget::setValue(double value)
 {
   QTE_D();
