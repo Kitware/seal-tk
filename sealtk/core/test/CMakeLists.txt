@@ -10,8 +10,10 @@ sealtk_add_library(sealtk::core_test_common
 
   SOURCES
     TestCommon.cpp
+    TestTrackModel.cpp
     TestTracks.cpp
     TestVideo.cpp
+    TestVideoSource.cpp
 
   PRIVATE_LINK_LIBRARIES
     qtExtensionsHeaders
@@ -25,6 +27,15 @@ sealtk_add_library(sealtk::core_test_common
 sealtk_add_test(KwiverDetectionsSink
   SOURCES
     KwiverDetectionsSink.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+    sealtk::core_test_common
+  )
+
+sealtk_add_test(KwiverTracksSink
+  SOURCES
+    KwiverTracksSink.cpp
 
   PRIVATE_LINK_LIBRARIES
     sealtk::core

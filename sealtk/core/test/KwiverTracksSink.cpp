@@ -9,8 +9,11 @@
 #include <sealtk/core/test/TestTracks.hpp>
 #include <sealtk/core/test/TestVideoSource.hpp>
 
-#include <sealtk/core/KwiverDetectionsSink.hpp>
+#include <sealtk/core/IdentityTransform.hpp>
+#include <sealtk/core/KwiverTracksSink.hpp>
 #include <sealtk/core/VideoRequest.hpp>
+
+#include <vital/types/homography.h>
 
 #include <QRegularExpression>
 #include <QTemporaryFile>
@@ -58,7 +61,7 @@ void compareFiles(QIODevice& actual, QString const& expected,
 } // namespace <anonymous>
 
 // ============================================================================
-class TestKwiverDetectionsSink : public QObject
+class TestKwiverTracksSink : public QObject
 {
   Q_OBJECT
 
@@ -68,21 +71,23 @@ private slots:
   void cleanup();
 
   void kw18();
-  void csv();
 
 private:
   std::unique_ptr<SimpleVideoSource> source;
-  std::unique_ptr<SimpleTrackModel> model;
+  std::unique_ptr<SimpleTrackModel> primaryModel;
+  std::unique_ptr<SimpleTrackModel> shadowModel;
+  kv::transform_2d_sptr primaryTransform;
+  kv::transform_2d_sptr shadowTransform;
 };
 
 // ----------------------------------------------------------------------------
-void TestKwiverDetectionsSink::initTestCase()
+void TestKwiverTracksSink::initTestCase()
 {
   loadKwiverPlugins();
 }
 
 // ----------------------------------------------------------------------------
-void TestKwiverDetectionsSink::init()
+void TestKwiverTracksSink::init()
 {
   using vmd = core::VideoMetaData;
 
@@ -99,33 +104,56 @@ void TestKwiverDetectionsSink::init()
     {2200, vmd{kv::timestamp{2200, 22}, "frame0022.png"}},
   }});
 
-  this->model.reset(new SimpleTrackModel{{
+  this->primaryModel.reset(new SimpleTrackModel{{
     data::track1,
     data::track2,
     data::track3,
+  }});
+  this->primaryModel->setFirstId(1);
+
+  this->shadowModel.reset(new SimpleTrackModel{{
     data::track4,
     data::track5,
   }});
+  this->shadowModel->setFirstId(4);
+
+  auto primaryMatrix = Eigen::Matrix3d{};
+  primaryMatrix << 2.0, 0.0, 0.0,
+                   0.0, 2.0, 0.0,
+                   0.0, 0.0, 1.0;
+  this->primaryTransform =
+    std::make_shared<kv::homography_<double>>(primaryMatrix);
+
+  auto shadowMatrix = Eigen::Matrix3d{};
+  shadowMatrix << +4.0, -2.0, 800.0,
+                  +2.0, +4.0, 200.0,
+                  0.0, 0.0, 1.0;
+  this->shadowTransform =
+    std::make_shared<kv::homography_<double>>(shadowMatrix);
 }
 
 // ----------------------------------------------------------------------------
-void TestKwiverDetectionsSink::cleanup()
+void TestKwiverTracksSink::cleanup()
 {
   this->source.reset();
-  this->model.reset();
+  this->primaryModel.reset();
+  this->shadowModel.reset();
+  this->shadowTransform.reset();
 }
 
 // ----------------------------------------------------------------------------
-void TestKwiverDetectionsSink::kw18()
+void TestKwiverTracksSink::kw18()
 {
-  KwiverDetectionsSink sink;
+  KwiverTracksSink sink;
 
   connect(&sink, &AbstractDataSink::failed,
           this, [](QString const& message){
             QFAIL(qPrintable(message));
           });
 
-  QVERIFY(sink.setData(this->source.get(), this->model.get()));
+  QVERIFY(sink.setData(this->source.get(), this->primaryModel.get()));
+  QVERIFY(sink.setTransform(this->primaryTransform));
+  QVERIFY(sink.addData(this->shadowModel.get(), this->shadowTransform));
 
   QTemporaryFile out;
   QVERIFY(out.open());
@@ -139,35 +167,7 @@ void TestKwiverDetectionsSink::kw18()
   sink.writeData(uri);
 
   auto const& expected =
-    SEALTK_TEST_DATA_PATH("KwiverDetectionsSink/expected.kw18");
-  compareFiles(out, expected, QRegularExpression{QStringLiteral("^#")});
-}
-
-// ----------------------------------------------------------------------------
-void TestKwiverDetectionsSink::csv()
-{
-  KwiverDetectionsSink sink;
-
-  connect(&sink, &AbstractDataSink::failed,
-          this, [](QString const& message){
-            QFAIL(qPrintable(message));
-          });
-
-  QVERIFY(sink.setData(this->source.get(), this->model.get()));
-
-  QTemporaryFile out;
-  QVERIFY(out.open());
-
-  auto uri = QUrl::fromLocalFile(out.fileName());
-  auto params = QUrlQuery{};
-
-  params.addQueryItem("output:type", "csv");
-  uri.setQuery(params);
-
-  sink.writeData(uri);
-
-  auto const& expected =
-    SEALTK_TEST_DATA_PATH("KwiverDetectionsSink/expected.csv");
+    SEALTK_TEST_DATA_PATH("KwiverTracksSink/expected.kw18");
   compareFiles(out, expected, QRegularExpression{QStringLiteral("^#")});
 }
 
@@ -178,5 +178,5 @@ void TestKwiverDetectionsSink::csv()
 } // namespace sealtk
 
 // ----------------------------------------------------------------------------
-QTEST_MAIN(sealtk::core::test::TestKwiverDetectionsSink)
-#include "KwiverDetectionsSink.moc"
+QTEST_MAIN(sealtk::core::test::TestKwiverTracksSink)
+#include "KwiverTracksSink.moc"
