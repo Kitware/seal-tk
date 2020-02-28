@@ -113,8 +113,6 @@ public slots:
   void setSelectionColor(QColor const& color);
   void setPendingColor(QColor const& color);
 
-  void drawPendingDetection(QRectF const& detection);
-
 protected:
   QTE_DECLARE_PRIVATE(Player)
 

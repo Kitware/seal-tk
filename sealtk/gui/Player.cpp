@@ -4,6 +4,7 @@
 
 #include <sealtk/gui/Player.hpp>
 
+#include <sealtk/gui/DetectionRepresentation.hpp>
 #include <sealtk/gui/PlayerTool.hpp>
 
 #include <sealtk/core/AutoLevelsTask.hpp>
@@ -55,14 +56,6 @@ struct VertexData
 };
 
 // ============================================================================
-struct DetectionInfo
-{
-  qint64 id;
-  int first; // first index in vertex buffer of this detection
-  int count; // number of indices used for this detection
-};
-
-// ============================================================================
 class PlayerPrivate
 {
 public:
@@ -76,8 +69,6 @@ public:
 
   void drawImage(float levelShift, float levelScale,
                  QOpenGLFunctions* functions);
-  void drawDetections(QOpenGLFunctions* functions, QOpenGLBuffer& buffer,
-                      QVector<DetectionInfo> const& indices);
 
   LevelsPair levels();
   void computeLevels(LevelsPair const& temporaryLevels);
@@ -93,19 +84,17 @@ public:
   QMatrix4x4 homography;
   QSize homographyImageSize;
 
-  QVector<DetectionInfo> detectedObjectVertexIndices;
+  std::vector<DetectionInfo> detectedObjectVertexIndices;
+
+  DetectionRepresentation detectionRepresentation;
+  // TODO also move image rendering to a representation?
 
   QOpenGLTexture imageTexture{QOpenGLTexture::Target2DArray};
   QOpenGLBuffer imageVertexBuffer{QOpenGLBuffer::VertexBuffer};
   QOpenGLBuffer detectedObjectVertexBuffer{QOpenGLBuffer::VertexBuffer};
   QOpenGLShaderProgram imageShaderProgram;
-  QOpenGLShaderProgram detectionShaderProgram;
 
-  int imageHomographyLocation;
-  int imageViewHomographyLocation;
-  int detectionHomographyLocation;
-  int detectionViewHomographyLocation;
-  int detectionColorLocation;
+  int imageTransformLocation;
   int levelShiftLocation;
   int levelScaleLocation;
 
@@ -144,6 +133,13 @@ Player::Player(QWidget* parent)
     d_ptr{new PlayerPrivate{this}}
 {
   QTE_D();
+
+  d->detectionRepresentation.setColorFunction(
+    [d](qint64 id){
+      return (d->selectedTracks.contains(id)
+              ? d->selectionColor
+              : d->defaultColor);
+    });
 
   connect(&d->trackModelFilter, &QAbstractItemModel::rowsInserted,
           this, [d]{ d->updateDetections(); });
@@ -454,39 +450,6 @@ void Player::setActiveTool(PlayerTool* tool)
 }
 
 // ----------------------------------------------------------------------------
-void Player::drawPendingDetection(QRectF const& detection)
-{
-  QTE_D();
-
-  auto* const functions = this->context()->functions();
-  QOpenGLBuffer buffer{QOpenGLBuffer::VertexBuffer};
-  QVector<float> vertexData;
-  QVector<DetectionInfo> indices;
-  auto const first = vertexData.count();
-
-  auto const minX = static_cast<float>(detection.left());
-  auto const maxX = static_cast<float>(detection.right());
-  auto const minY = static_cast<float>(detection.top());
-  auto const maxY = static_cast<float>(detection.bottom());
-  vertexData.append(minX); vertexData.append(minY);
-  vertexData.append(maxX); vertexData.append(minY);
-  vertexData.append(maxX); vertexData.append(maxY);
-  vertexData.append(minX); vertexData.append(maxY);
-  vertexData.append(minX); vertexData.append(minY);
-
-  auto const last = vertexData.count();
-  indices.append({-1, first, last - first});
-
-  buffer.create();
-  buffer.bind();
-  buffer.allocate(vertexData.data(),
-                  vertexData.size() * static_cast<int>(sizeof(float)));
-  buffer.release();
-
-  d->drawDetections(functions, buffer, indices);
-}
-
-// ----------------------------------------------------------------------------
 QSize Player::homographyImageSize() const
 {
   QTE_D();
@@ -581,31 +544,12 @@ void Player::initializeGL()
   d->imageShaderProgram.bindAttributeLocation("a_textureCoords", 1);
   d->imageShaderProgram.link();
 
-  d->imageHomographyLocation =
-    d->imageShaderProgram.uniformLocation("homography");
-  d->imageViewHomographyLocation =
-    d->imageShaderProgram.uniformLocation("viewHomography");
+  d->imageTransformLocation =
+    d->imageShaderProgram.uniformLocation("transform");
   d->levelShiftLocation =
     d->imageShaderProgram.uniformLocation("levelShift");
   d->levelScaleLocation =
     d->imageShaderProgram.uniformLocation("levelScale");
-
-  d->detectionShaderProgram.addShaderFromSourceFile(
-    QOpenGLShader::Vertex, ":/DetectionVertex.glsl");
-  // TODO Get the geometry shader working
-  // d->detectionShaderProgram.addShaderFromSourceFile(
-  //   QOpenGLShader::Geometry, ":/DetectionGeometry.glsl");
-  d->detectionShaderProgram.addShaderFromSourceFile(
-    QOpenGLShader::Fragment, ":/DetectionFragment.glsl");
-  d->detectionShaderProgram.bindAttributeLocation("a_vertexCoords", 0);
-  d->detectionShaderProgram.link();
-
-  d->detectionHomographyLocation =
-    d->detectionShaderProgram.uniformLocation("homography");
-  d->detectionViewHomographyLocation =
-    d->detectionShaderProgram.uniformLocation("viewHomography");
-  d->detectionColorLocation =
-    d->detectionShaderProgram.uniformLocation("color");
 
   d->initialized = true;
 }
@@ -628,10 +572,11 @@ void Player::paintGL()
 
     d->drawImage(levelShift, levelScale, functions);
 
-    if (!d->detectedObjectVertexIndices.isEmpty())
+    if (!d->detectedObjectVertexIndices.empty())
     {
-      d->drawDetections(functions, d->detectedObjectVertexBuffer,
-                        d->detectedObjectVertexIndices);
+      d->detectionRepresentation.drawDetections(
+        functions, d->viewHomography * d->homography,
+        d->detectedObjectVertexBuffer, d->detectedObjectVertexIndices);
     }
   }
   else
@@ -873,7 +818,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
     }
 
     auto const last = vertexData.count() / tuple_size;
-    this->detectedObjectVertexIndices.append({id, first, last - first});
+    this->detectedObjectVertexIndices.push_back({id, first, last - first});
   }
 
   if (vertexData.isEmpty())
@@ -984,9 +929,7 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
   this->imageShaderProgram.enableAttributeArray(1);
 
   this->imageShaderProgram.setUniformValue(
-    this->imageHomographyLocation, this->homography);
-  this->imageShaderProgram.setUniformValue(
-    this->imageViewHomographyLocation, this->viewHomography);
+    this->imageTransformLocation, this->viewHomography * this->homography);
 
   this->imageShaderProgram.setUniformValue(
     this->levelShiftLocation, levelShift);
@@ -998,51 +941,6 @@ void PlayerPrivate::drawImage(float levelShift, float levelScale,
   this->imageVertexBuffer.release();
   this->imageTexture.release();
   this->imageShaderProgram.release();
-}
-
-// ----------------------------------------------------------------------------
-void PlayerPrivate::drawDetections(
-  QOpenGLFunctions* functions, QOpenGLBuffer& buffer,
-  QVector<DetectionInfo> const& indices)
-{
-  this->detectionShaderProgram.bind();
-  buffer.bind();
-
-  this->detectionShaderProgram.setAttributeBuffer(0, GL_FLOAT, 0, 2);
-  this->detectionShaderProgram.enableAttributeArray(0);
-
-  this->detectionShaderProgram.setUniformValue(
-    this->detectionHomographyLocation, this->homography);
-  this->detectionShaderProgram.setUniformValue(
-    this->detectionViewHomographyLocation, this->viewHomography);
-
-  for (auto const& vertexInfo : indices)
-  {
-    if (auto const k = vertexInfo.count / 5)
-    {
-      auto const& color =
-        (vertexInfo.id < 0
-         ? this->pendingColor
-         : (this->selectedTracks.contains(vertexInfo.id)
-            ? this->selectionColor
-            : this->defaultColor));
-      this->detectionShaderProgram.setUniformValue(
-        this->detectionColorLocation,
-        static_cast<float>(color.redF()),
-        static_cast<float>(color.greenF()),
-        static_cast<float>(color.blueF()),
-        static_cast<float>(color.alphaF()));
-
-      for (auto const n : kvr::iota(k))
-      {
-        auto const offset = vertexInfo.first + (n * 5);
-        functions->glDrawArrays(GL_LINE_STRIP, offset, 5);
-      }
-    }
-  }
-
-  buffer.release();
-  this->detectionShaderProgram.release();
 }
 
 // ----------------------------------------------------------------------------

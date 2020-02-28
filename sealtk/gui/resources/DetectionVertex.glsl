@@ -6,10 +6,9 @@
 
 in vec2 a_vertexCoords;
 
-uniform mat4 homography;
-uniform mat4 viewHomography;
+uniform mat4 transform;
 
 void main()
 {
-  gl_Position = viewHomography * homography * vec4(a_vertexCoords, 0.0, 1.0);
+  gl_Position = transform * vec4(a_vertexCoords, 0.0, 1.0);
 }

@@ -4,9 +4,12 @@
 
 #include <sealtk/gui/CreateDetectionPlayerTool.hpp>
 
+#include <sealtk/gui/DetectionRepresentation.hpp>
 #include <sealtk/gui/Player.hpp>
 
 #include <QMouseEvent>
+#include <QOpenGLBuffer>
+#include <QOpenGLContext>
 
 namespace sealtk
 {
@@ -20,6 +23,10 @@ class CreateDetectionPlayerToolPrivate
 public:
   QRectF detection;
   bool dragging = false;
+
+  DetectionRepresentation representation;
+  QOpenGLBuffer vertexBuffer{QOpenGLBuffer::VertexBuffer};
+  std::vector<DetectionInfo> vertexIndices;
 };
 
 // ----------------------------------------------------------------------------
@@ -29,6 +36,11 @@ QTE_IMPLEMENT_D_FUNC(CreateDetectionPlayerTool)
 CreateDetectionPlayerTool::CreateDetectionPlayerTool(Player* parent)
   : PlayerTool{parent}, d_ptr{new CreateDetectionPlayerToolPrivate}
 {
+  QTE_D();
+
+  d->representation.setColorFunction(
+    [player = parent](qint64){ return player->pendingColor(); });
+  d->vertexIndices.push_back({0, 0, 5});
 }
 
 // ----------------------------------------------------------------------------
@@ -90,7 +102,31 @@ void CreateDetectionPlayerTool::paintGL()
 
   if (d->dragging && this->player()->hasImage())
   {
-    this->player()->drawPendingDetection(d->detection);
+    if (!d->vertexBuffer.isCreated())
+    {
+      d->vertexBuffer.create();
+    }
+
+    QVector<float> vertexData;
+    auto const minX = static_cast<float>(d->detection.left());
+    auto const maxX = static_cast<float>(d->detection.right());
+    auto const minY = static_cast<float>(d->detection.top());
+    auto const maxY = static_cast<float>(d->detection.bottom());
+    vertexData.append(minX); vertexData.append(minY);
+    vertexData.append(maxX); vertexData.append(minY);
+    vertexData.append(maxX); vertexData.append(maxY);
+    vertexData.append(minX); vertexData.append(maxY);
+    vertexData.append(minX); vertexData.append(minY);
+
+    d->vertexBuffer.bind();
+    d->vertexBuffer.allocate(
+      vertexData.data(), vertexData.size() * static_cast<int>(sizeof(float)));
+    d->vertexBuffer.release();
+
+    d->representation.drawDetections(
+      this->player()->context()->functions(),
+      this->player()->viewHomography() * this->player()->homography(),
+      d->vertexBuffer, d->vertexIndices);
   }
 }
 
