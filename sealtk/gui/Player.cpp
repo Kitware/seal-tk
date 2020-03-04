@@ -96,8 +96,7 @@ public:
 
   QSet<qint64> addDetectionVertices(
     QAbstractItemModel& model, kv::transform_2d_sptr const& transform,
-    QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore,
-    QVector<float>& vertexData);
+    QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore);
 
   void connectDetectionSource(QAbstractItemModel* source);
 
@@ -121,7 +120,8 @@ public:
   QMatrix4x4 inverseHomography;
   QSize homographyImageSize;
 
-  std::vector<DetectionInfo> detectedObjectVertexIndices;
+  QVector<float> detectedObjectVertexData;
+  QVector<DetectionInfo> detectedObjectVertexIndices;
 
   DetectionRepresentation detectionRepresentation;
   // TODO also move image rendering to a representation?
@@ -959,13 +959,12 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
   QTE_Q();
 
-  QVector<float> vertexData;
+  this->detectedObjectVertexData.clear();
   this->detectedObjectVertexIndices.clear();
 
   // Add detections from local model
   this->primaryTracks =
-    this->addDetectionVertices(this->trackModelFilter,
-                               nullptr, {}, {}, vertexData);
+    this->addDetectionVertices(this->trackModelFilter, nullptr, {}, {});
 
   // Add detections from shadow models
   if (q->hasTransform())
@@ -976,14 +975,14 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
       if (sd.transform && sd.trackModelFilter &&
           sd.trackModelFilter->sourceModel())
       {
-        this->addDetectionVertices(*sd.trackModelFilter,
-                                   sd.transform, this->inverseHomography,
-                                   this->primaryTracks, vertexData);
+        this->addDetectionVertices(
+          *sd.trackModelFilter, sd.transform, this->inverseHomography,
+          this->primaryTracks);
       }
     }
   }
 
-  if (vertexData.isEmpty())
+  if (this->detectedObjectVertexData.isEmpty())
   {
     return;
   }
@@ -996,16 +995,18 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
 
   this->detectedObjectVertexBuffer.bind();
   this->detectedObjectVertexBuffer.allocate(
-    vertexData.data(), vertexData.size() * static_cast<int>(sizeof(float)));
+    this->detectedObjectVertexData.data(),
+    this->detectedObjectVertexData.size() * static_cast<int>(sizeof(float)));
   this->detectedObjectVertexBuffer.release();
 }
 
 // ----------------------------------------------------------------------------
 QSet<qint64> PlayerPrivate::addDetectionVertices(
   QAbstractItemModel& model, kv::transform_2d_sptr const& transform,
-  QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore,
-  QVector<float>& vertexData)
+  QMatrix4x4 const& inverseTransform, QSet<qint64> const& idsToIgnore)
 {
+  auto& vertexData = this->detectedObjectVertexData;
+
   static constexpr decltype(vertexData.count()) tupleSize = 2;
   QSet<qint64> idsUsed;
 
@@ -1078,7 +1079,7 @@ QSet<qint64> PlayerPrivate::addDetectionVertices(
     }
 
     auto const last = vertexData.count() / tupleSize;
-    this->detectedObjectVertexIndices.push_back({id, first, last - first});
+    this->detectedObjectVertexIndices.append({id, first, last - first});
   }
 
   return idsUsed;
