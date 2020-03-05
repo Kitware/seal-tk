@@ -619,6 +619,12 @@ bool Player::hasImage() const
 }
 
 // ----------------------------------------------------------------------------
+bool Player::hasTransform() const
+{
+  return false;
+}
+
+// ----------------------------------------------------------------------------
 QPointF Player::viewToImage(QPointF const& viewCoord) const
 {
   QTE_D();
@@ -945,6 +951,8 @@ void PlayerPrivate::updateViewHomography()
 // ----------------------------------------------------------------------------
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
+  QTE_Q();
+
   QVector<float> vertexData;
   this->detectedObjectVertexIndices.clear();
 
@@ -954,7 +962,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
                                nullptr, {}, {}, vertexData);
 
   // Add detections from shadow models
-  if (!this->inverseHomography.isIdentity() || this->homography.isIdentity())
+  if (q->hasTransform())
   {
     for (auto const& i : this->shadowData)
     {

@@ -78,6 +78,7 @@ public:
   QMatrix4x4 viewHomography() const;
   PlayerTool* activeTool() const;
   bool hasImage() const;
+  virtual bool hasTransform() const;
 
   QPointF viewToImage(QPointF const& viewCoord) const;
 
