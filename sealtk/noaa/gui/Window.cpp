@@ -744,7 +744,10 @@ void WindowPrivate::createDetection(WindowData* data, QRectF const& detection)
   auto const box =
     kv::bounding_box_d{detection.left(), detection.top(),
                        detection.right(), detection.bottom()};
-  auto const& detectedObject = std::make_shared<kv::detected_object>(box);
+  auto const& kdot = std::make_shared<kv::detected_object_type>();
+  kdot->set_score("unspecified", 1.0);
+  auto const& detectedObject =
+    std::make_shared<kv::detected_object>(box, 1.0, kdot);
   auto const& trackState =
     std::make_shared<kv::object_track_state>(frame, time, detectedObject);
 
