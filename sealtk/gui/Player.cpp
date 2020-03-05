@@ -315,6 +315,11 @@ void Player::setHomography(QMatrix4x4 const& homography)
     d->homography = homography;
     d->inverseHomography = homography.inverted();
     d->updateViewHomography();
+
+    if (!d->shadowData.empty())
+    {
+      d->updateDetections();
+    }
   }
 }
 
