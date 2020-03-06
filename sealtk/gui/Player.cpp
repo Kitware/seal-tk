@@ -789,7 +789,8 @@ void Player::mouseMoveEvent(QMouseEvent* event)
 
   if (d->dragging && event->buttons() & Qt::MiddleButton)
   {
-    this->setCenter(this->center() - (event->pos() - d->dragStart) / d->zoom);
+    auto const delta = QPointF{event->pos() - d->dragStart};
+    this->setCenter(this->center() - (delta / d->zoom));
     d->dragStart = event->pos();
   }
   else
