@@ -17,8 +17,10 @@
 #include <vital/range/iota.h>
 
 #include <qtGet.h>
+#include <qtStlUtil.h>
 
 #include <QApplication>
+#include <QFileInfo>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -281,6 +283,9 @@ void Player::setImage(kv::image_container_sptr const& image,
     emit this->imageSizeChanged({static_cast<int>(d->image->width()),
                                  static_cast<int>(d->image->height())});
   }
+
+  auto const fi = QFileInfo{qtString(metaData.imageName())};
+  emit imageNameChanged(fi.fileName());
 }
 
 // ----------------------------------------------------------------------------

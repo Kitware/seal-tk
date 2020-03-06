@@ -33,6 +33,8 @@ public:
   void setCentralWidget(QWidget* widget);
   bool closable() const;
   void setClosable(bool closable);
+  void setFilenameVisible(bool visible);
+  void setFilename(QString const& filename);
 
 protected:
   QTE_DECLARE_PRIVATE(SplitterWindow)

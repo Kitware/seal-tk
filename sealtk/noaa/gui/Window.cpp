@@ -212,6 +212,13 @@ Window::Window(QWidget* parent)
   d->videoController = make_unique<sc::VideoController>(this);
   d->ui.control->setVideoController(d->videoController.get());
 
+  connect(d->ui.actionShowImageFilename, &QAction::toggled,
+          this, [d](bool show){
+            for (auto* const w : d->allWindows)
+            {
+              w->window->setFilenameVisible(show);
+            }
+          });
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
   connect(d->ui.control, &sg::PlayerControl::previousFrameTriggered,
@@ -295,6 +302,7 @@ Window::Window(QWidget* parent)
   d->uiState.mapState("Tracks/state", d->ui.tracks->header());
   d->uiState.mapChecked("View/showIR", d->ui.actionShowIrPane);
   d->uiState.mapChecked("View/showUV", d->ui.actionShowUvPane);
+  d->uiState.mapChecked("View/showFileName", d->ui.actionShowImageFilename);
 
   d->uiState.restore();
 }
@@ -458,6 +466,9 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   QObject::connect(data->player, &sg::Player::centerChanged,
                    q, &Window::setCenter);
   data->player->setCenter(q->center());
+
+  QObject::connect(data->player, &sg::Player::imageNameChanged,
+                   data->window, &sg::SplitterWindow::setFilename);
 
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,

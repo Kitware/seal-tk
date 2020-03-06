@@ -81,6 +81,22 @@ void SplitterWindow::setClosable(bool closable)
 }
 
 // ----------------------------------------------------------------------------
+void SplitterWindow::setFilenameVisible(bool visible)
+{
+  QTE_D();
+
+  d->ui.filenameLabel->setVisible(visible);
+}
+
+// ----------------------------------------------------------------------------
+void SplitterWindow::setFilename(QString const& filename)
+{
+  QTE_D();
+
+  d->ui.filenameLabel->setText(filename);
+}
+
+// ----------------------------------------------------------------------------
 SplitterWindowPrivate::SplitterWindowPrivate(SplitterWindow* parent)
   : parent(parent)
 {
