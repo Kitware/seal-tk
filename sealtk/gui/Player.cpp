@@ -21,6 +21,7 @@
 
 #include <QApplication>
 #include <QFileInfo>
+#include <QFutureWatcher>
 #include <QMatrix3x3>
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -32,7 +33,10 @@
 #include <QVector2D>
 #include <QWheelEvent>
 
+#include <QtConcurrentMap>
 #include <QtConcurrentRun>
+
+#include <array>
 
 #include <cmath>
 
@@ -43,6 +47,9 @@ namespace sealtk
 {
 
 namespace gui
+{
+
+namespace // anonymous
 {
 
 // ============================================================================
@@ -83,6 +90,97 @@ struct ShadowData
 };
 
 // ============================================================================
+struct PickCandidate
+{
+  qint64 id = -1;
+  double distance = std::numeric_limits<double>::infinity();
+};
+
+// ----------------------------------------------------------------------------
+double distance(QPointF const& a, QPointF const& b)
+{
+  // Compute distance between a and b
+  return std::hypot(b.x() - a.x(), b.y() - a.y());
+}
+
+// ----------------------------------------------------------------------------
+double distance(QPointF const& a, QPointF const& b, QPointF const& p)
+{
+  // Compute signed distance between p and the line defined by a and b
+  auto const x = b.x() - a.x();
+  auto const y = b.y() - a.y();
+  return ((y * p.x()) - (x * p.y()) + (b.x() * a.y()) - (a.x() * b.y())) /
+         std::hypot(x, y);
+}
+
+// ----------------------------------------------------------------------------
+double project(QPointF const& a, QPointF const& b, QPointF const& p)
+{
+  // Compute relative distance along the line segment defined by a and b
+  // of the point p projected to the same (0.0 == a, 1.0 == b)
+  auto const x = b.x() - a.x();
+  auto const y = b.y() - a.y();
+  return ((x * (p.x() - a.x())) + (y * (p.y() - a.y()))) /
+         ((x * x) + (y * y));
+}
+
+// ----------------------------------------------------------------------------
+double computePickDistance(
+  std::array<QPointF, 4> const& polygon, QPointF const& pickPosition)
+{
+  // Compute distances to each edge of the polygon
+  std::array<double, 4> distances;
+  for (auto const i : kvr::iota(distances.size()))
+  {
+    auto const j = (i + 1) % polygon.size();
+    distances[i] = distance(polygon[i], polygon[j], pickPosition);
+  }
+
+  // Check if the pick is inside the polygon
+  if ((distances[0] < 0.0) == (distances[2] < 0.0) &&
+      (distances[1] < 0.0) == (distances[3] < 0.0))
+  {
+    auto const d1 = std::min(std::abs(distances[0]), std::abs(distances[2]));
+    auto const d2 = std::min(std::abs(distances[1]), std::abs(distances[3]));
+    return -std::min(d1, d2);
+  }
+
+  // Not inside the polygon; compute minimum distance to any edge
+  auto best = std::numeric_limits<double>::infinity();
+  for (auto const i : kvr::iota(polygon.size()))
+  {
+    auto const j = (i + 1) % polygon.size();
+    auto const t = project(polygon[i], polygon[j], pickPosition);
+
+    if (t < 0.0)
+    {
+      best = std::min(best, distance(polygon[i], pickPosition));
+    }
+    else if (t > 1.0)
+    {
+      best = std::min(best, distance(polygon[j], pickPosition));
+    }
+    else
+    {
+      best = std::min(best, std::abs(distances[i]));
+    }
+  }
+  return best;
+}
+
+// ----------------------------------------------------------------------------
+void reducePicks(
+  PickCandidate& bestCandidate, PickCandidate const& otherCandidate)
+{
+  if (otherCandidate.distance < bestCandidate.distance)
+  {
+    bestCandidate = otherCandidate;
+  }
+}
+
+} // namespace <anonymous>
+
+// ============================================================================
 class PlayerPrivate
 {
 public:
@@ -108,10 +206,17 @@ public:
 
   ShadowData& getShadowData(QObject* source);
 
+  void pickDetection(QPointF const& pos);
+  void cancelPick();
+
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
 
   QMetaObject::Connection destroyResourcesConnection;
+
+  static constexpr auto pickThreshold = 8.0;
+  QFuture<PickCandidate> pickTask;
+  QFutureWatcher<PickCandidate> pickWatcher;
 
   kv::timestamp timeStamp;
   kv::image_container_sptr image;
@@ -202,6 +307,15 @@ Player::Player(QWidget* parent)
           this, [d]{ d->updateDetections(); });
   connect(&d->trackModelFilter, &QAbstractItemModel::modelReset,
           this, [d]{ d->updateDetections(); });
+
+  connect(&d->pickWatcher, &QFutureWatcher<qint64>::finished,
+          this, [this, d]{
+            auto const& pick = d->pickTask.result();
+            if (std::isfinite(pick.distance))
+            {
+              emit this->trackPicked(d->pickTask.result().id);
+            }
+          });
 }
 
 // ----------------------------------------------------------------------------
@@ -775,6 +889,8 @@ void Player::mousePressEvent(QMouseEvent* event)
 {
   QTE_D();
 
+  d->cancelPick();
+
   if (event->button() == Qt::MiddleButton)
   {
     d->dragging = true;
@@ -822,6 +938,10 @@ void Player::mouseReleaseEvent(QMouseEvent* event)
   if (d->activeTool)
   {
     d->activeTool->mouseReleaseEvent(event);
+  }
+  else if (event->button() == Qt::LeftButton)
+  {
+    d->pickDetection(event->pos());
   }
 }
 
@@ -961,6 +1081,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
 
   this->detectedObjectVertexData.clear();
   this->detectedObjectVertexIndices.clear();
+  this->cancelPick();
 
   // Add detections from local model
   this->primaryTracks =
@@ -1231,6 +1352,84 @@ ShadowData& PlayerPrivate::getShadowData(QObject* source)
     [source, this]{ this->shadowData.erase(source); });
 
   return this->shadowData[source];
+}
+
+// ----------------------------------------------------------------------------
+void PlayerPrivate::pickDetection(QPointF const& pos)
+{
+  QTE_Q();
+
+  auto screenToProjection = QMatrix4x4{};
+  screenToProjection.ortho(q->rect());
+
+  auto const& xf = screenToProjection.inverted() *
+                   this->viewHomography * this->homography;
+
+  struct TestPickFunctor
+  {
+    using result_type = PickCandidate;
+
+    // Test pick against a single detection box
+    result_type test(DetectionInfo const& info, int offset) const
+    {
+      // Transform points from world space to screen space
+      std::array<QPointF, 4> points;
+      for (auto const i : kvr::iota(points.size()))
+      {
+        auto const n = 2 * (offset + static_cast<decltype(offset)>(i));
+        auto const p = QPointF{this->vertexData[n + 0],
+                               this->vertexData[n + 1]};
+        points[i] = this->transform.map(p);
+      }
+
+      // Compute pick score for transformed polygon
+      auto const score = computePickDistance(points, pickPosition);
+
+      // Test raw score against threshold, and return pick result if viable
+      // (a negative score is inside the polygon)
+      if (score < PlayerPrivate::pickThreshold)
+      {
+        return {info.id, std::abs(score)};
+      }
+      return {};
+    }
+
+    // Test pick against all boxes of a detection
+    result_type operator()(DetectionInfo const& info) const
+    {
+      result_type result;
+      for (auto const n : kvr::iota(info.count / 5))
+      {
+        auto const offset = info.first + (n * 5);
+        reducePicks(result, this->test(info, offset));
+      }
+
+      return result;
+    }
+
+    QPointF const pickPosition;
+    QMatrix4x4 const transform;
+    QVector<float> const vertexData;
+  };
+
+  // Run pick tests against all detections
+  auto const testPick =
+    TestPickFunctor{pos, xf, this->detectedObjectVertexData};
+
+  this->pickTask =
+    QtConcurrent::mappedReduced(this->detectedObjectVertexIndices,
+                                testPick, reducePicks);
+  this->pickWatcher.setFuture(this->pickTask);
+}
+
+// ----------------------------------------------------------------------------
+void PlayerPrivate::cancelPick()
+{
+  if (this->pickTask.isRunning())
+  {
+    this->pickTask.cancel();
+    this->pickWatcher.setFuture({});
+  }
 }
 
 } // namespace gui
