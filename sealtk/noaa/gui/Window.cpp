@@ -140,6 +140,7 @@ public:
   void setTrackModel(
     WindowData* data, std::shared_ptr<QAbstractItemModel> const& model);
 
+  void setSelectedTrack(qint64 id);
   void updateTrackSelection(QItemSelection const& selection);
 
   Ui::Window ui;
@@ -478,6 +479,10 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
     q, [data, this]{ this->saveDetections(data); });
 
   QObject::connect(
+    data->player, &sealtk::noaa::gui::Player::trackPicked,
+    q, [this](qint64 id){ this->setSelectedTrack(id); });
+
+  QObject::connect(
     data->createDetectionTool,
     &sg::CreateDetectionPlayerTool::detectionCreated,
     [this, data](QRectF const& detection){
@@ -703,6 +708,32 @@ void WindowPrivate::setTrackModel(
     {
       w->player->setShadowTrackModel(data->player, model.get());
     }
+  }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::setSelectedTrack(qint64 id)
+{
+  QItemSelection selection;
+
+  for (auto const row : kvr::iota(this->trackModel.rowCount()))
+  {
+    auto const& index = this->trackModel.index(row, 0);
+    auto const& data = this->trackModel.data(index, sc::LogicalIdentityRole);
+    if (data.value<qint64>() == id)
+    {
+      auto const r = this->trackRepresentation.mapFromSource(index).row();
+      auto const c = this->trackRepresentation.columnCount();
+      auto const& left = this->trackRepresentation.index(r, 0);
+      auto const& right = this->trackRepresentation.index(r, c - 1);
+      selection.merge({left, right}, QItemSelectionModel::Select);
+    }
+  }
+
+  if (!selection.isEmpty())
+  {
+    this->ui.tracks->selectionModel()->select(
+      selection, QItemSelectionModel::ClearAndSelect);
   }
 }
 
