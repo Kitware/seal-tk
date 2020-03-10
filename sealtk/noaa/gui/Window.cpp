@@ -477,6 +477,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   if (role == sealtk::noaa::gui::Player::Role::Master)
   {
     data->transform = std::make_shared<sealtk::core::IdentityTransform>();
+    data->player->setTransform(data->transform);
   }
   else
   {

@@ -123,6 +123,25 @@ void Player::setImage(kv::image_container_sptr const& image,
 }
 
 // ----------------------------------------------------------------------------
+bool Player::hasTransform() const
+{
+  QTE_D();
+
+  return !!d->transform;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setTransform(kv::transform_2d_sptr const& transform)
+{
+  QTE_D();
+
+  d->transform = transform;
+  d->updateTransform(this);
+
+  emit this->transformChanged(transform);
+}
+
+// ----------------------------------------------------------------------------
 void Player::contextMenuEvent(QContextMenuEvent* event)
 {
   QTE_D();
@@ -164,10 +183,7 @@ void PlayerPrivate::loadTransform(Player* q)
         "transform_reader", config, ti);
       if (ti)
       {
-        this->transform = ti->load(stdString(path));
-        this->updateTransform(q);
-
-        emit q->transformChanged(this->transform);
+        q->setTransform(ti->load(stdString(path)));
       }
       else
       {
@@ -227,9 +243,12 @@ void PlayerPrivate::updateTransform(Player* q)
       }
       return;
     }
+
+    qDebug() << "Failed to set homography from transform";
+    this->transform.reset();
   }
 
-  // Did not successfully set homography; use identity
+  // Failed to set homography or no transform; use identity
   q->setHomography({});
   if (this->resetTransformAction)
   {

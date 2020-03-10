@@ -315,6 +315,11 @@ void Player::setHomography(QMatrix4x4 const& homography)
     d->homography = homography;
     d->inverseHomography = homography.inverted();
     d->updateViewHomography();
+
+    if (!d->shadowData.empty())
+    {
+      d->updateDetections();
+    }
   }
 }
 
@@ -614,6 +619,12 @@ bool Player::hasImage() const
 }
 
 // ----------------------------------------------------------------------------
+bool Player::hasTransform() const
+{
+  return false;
+}
+
+// ----------------------------------------------------------------------------
 QPointF Player::viewToImage(QPointF const& viewCoord) const
 {
   QTE_D();
@@ -778,7 +789,8 @@ void Player::mouseMoveEvent(QMouseEvent* event)
 
   if (d->dragging && event->buttons() & Qt::MiddleButton)
   {
-    this->setCenter(this->center() - (event->pos() - d->dragStart) / d->zoom);
+    auto const delta = QPointF{event->pos() - d->dragStart};
+    this->setCenter(this->center() - (delta / d->zoom));
     d->dragStart = event->pos();
   }
   else
@@ -940,6 +952,8 @@ void PlayerPrivate::updateViewHomography()
 // ----------------------------------------------------------------------------
 void PlayerPrivate::updateDetectedObjectVertexBuffers()
 {
+  QTE_Q();
+
   QVector<float> vertexData;
   this->detectedObjectVertexIndices.clear();
 
@@ -949,7 +963,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
                                nullptr, {}, {}, vertexData);
 
   // Add detections from shadow models
-  if (!this->inverseHomography.isIdentity() || this->homography.isIdentity())
+  if (q->hasTransform())
   {
     for (auto const& i : this->shadowData)
     {

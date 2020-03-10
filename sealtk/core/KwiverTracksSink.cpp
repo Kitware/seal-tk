@@ -157,7 +157,8 @@ bool KwiverTracksSink::addData(
           // Create track state
           auto detection = d->makeDetection(model, jIndex, transform);
           auto state =
-            std::make_shared<kv::object_track_state>(0, t, detection);
+            std::make_shared<kv::object_track_state>(
+              0, t, std::move(detection));
 
           // Add state to map
           frame->trackStates.emplace(id, std::move(state));
@@ -270,8 +271,16 @@ kv::detected_object_sptr KwiverTracksSinkPrivate::makeDetection(
     kv::bounding_box_d{{adjustedBox.left(), adjustedBox.top()},
                        adjustedBox.width(), adjustedBox.height()};
   auto const& kdot = classificationToDetectedObjectType(type);
+  auto const& detection =
+    std::make_shared<kv::detected_object>(kbox, 1.0, kdot);
 
-  return std::make_shared<kv::detected_object>(kbox, 1.0, kdot);
+  auto const& notes = model->data(index, NotesRole).toStringList();
+  for (auto const& n : notes)
+  {
+    detection->add_note(stdString(n));
+  }
+
+  return detection;
 }
 
 } // namespace core

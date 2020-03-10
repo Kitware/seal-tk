@@ -45,6 +45,9 @@ public:
   void setImage(kwiver::vital::image_container_sptr const& image,
                 sealtk::core::VideoMetaData const& metaData) override;
 
+  bool hasTransform() const override;
+  void setTransform(kwiver::vital::transform_2d_sptr const&);
+
 signals:
   void loadDetectionsTriggered() const;
   void saveDetectionsTriggered() const;

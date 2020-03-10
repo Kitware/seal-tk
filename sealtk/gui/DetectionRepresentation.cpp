@@ -84,7 +84,7 @@ void DetectionRepresentation::drawDetections(
   {
     if (auto const k = vertexInfo.count / 5)
     {
-      auto const& color = d->colorFunction(vertexInfo.id < 0);
+      auto const& color = d->colorFunction(vertexInfo.id);
       d->shaderProgram.setUniformValue(
         d->colorLocation,
         static_cast<float>(color.redF()),
