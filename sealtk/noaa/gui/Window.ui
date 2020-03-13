@@ -68,6 +68,8 @@
     </property>
     <addaction name="actionShowIrPane"/>
     <addaction name="actionShowUvPane"/>
+    <addaction name="separator"/>
+    <addaction name="actionShowImageFilename"/>
    </widget>
    <addaction name="menuTools"/>
    <addaction name="menuView"/>
@@ -149,6 +151,17 @@
    </property>
    <property name="text">
     <string>&amp;UV Pane</string>
+   </property>
+  </action>
+  <action name="actionShowImageFilename">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Image &amp;Filename</string>
    </property>
   </action>
  </widget>

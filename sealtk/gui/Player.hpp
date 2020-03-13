@@ -90,6 +90,7 @@ signals:
   void zoomChanged(float zoom) const;
   void centerChanged(QPointF center) const;
   void imageSizeChanged(QSize imageSize) const;
+  void imageNameChanged(QString const& imageName) const;
   void activeToolChanged(PlayerTool* tool) const;
 
   void defaultColorChanged(QColor const& color) const;
