@@ -92,6 +92,9 @@
        <property name="rootIsDecorated">
         <bool>false</bool>
        </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
        <property name="sortingEnabled">
         <bool>true</bool>
        </property>

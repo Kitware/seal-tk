@@ -32,12 +32,13 @@ namespace // anonymous
 
 // ----------------------------------------------------------------------------
 kv::track_sptr createTrack(
-  kv::track_id_t id, TimeMap<TrackState> const& states)
+  kv::track_id_t id, TimeMap<TrackState> const& states,
+  kv::frame_id_t frameOffset = 0)
 {
   auto track = kv::track::create();
   track->set_id(id);
 
-  auto frame = kv::frame_id_t{0};
+  auto frame = frameOffset;
 
   for (auto const& i : states | kvr::indirect)
   {
@@ -67,6 +68,7 @@ class TestKwiverTrackModel : public QObject
 private slots:
   void operations();
   void data();
+  void mergeTracks();
 };
 
 // ----------------------------------------------------------------------------
@@ -126,6 +128,43 @@ void TestKwiverTrackModel::data()
   testTrackData(model, 3, data::track3);
   testTrackData(model, 4, data::track4);
   testTrackData(model, 5, data::track5);
+}
+
+// ----------------------------------------------------------------------------
+void TestKwiverTrackModel::mergeTracks()
+{
+  using Result = KwiverTrackModel::MergeTracksResult;
+
+  KwiverTrackModel model;
+
+  model.addTracks(
+    std::make_shared<kv::object_track_set>(
+      std::vector<kv::track_sptr>{
+        createTrack(1, data::track1, 0),
+        createTrack(2, data::track2, 2),
+        createTrack(3, data::track3, 6),
+        createTrack(4, data::track4, 17),
+        createTrack(5, data::track5, 10),
+        createTrack(6, data::track1, 0),
+      }));
+  QCOMPARE(model.rowCount(), 6);
+
+  QCOMPARE(model.mergeTracks({1}), Result::NothingToDo);
+  QCOMPARE(model.mergeTracks({7}), Result::NothingToDo);
+  QCOMPARE(model.mergeTracks({7, 8}), Result::NothingToDo);
+  QCOMPARE(model.mergeTracks({1, 7}), Result::NothingToDo);
+  QCOMPARE(model.rowCount(), 6);
+
+  QCOMPARE(model.mergeTracks({1, 6}), Result::OverlappingStates);
+  QCOMPARE(model.rowCount(), 6);
+
+  QCOMPARE(model.mergeTracks({2, 3}), Result::Success);
+  QCOMPARE(model.rowCount(), 5);
+
+  auto expected = TimeMap<TrackState>{};
+  expected.unite(data::track2);
+  expected.unite(data::track3);
+  testTrackData(model, 2, expected);
 }
 
 } // namespace test

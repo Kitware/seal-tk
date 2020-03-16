@@ -41,6 +41,9 @@ struct KwiverTrack
   KwiverTrack(KwiverTrack const& other) = default;
   KwiverTrack(kv::track_sptr&& object);
 
+  KwiverTrack& operator=(KwiverTrack&&) = default;
+  KwiverTrack& operator=(KwiverTrack const&) = default;
+
   core::UnsharedPointer<kv::track> track;
   bool visible = true;
 };
@@ -439,6 +442,102 @@ void KwiverTrackModel::setTracks(
   }
 
   this->endResetModel();
+}
+
+// ----------------------------------------------------------------------------
+KwiverTrackModel::MergeTracksResult KwiverTrackModel::mergeTracks(
+  QSet<qint64> const& ids)
+{
+  auto rows = [&]{
+    QTE_D_CONST();
+
+    auto sortedIds = ids.toList();
+    std::sort(sortedIds.begin(), sortedIds.end());
+
+    QList<size_t const*> rows;
+    for (auto const id : sortedIds)
+    {
+      if (auto const* row = qtGet(d->trackMap, id))
+      {
+        rows.append(row);
+      }
+    }
+    return rows;
+  }();
+
+  if (rows.count() < 2)
+  {
+    return MergeTracksResult::NothingToDo;
+  }
+
+  QTE_D_DETACH();
+
+  // Get target track
+  auto* const targetRow = rows.takeFirst();
+  auto& targetTrack = *(d->tracks[*targetRow].track);
+
+  // Copy all target track states to temporary history
+  QMap<kv::frame_id_t, kv::track_state_sptr> tempHistory;
+  for (auto const& s : targetTrack | kv::as_object_track)
+  {
+    tempHistory.insert(s->frame(), s);
+  }
+
+  // Merge other track states into temporary history
+  for (auto *const row : rows)
+  {
+    auto const& track = *(d->tracks[*row].track);
+    for (auto const& s : track | kv::as_object_track)
+    {
+      if (tempHistory.contains(s->frame()))
+      {
+        return MergeTracksResult::OverlappingStates;
+      }
+      tempHistory.insert(s->frame(), s);
+    }
+  }
+
+  // Remove tracks to be merged
+  for (auto* const row : rows)
+  {
+    auto const r = static_cast<int>(*row);
+    auto const trackIter = d->tracks.begin() + r;
+    auto const trackId = (*trackIter).track->id();
+    this->beginRemoveRows({}, r, r);
+    // Remove track from tracks vector
+    d->tracks.erase(trackIter);
+    // Remove track from map
+    d->trackMap.remove(trackId);
+    // Shift map indexes
+    for (auto& j : d->trackMap)
+    {
+      if (j >= *row)
+      {
+        --j;
+      }
+    }
+    this->endRemoveRows();
+  }
+
+  // Clear the target track's history
+  auto const r = static_cast<int>(*targetRow);
+  auto const targetIndex = this->index(r, 0);
+
+  this->beginRemoveRows(
+    targetIndex, r, r + static_cast<int>(targetTrack.size()) - 1);
+  targetTrack.clear();
+  this->endRemoveRows();
+
+  // Add merged history to target track
+  this->beginInsertRows(
+    targetIndex, r, r + static_cast<int>(tempHistory.size() - 1));
+  for (auto&& s : tempHistory)
+  {
+    targetTrack.append(std::move(s));
+  }
+  this->endInsertRows();
+
+  return MergeTracksResult::Success;
 }
 
 // ----------------------------------------------------------------------------

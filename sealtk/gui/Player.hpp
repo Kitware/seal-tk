@@ -100,8 +100,9 @@ signals:
 public slots:
   virtual void setImage(kwiver::vital::image_container_sptr const& image,
                         sealtk::core::VideoMetaData const& metaData);
-  void setTrackModel(QAbstractItemModel* model);
-  void setSelectedTrackIds(QSet<qint64> const& selectedIds);
+  virtual void setTrackModel(QAbstractItemModel* model);
+  virtual void setSelectedTrackIds(QSet<qint64> const& selectedIds);
+
   void setHomography(QMatrix4x4 const& homography);
   void setHomographyImageSize(QSize size);
   void setZoom(float zoom);
