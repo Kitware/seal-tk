@@ -61,7 +61,7 @@ void DetectionRepresentation::setColorFunction(
 // ----------------------------------------------------------------------------
 void DetectionRepresentation::drawDetections(
   QOpenGLFunctions* functions, QMatrix4x4 const& transform,
-  QOpenGLBuffer& vertexBuffer, std::vector<DetectionInfo> const& indices)
+  QOpenGLBuffer& vertexBuffer, QVector<DetectionInfo> const& indices)
 {
   QTE_D();
 

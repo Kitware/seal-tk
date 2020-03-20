@@ -26,7 +26,7 @@ public:
 
   DetectionRepresentation representation;
   QOpenGLBuffer vertexBuffer{QOpenGLBuffer::VertexBuffer};
-  std::vector<DetectionInfo> vertexIndices;
+  QVector<DetectionInfo> vertexIndices;
 };
 
 // ----------------------------------------------------------------------------
@@ -40,7 +40,7 @@ CreateDetectionPlayerTool::CreateDetectionPlayerTool(Player* parent)
 
   d->representation.setColorFunction(
     [player = parent](qint64){ return player->pendingColor(); });
-  d->vertexIndices.push_back({0, 0, 5});
+  d->vertexIndices.append({0, 0, 5});
 }
 
 // ----------------------------------------------------------------------------

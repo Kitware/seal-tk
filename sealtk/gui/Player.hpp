@@ -97,6 +97,8 @@ signals:
   void selectionColorChanged(QColor const& color) const;
   void pendingColorChanged(QColor const& color) const;
 
+  void trackPicked(qint64 id) const;
+
 public slots:
   virtual void setImage(kwiver::vital::image_container_sptr const& image,
                         sealtk::core::VideoMetaData const& metaData);
