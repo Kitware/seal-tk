@@ -400,6 +400,11 @@ void Player::setImage(kv::image_container_sptr const& image,
                                  static_cast<int>(d->image->height())});
   }
 
+  if (d->activeTool)
+  {
+    d->activeTool->updateImage();
+  }
+
   auto const fi = QFileInfo{qtString(metaData.imageName())};
   emit imageNameChanged(fi.fileName());
 }
