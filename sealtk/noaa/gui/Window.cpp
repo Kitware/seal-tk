@@ -116,6 +116,14 @@ public:
   }
 };
 
+// ----------------------------------------------------------------------------
+void addShortcut(QAction* action, QKeySequence const& shortcut)
+{
+  auto shortcuts = action->shortcuts();
+  shortcuts.append(shortcut);
+  action->setShortcuts(shortcuts);
+}
+
 } // namespace <anonymous>
 
 // ============================================================================
@@ -181,6 +189,9 @@ Window::Window(QWidget* parent)
 {
   QTE_D();
   d->ui.setupUi(this);
+
+  addShortcut(d->ui.actionCreateDetection, Qt::Key_C);
+  addShortcut(d->ui.actionDeleteDetection, Qt::Key_D);
 
   d->trackRepresentation.setSourceModel(&d->trackModel);
   d->ui.tracks->setModel(&d->trackRepresentation);
