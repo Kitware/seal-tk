@@ -736,6 +736,7 @@ void WindowPrivate::setSelectedTrack(qint64 id)
   {
     this->ui.tracks->selectionModel()->select(
       selection, QItemSelectionModel::ClearAndSelect);
+    this->ui.tracks->scrollTo(selection.indexes().first());
   }
 }
 
