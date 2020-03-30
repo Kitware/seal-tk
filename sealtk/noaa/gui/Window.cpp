@@ -782,7 +782,7 @@ void WindowPrivate::setActiveTool(Tool* WindowData::* tool)
     QTE_Q();
 
     this->cancelToolShortcut = new QShortcut{Qt::Key_Escape, q};
-    QObject::connect(this->cancelToolShortcut, &QShortcut::activated,
+    QObject::connect(this->cancelToolShortcut.data(), &QShortcut::activated,
                      q, [this]{ this->resetActiveTool(); });
   }
 
@@ -800,7 +800,7 @@ void WindowPrivate::resetActiveTool()
     w->player->setActiveTool(nullptr);
     w->player->update();
   }
-  delete this->cancelToolShortcut;
+  delete this->cancelToolShortcut.data();
 }
 
 // ----------------------------------------------------------------------------
