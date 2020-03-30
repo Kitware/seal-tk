@@ -258,8 +258,10 @@ public:
   QPointF center{0.0f, 0.0f};
   float zoom = 1.0f;
 
-  QPoint dragStart;
+  static constexpr auto dragThreshold = 6.0;
   bool dragging = false;
+  QPoint dragStart;
+  Qt::MouseButtons dragButtons;
 
   CenterRequest centerRequest;
 
@@ -396,6 +398,11 @@ void Player::setImage(kv::image_container_sptr const& image,
   {
     emit this->imageSizeChanged({static_cast<int>(d->image->width()),
                                  static_cast<int>(d->image->height())});
+  }
+
+  if (d->activeTool)
+  {
+    d->activeTool->updateImage();
   }
 
   auto const fi = QFileInfo{qtString(metaData.imageName())};
@@ -891,15 +898,24 @@ void Player::mousePressEvent(QMouseEvent* event)
 
   d->cancelPick();
 
-  if (event->button() == Qt::MiddleButton)
-  {
-    d->dragging = true;
-    d->dragStart = event->pos();
-  }
-
   if (d->activeTool)
   {
+    auto const wasAccepted = event->isAccepted();
+    event->ignore();
+
     d->activeTool->mousePressEvent(event);
+    if (event->isAccepted())
+    {
+      return;
+    }
+
+    event->setAccepted(wasAccepted);
+  }
+
+  if (event->button() == Qt::LeftButton || event->button() == Qt::MiddleButton)
+  {
+    d->dragStart = event->pos();
+    d->dragButtons |= event->button();
   }
 }
 
@@ -908,20 +924,37 @@ void Player::mouseMoveEvent(QMouseEvent* event)
 {
   QTE_D();
 
-  if (d->dragging && event->buttons() & Qt::MiddleButton)
+  if (d->activeTool)
+  {
+    auto const wasAccepted = event->isAccepted();
+    event->ignore();
+
+    d->activeTool->mouseMoveEvent(event);
+    if (event->isAccepted())
+    {
+      return;
+    }
+
+    event->setAccepted(wasAccepted);
+  }
+
+  if (!d->dragging)
+  {
+    if (event->buttons() & d->dragButtons)
+    {
+      auto const delta = QPointF{event->pos() - d->dragStart};
+      if (delta.manhattanLength() > d->dragThreshold)
+      {
+        d->dragging = true;
+      }
+    }
+  }
+
+  if (d->dragging)
   {
     auto const delta = QPointF{event->pos() - d->dragStart};
     this->setCenter(this->center() - (delta / d->zoom));
     d->dragStart = event->pos();
-  }
-  else
-  {
-    d->dragging = false;
-  }
-
-  if (d->activeTool)
-  {
-    d->activeTool->mouseMoveEvent(event);
   }
 }
 
@@ -930,14 +963,27 @@ void Player::mouseReleaseEvent(QMouseEvent* event)
 {
   QTE_D();
 
-  if (event->button() == Qt::MiddleButton)
-  {
-    d->dragging = false;
-  }
-
   if (d->activeTool)
   {
+    auto const wasAccepted = event->isAccepted();
+    event->ignore();
+
     d->activeTool->mouseReleaseEvent(event);
+    if (event->isAccepted())
+    {
+      return;
+    }
+
+    event->setAccepted(wasAccepted);
+  }
+
+  if (d->dragging && event->button() & d->dragButtons)
+  {
+    d->dragButtons &= ~(event->button());
+    if (!d->dragButtons)
+    {
+      d->dragging = false;
+    }
   }
   else if (event->button() == Qt::LeftButton)
   {

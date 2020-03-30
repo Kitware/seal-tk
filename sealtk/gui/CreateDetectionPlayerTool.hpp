@@ -36,6 +36,7 @@ protected:
   QTE_DECLARE_PRIVATE_RPTR(CreateDetectionPlayerTool)
 
   void activate() override;
+  void updateImage() override;
   void mousePressEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
   void mouseMoveEvent(QMouseEvent* event) override;

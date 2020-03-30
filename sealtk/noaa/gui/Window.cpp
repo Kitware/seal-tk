@@ -45,7 +45,9 @@
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QPointer>
 #include <QProgressDialog>
+#include <QShortcut>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QVector>
@@ -77,7 +79,8 @@ struct WindowData
   sc::VideoSource* videoSource = nullptr;
   sg::SplitterWindow* window = nullptr;
   sealtk::noaa::gui::Player* player = nullptr;
-  sealtk::gui::CreateDetectionPlayerTool* createDetectionTool = nullptr;
+
+  sg::CreateDetectionPlayerTool* createDetectionTool = nullptr;
 
   std::shared_ptr<sc::AbstractDataSource> trackSource;
   std::shared_ptr<QAbstractItemModel> trackModel;
@@ -142,6 +145,9 @@ public:
   void saveDetections(WindowData* data);
   void executePipeline(QString const& pipelineFile);
   void createDetection(WindowData* data, QRectF const& detection);
+
+  template <typename Tool>
+  void setActiveTool(Tool* WindowData::* tool);
   void resetActiveTool();
 
   WindowData* dataForView(int viewIndex);
@@ -170,6 +176,8 @@ public:
     &this->irWindow,
     &this->uvWindow,
   };
+
+  QPointer<QShortcut> cancelToolShortcut;
 
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
@@ -272,12 +280,7 @@ Window::Window(QWidget* parent)
               d->ui.tracks->selectionModel()->selectedIndexes());
           });
   connect(d->ui.actionCreateDetection, &QAction::triggered,
-          this, [d]{
-            for (auto* const w : d->allWindows)
-            {
-              w->player->setActiveTool(w->createDetectionTool);
-            }
-          });
+          this, [d]{ d->setActiveTool(&WindowData::createDetectionTool); });
 
   connect(d->ui.tracks->selectionModel(),
           &QItemSelectionModel::selectionChanged,
@@ -498,7 +501,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
   QObject::connect(
     data->createDetectionTool,
     &sg::CreateDetectionPlayerTool::detectionCreated,
-    [this, data](QRectF const& detection){
+    q, [this, data](QRectF const& detection){
       this->createDetection(data, detection);
       this->resetActiveTool();
     });
@@ -771,12 +774,33 @@ void WindowPrivate::updateTrackSelection(
 }
 
 // ----------------------------------------------------------------------------
+template <typename Tool>
+void WindowPrivate::setActiveTool(Tool* WindowData::* tool)
+{
+  if (!this->cancelToolShortcut)
+  {
+    QTE_Q();
+
+    this->cancelToolShortcut = new QShortcut{Qt::Key_Escape, q};
+    QObject::connect(this->cancelToolShortcut, &QShortcut::activated,
+                     q, [this]{ this->resetActiveTool(); });
+  }
+
+  for (auto* const w : this->allWindows)
+  {
+    w->player->setActiveTool(w->*tool);
+  }
+}
+
+// ----------------------------------------------------------------------------
 void WindowPrivate::resetActiveTool()
 {
   for (auto* const w : this->allWindows)
   {
     w->player->setActiveTool(nullptr);
+    w->player->update();
   }
+  delete this->cancelToolShortcut;
 }
 
 // ----------------------------------------------------------------------------

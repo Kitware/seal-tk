@@ -21,8 +21,12 @@ namespace gui
 class CreateDetectionPlayerToolPrivate
 {
 public:
+  QPointF startPos;
   QRectF detection;
+  bool creating = false;
   bool dragging = false;
+
+  static constexpr auto threshold = 8.0;
 
   DetectionRepresentation representation;
   QOpenGLBuffer vertexBuffer{QOpenGLBuffer::VertexBuffer};
@@ -53,6 +57,19 @@ void CreateDetectionPlayerTool::activate()
 {
   this->PlayerTool::activate();
   this->pushProperty("cursor", QCursor{Qt::CrossCursor});
+  this->pushProperty("mouseTracking", true);
+}
+
+// ----------------------------------------------------------------------------
+void CreateDetectionPlayerTool::updateImage()
+{
+  QTE_D();
+
+  if (d->creating)
+  {
+    d->creating = false;
+    d->dragging = false;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -62,11 +79,20 @@ void CreateDetectionPlayerTool::mousePressEvent(QMouseEvent* event)
 
   if (event->button() & Qt::LeftButton && this->player()->hasImage())
   {
-    d->dragging = true;
-    d->detection =
-      QRectF{this->player()->viewToImage(event->localPos()), QSize{}};
-    this->player()->update();
+    if (!d->creating)
+    {
+      d->creating = true;
+      d->startPos = event->localPos();
+      d->detection =
+        QRectF{this->player()->viewToImage(event->localPos()), QSize{}};
+      this->player()->update();
+    }
+
+    event->accept();
+    return;
   }
+
+  PlayerTool::mousePressEvent(event);
 }
 
 // ----------------------------------------------------------------------------
@@ -74,12 +100,25 @@ void CreateDetectionPlayerTool::mouseReleaseEvent(QMouseEvent* event)
 {
   QTE_D();
 
-  if (event->button() & Qt::LeftButton && this->player()->hasImage())
+  if (d->creating && event->button() & Qt::LeftButton)
   {
-    d->dragging = false;
-    this->player()->update();
-    emit this->detectionCreated(d->detection);
+    if (d->dragging)
+    {
+      d->creating = false;
+      d->dragging = false;
+      this->player()->update();
+      emit this->detectionCreated(d->detection);
+    }
+    else if (d->creating)
+    {
+      d->dragging = true;
+    }
+
+    event->accept();
+    return;
   }
+
+  PlayerTool::mouseReleaseEvent(event);
 }
 
 // ----------------------------------------------------------------------------
@@ -87,12 +126,26 @@ void CreateDetectionPlayerTool::mouseMoveEvent(QMouseEvent* event)
 {
   QTE_D();
 
-  if (d->dragging && this->player()->hasImage())
+  if (d->creating)
   {
+    if (!d->dragging)
+    {
+      auto const& delta = event->localPos() - d->startPos;
+      if (delta.manhattanLength() > d->threshold)
+      {
+        d->dragging = true;
+      }
+    }
+
     d->detection.setBottomRight(
       this->player()->viewToImage(event->localPos()));
     this->player()->update();
+
+    event->accept();
+    return;
   }
+
+  PlayerTool::mouseMoveEvent(event);
 }
 
 // ----------------------------------------------------------------------------
@@ -100,7 +153,7 @@ void CreateDetectionPlayerTool::paintGL()
 {
   QTE_D();
 
-  if (d->dragging && this->player()->hasImage())
+  if (d->creating)
   {
     if (!d->vertexBuffer.isCreated())
     {

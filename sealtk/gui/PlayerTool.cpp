@@ -7,6 +7,7 @@
 #include <sealtk/gui/Player.hpp>
 
 #include <QByteArray>
+#include <QMouseEvent>
 #include <QPair>
 #include <QStack>
 #include <QVariant>
@@ -69,23 +70,28 @@ void PlayerTool::deactivate()
 // ----------------------------------------------------------------------------
 void PlayerTool::mousePressEvent(QMouseEvent* event)
 {
-  Q_UNUSED(event)
+  event->ignore();
 }
 
 // ----------------------------------------------------------------------------
 void PlayerTool::mouseReleaseEvent(QMouseEvent* event)
 {
-  Q_UNUSED(event)
+  event->ignore();
 }
 
 // ----------------------------------------------------------------------------
 void PlayerTool::mouseMoveEvent(QMouseEvent* event)
 {
-  Q_UNUSED(event)
+  event->ignore();
 }
 
 // ----------------------------------------------------------------------------
 void PlayerTool::paintGL()
+{
+}
+
+// ----------------------------------------------------------------------------
+void PlayerTool::updateImage()
 {
 }
 

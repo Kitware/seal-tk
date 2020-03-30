@@ -44,6 +44,8 @@ protected:
   virtual void mouseMoveEvent(QMouseEvent* event);
   virtual void paintGL();
 
+  virtual void updateImage();
+
   void pushProperty(char const* name, QVariant const& value);
 
 private:
