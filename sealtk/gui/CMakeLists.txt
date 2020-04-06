@@ -7,6 +7,7 @@ include(SEALTKUtils)
 sealtk_add_library(sealtk::gui
   SOURCES
     AbstractItemRepresentation.cpp
+    ClassificationSummaryRepresentation.cpp
     CreateDetectionPlayerTool.cpp
     DetectionRepresentation.cpp
     FilterWidget.cpp
@@ -21,6 +22,7 @@ sealtk_add_library(sealtk::gui
 
   HEADERS
     AbstractItemRepresentation.hpp
+    ClassificationSummaryRepresentation.hpp
     CreateDetectionPlayerTool.hpp
     DetectionRepresentation.hpp
     FilterWidget.hpp

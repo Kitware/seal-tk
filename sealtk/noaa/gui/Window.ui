@@ -14,7 +14,7 @@
    <string>SEAL-TK</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="SEALTKBranding.qrc">
     <normaloff>:/logo256.png</normaloff>:/logo256.png</iconset>
   </property>
   <widget class="QWidget" name="layout">
@@ -37,7 +37,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>29</height>
+     <height>40</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -95,12 +95,49 @@
        <property name="rootIsDecorated">
         <bool>false</bool>
        </property>
+       <property name="uniformRowHeights">
+        <bool>true</bool>
+       </property>
        <property name="sortingEnabled">
         <bool>true</bool>
        </property>
        <property name="allColumnsShowFocus">
         <bool>true</bool>
        </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="statisticsDock">
+   <property name="windowTitle">
+    <string>Statistics</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="statisticsDockContents">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QTreeView" name="statistics">
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="rootIsDecorated">
+        <bool>false</bool>
+       </property>
+       <property name="uniformRowHeights">
+        <bool>true</bool>
+       </property>
+       <property name="sortingEnabled">
+        <bool>true</bool>
+       </property>
+       <property name="allColumnsShowFocus">
+        <bool>true</bool>
+       </property>
+       <attribute name="headerShowSortIndicator" stdset="0">
+        <bool>true</bool>
+       </attribute>
       </widget>
      </item>
     </layout>
