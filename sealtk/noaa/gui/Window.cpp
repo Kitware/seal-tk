@@ -178,6 +178,9 @@ Window::Window(QWidget* parent)
     d_ptr{new WindowPrivate{this}}
 {
   QTE_D();
+
+  QIcon::setThemeName("krest");
+
   d->ui.setupUi(this);
 
   d->trackRepresentation.setSourceModel(&d->trackModel);
