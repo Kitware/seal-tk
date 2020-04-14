@@ -11,6 +11,8 @@
 
 #include <qtGlobal.h>
 
+class QAbstractItemModel;
+
 namespace sealtk
 {
 
@@ -34,6 +36,7 @@ public:
   ~KwiverPipelineWorker() override;
 
   void addVideoSource(VideoSource* source);
+  void addTrackSource(QAbstractItemModel* model, bool includeHidden = false);
 
 signals:
   void progressRangeChanged(int minimum, int maximum);

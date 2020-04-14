@@ -722,6 +722,7 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
   for (auto* const w : this->allWindows)
   {
     worker.addVideoSource(w->videoSource);
+    worker.addTrackSource(w->trackModel.get());
   }
 
   QObject::connect(
