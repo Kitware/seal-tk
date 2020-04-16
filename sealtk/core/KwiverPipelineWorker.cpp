@@ -49,7 +49,29 @@ struct Detection
   QVariantHash classification;
 };
 
-using DetectionSet = QList<Detection>;
+using DetectionSet = QHash<qint64, Detection>;
+
+// ----------------------------------------------------------------------------
+QPointF transformPoint(QPointF const& in, kv::transform_2d const& transform)
+{
+  auto const& out = transform.map({in.x(), in.y()});
+  return {out.x(), out.y()};
+}
+
+// ----------------------------------------------------------------------------
+QRectF transformBox(QAbstractItemModel* model, QModelIndex const& index,
+                    kv::transform_2d const& transform)
+{
+  auto const& in = model->data(index, AreaLocationRole).toRectF();
+
+  auto poly = QPolygonF{};
+  poly.append(transformPoint(in.topLeft(), transform));
+  poly.append(transformPoint(in.topRight(), transform));
+  poly.append(transformPoint(in.bottomLeft(), transform));
+  poly.append(transformPoint(in.bottomRight(), transform));
+
+  return poly.boundingRect();
+}
 
 // ============================================================================
 class PortSet : public KwiverPipelinePortSet
@@ -282,30 +304,87 @@ void KwiverPipelineWorker::addTrackSource(
       auto const iIndex = model->index(i, 0);
       for (auto const j : kvr::iota(model->rowCount(iIndex)))
       {
-        // Get detection (track state) information
         auto const jIndex = model->index(j, 0, iIndex);
-        auto const& td = model->data(jIndex, StartTimeRole);
-        auto const t = td.value<kv::timestamp::time_t>();
 
+        // Check if detection is hidden (if we care)
         if (!includeHidden)
         {
-          auto const& vd = model->data(jIndex, VisibilityRole);
-          if (!vd.toBool())
+          auto const& visibilityData = model->data(jIndex, VisibilityRole);
+          if (!visibilityData.toBool())
           {
             // Skip detections which are not visible
             continue;
           }
         }
 
+        // Get detection (track state) information
+        auto const& idData = model->data(jIndex, LogicalIdentityRole);
+        auto const& timeData = model->data(jIndex, StartTimeRole);
+        auto const id = idData.value<qint64>();
+        auto const time = timeData.value<kv::timestamp::time_t>();
+
         // Add detection to detection set for the appropriate time
-        detections[t].append({
-          model->data(jIndex, AreaLocationRole).toRectF(),
-          model->data(jIndex, ClassificationRole).toHash()});
+        auto detection =
+          Detection{model->data(jIndex, AreaLocationRole).toRectF(),
+                    model->data(jIndex, ClassificationRole).toHash()};
+        detections[time].insert(id, detection);
       }
     }
   }
 
   d->detections.append(detections);
+}
+
+// ----------------------------------------------------------------------------
+void KwiverPipelineWorker::addTrackSource(
+  QAbstractItemModel* model, kv::transform_2d const& transform,
+  bool includeHidden)
+{
+  QTE_D();
+
+  if (model && !d->detections.isEmpty())
+  {
+    auto& detections = d->detections.last();
+
+    // Iterate over all items in data model
+    for (auto const i : kvr::iota(model->rowCount()))
+    {
+      auto const iIndex = model->index(i, 0);
+      for (auto const j : kvr::iota(model->rowCount(iIndex)))
+      {
+        auto const jIndex = model->index(j, 0, iIndex);
+
+        // Check if detection is hidden (if we care)
+        if (!includeHidden)
+        {
+          auto const& visibilityData = model->data(jIndex, VisibilityRole);
+          if (!visibilityData.toBool())
+          {
+            // Skip detections which are not visible
+            continue;
+          }
+        }
+
+        // Get detection (track state) information
+        auto const& idData = model->data(jIndex, LogicalIdentityRole);
+        auto const& timeData = model->data(jIndex, StartTimeRole);
+        auto const id = idData.value<qint64>();
+        auto const time = timeData.value<kv::timestamp::time_t>();
+
+        // Skip detections that would overlap with existing data
+        if (detections.value(time).contains(id))
+        {
+          continue;
+        }
+
+        // Add (transformed) detection to the existing detection set for the
+        // appropriate time
+        auto const& rect = transformBox(model, jIndex, transform);
+        auto const& type = model->data(jIndex, ClassificationRole).toHash();
+        detections[time].insert(id, {rect, type});
+      }
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------
