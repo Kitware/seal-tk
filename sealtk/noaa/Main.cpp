@@ -36,6 +36,10 @@ int main(int argc, char** argv)
   QApplication::setApplicationVersion(QStringLiteral(SEALTK_VERSION));
   QApplication::setOrganizationName(QStringLiteral("Kitware"));
 
+  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+  QIcon::setThemeName("krest");
+
   QCommandLineParser parser;
   parser.setApplicationDescription(
     QStringLiteral(

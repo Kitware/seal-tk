@@ -1,12 +1,24 @@
 [Icon Theme]
-Name=Krest-icons
-Comment=
+Name=Krest
+Comment=Icon theme for Kitware vision group applications
 
 # Directory list
-Directories=16x16,22x22
+Directories=16x16,16x16@2x,22x22,22x22@2x
 
 [16x16]
 Size=16
+Type=Fixed
+
+[16x16@2x]
+Size=16
+Scale=2
+Type=Fixed
 
 [22x22]
 Size=22
+Type=Fixed
+
+[22x22@2x]
+Size=22
+Scale=2
+Type=Fixed

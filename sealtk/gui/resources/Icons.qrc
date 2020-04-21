@@ -1,13 +1,71 @@
-<!--This file is part of SEAL-TK, and is distributed under the OSI-approved BSD
-    3-Clause License. See top-level LICENSE file or
-    https://github.com/Kitware/seal-tk/blob/master/LICENSE for details.-->
-
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource>
-  <file>icons/krest/index.theme</file>
-  <file>icons/krest/16x16/list-add.png</file>
-  <file>icons/krest/16x16/list-remove.png</file>
-  <file>icons/krest/22x22/media-seek-backward.png</file>
-  <file>icons/krest/22x22/media-seek-forward.png</file>
-</qresource>
+<RCC>
+  <qresource>
+    <file>icons/krest/index.theme</file>
+    <file>icons/krest/16x16/application-exit.png</file>
+    <file>icons/krest/16x16/dialog-cancel.png</file>
+    <file>icons/krest/16x16/dialog-close.png</file>
+    <file>icons/krest/16x16/dialog-ok-apply.png</file>
+    <file>icons/krest/16x16/dialog-ok.png</file>
+    <file>icons/krest/16x16/document-open-detections.png</file>
+    <file>icons/krest/16x16/document-open-video.png</file>
+    <file>icons/krest/16x16/document-open.png</file>
+    <file>icons/krest/16x16/document-save.png</file>
+    <file>icons/krest/16x16/edit-clear.png</file>
+    <file>icons/krest/16x16/edit-delete.png</file>
+    <file>icons/krest/16x16/list-add.png</file>
+    <file>icons/krest/16x16/list-remove.png</file>
+    <file>icons/krest/16x16/media-skip-backward.png</file>
+    <file>icons/krest/16x16/media-skip-forward.png</file>
+    <file>icons/krest/16x16/media-step-backward.png</file>
+    <file>icons/krest/16x16/media-step-forward.png</file>
+    <file>icons/krest/16x16@2x/application-exit.png</file>
+    <file>icons/krest/16x16@2x/dialog-cancel.png</file>
+    <file>icons/krest/16x16@2x/dialog-close.png</file>
+    <file>icons/krest/16x16@2x/dialog-ok-apply.png</file>
+    <file>icons/krest/16x16@2x/dialog-ok.png</file>
+    <file>icons/krest/16x16@2x/document-open-detections.png</file>
+    <file>icons/krest/16x16@2x/document-open-video.png</file>
+    <file>icons/krest/16x16@2x/document-open.png</file>
+    <file>icons/krest/16x16@2x/document-save.png</file>
+    <file>icons/krest/16x16@2x/edit-clear.png</file>
+    <file>icons/krest/16x16@2x/edit-delete.png</file>
+    <file>icons/krest/16x16@2x/list-add.png</file>
+    <file>icons/krest/16x16@2x/list-remove.png</file>
+    <file>icons/krest/16x16@2x/media-skip-backward.png</file>
+    <file>icons/krest/16x16@2x/media-skip-forward.png</file>
+    <file>icons/krest/16x16@2x/media-step-backward.png</file>
+    <file>icons/krest/16x16@2x/media-step-forward.png</file>
+    <file>icons/krest/22x22/application-exit.png</file>
+    <file>icons/krest/22x22/dialog-cancel.png</file>
+    <file>icons/krest/22x22/dialog-close.png</file>
+    <file>icons/krest/22x22/dialog-ok-apply.png</file>
+    <file>icons/krest/22x22/dialog-ok.png</file>
+    <file>icons/krest/22x22/document-open-detections.png</file>
+    <file>icons/krest/22x22/document-open-video.png</file>
+    <file>icons/krest/22x22/document-open.png</file>
+    <file>icons/krest/22x22/document-save.png</file>
+    <file>icons/krest/22x22/edit-delete.png</file>
+    <file>icons/krest/22x22/list-add.png</file>
+    <file>icons/krest/22x22/list-remove.png</file>
+    <file>icons/krest/22x22/media-skip-backward.png</file>
+    <file>icons/krest/22x22/media-skip-forward.png</file>
+    <file>icons/krest/22x22/media-step-backward.png</file>
+    <file>icons/krest/22x22/media-step-forward.png</file>
+    <file>icons/krest/22x22@2x/application-exit.png</file>
+    <file>icons/krest/22x22@2x/dialog-cancel.png</file>
+    <file>icons/krest/22x22@2x/dialog-close.png</file>
+    <file>icons/krest/22x22@2x/dialog-ok-apply.png</file>
+    <file>icons/krest/22x22@2x/dialog-ok.png</file>
+    <file>icons/krest/22x22@2x/document-open-detections.png</file>
+    <file>icons/krest/22x22@2x/document-open-video.png</file>
+    <file>icons/krest/22x22@2x/document-open.png</file>
+    <file>icons/krest/22x22@2x/document-save.png</file>
+    <file>icons/krest/22x22@2x/edit-delete.png</file>
+    <file>icons/krest/22x22@2x/list-add.png</file>
+    <file>icons/krest/22x22@2x/list-remove.png</file>
+    <file>icons/krest/22x22@2x/media-skip-backward.png</file>
+    <file>icons/krest/22x22@2x/media-skip-forward.png</file>
+    <file>icons/krest/22x22@2x/media-step-backward.png</file>
+    <file>icons/krest/22x22@2x/media-step-forward.png</file>
+  </qresource>
 </RCC>

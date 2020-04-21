@@ -38,8 +38,6 @@ PlayerControl::PlayerControl(QWidget* parent)
 {
   QTE_D();
 
-  QIcon::setThemeName("krest");
-
   d->ui.setupUi(this);
 
   connect(this, &PlayerControl::rangeSet,
