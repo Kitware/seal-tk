@@ -5678,6 +5678,162 @@
        inkscape:connector-curvature="0" />
   </g>
   <g
+     inkscape:export-ydpi="192"
+     inkscape:export-xdpi="192"
+     inkscape:export-filename="/usr/local/src/matthew/work/sealtk/sealtk/gui/resources/icons/krest/22x22@2x/zoom-in.png"
+     inkscape:label="#zoom-in"
+     id="22_zoom-in">
+    <rect
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:none;stroke:none;stroke-width:1;marker:none;enable-background:accumulate"
+       id="rect9027"
+       y="186"
+       x="344"
+       height="22"
+       width="22" />
+    <path
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       id="path9025"
+       d="m 360,192 -4,4"
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate" />
+    <path
+       sodipodi:nodetypes="ccccc"
+       inkscape:connector-curvature="0"
+       d="m 344.5,196 v -9.5 h 21 v 21 H 356"
+       style="fill:none;stroke:#717171;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:2,2;stroke-opacity:1;font-variation-settings:normal;opacity:1;vector-effect:none;fill-opacity:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-dashoffset:1;anonymous:0;stop-color:#000000;stop-opacity:1"
+       id="rect9029" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#aed476;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate"
+       d="m 357.5,190 6,-1.5 -1.5,6 z"
+       id="path9033"
+       sodipodi:nodetypes="cccc" />
+    <rect
+       width="10"
+       height="10"
+       x="344.5"
+       y="197.5"
+       id="rect9168"
+       style="fill:none;stroke:#717171;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stroke-dashoffset:0;font-variation-settings:normal;opacity:1;vector-effect:none;fill-opacity:1;stroke-linecap:butt;stroke-linejoin:miter;anonymous:0;stop-color:#000000;stop-opacity:1" />
+  </g>
+  <g
+     inkscape:export-ydpi="192"
+     inkscape:export-xdpi="192"
+     inkscape:export-filename="/usr/local/src/matthew/work/sealtk/sealtk/gui/resources/icons/krest/16x16@2x/zoom-in.png"
+     inkscape:label="#zoom-in"
+     id="16_zoom-in">
+    <rect
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:none;stroke:none;stroke-width:0.727273;marker:none;enable-background:accumulate"
+       id="rect9041"
+       y="168"
+       x="344"
+       height="16"
+       width="16" />
+    <path
+       sodipodi:nodetypes="ccccc"
+       inkscape:connector-curvature="0"
+       d="m 344.5,175 v -6.5 h 15 v 15 H 353"
+       style="font-variation-settings:normal;opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#717171;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:2,2;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000;stop-opacity:1"
+       id="rect9043" />
+    <path
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       id="path9047"
+       d="M 355.5,172.5 353,175"
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:1.8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate" />
+    <path
+       inkscape:connector-curvature="0"
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#aed476;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:0.8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate"
+       d="m 354,171 4,-1 -1,4 z"
+       id="path9055"
+       sodipodi:nodetypes="cccc" />
+    <rect
+       style="fill:none;stroke:#717171;stroke-width:0.9;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;font-variation-settings:normal;opacity:1;vector-effect:none;fill-opacity:1;stroke-linecap:butt;stroke-linejoin:miter;anonymous:0;stop-color:#000000;stop-opacity:1"
+       id="rect9168-3"
+       y="176.5"
+       x="344.5"
+       height="7"
+       width="7" />
+  </g>
+  <g
+     inkscape:export-ydpi="192"
+     inkscape:export-xdpi="192"
+     inkscape:export-filename="/usr/local/src/matthew/work/sealtk/sealtk/gui/resources/icons/krest/22x22@2x/zoom-out.png"
+     inkscape:label="#zoom-out"
+     id="22_zoom-out">
+    <rect
+       width="22"
+       height="22"
+       x="368"
+       y="186"
+       id="rect9186"
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:none;stroke:none;stroke-width:1;marker:none;enable-background:accumulate" />
+    <path
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate"
+       d="M 387.5,188.5 384,192"
+       id="path9190"
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0" />
+    <path
+       sodipodi:nodetypes="ccccc"
+       inkscape:connector-curvature="0"
+       id="path9192"
+       style="fill:none;stroke:#717171;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 368.5,196 v -9.5 h 21 v 21 H 380" />
+    <path
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#aed476;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate"
+       d="m 386.5,194 -6,1.5 1.5,-6 z"
+       id="path9194"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0" />
+    <rect
+       style="fill:none;stroke:#717171;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:2, 2;stroke-dashoffset:0.5;stroke-opacity:1"
+       id="rect9202"
+       y="197.5"
+       x="368.5"
+       height="10"
+       width="10" />
+  </g>
+  <g
+     inkscape:export-ydpi="192"
+     inkscape:export-xdpi="192"
+     inkscape:export-filename="/usr/local/src/matthew/work/sealtk/sealtk/gui/resources/icons/krest/16x16@2x/zoom-out.png"
+     inkscape:label="#zoom-out"
+     id="16_zoom-out">
+    <rect
+       width="16"
+       height="16"
+       x="368"
+       y="168"
+       id="rect9206"
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:none;stroke:none;stroke-width:0.727273;marker:none;enable-background:accumulate" />
+    <path
+       sodipodi:nodetypes="ccccc"
+       inkscape:connector-curvature="0"
+       d="m 368.5,175 v -6.5 h 15 v 15 H 377"
+       style="fill:none;stroke:#717171;stroke-width:0.9;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect9208" />
+    <path
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:1.8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate"
+       d="m 381.5,170.5 -2,2"
+       id="path9212"
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0" />
+    <path
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#aed476;fill-opacity:1;fill-rule:nonzero;stroke:#687a4f;stroke-width:0.8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate"
+       d="m 381,174 -4,1 1,-4 z"
+       id="path9214"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0" />
+    <rect
+       width="7"
+       height="7"
+       x="368.5"
+       y="176.5"
+       id="rect9222"
+       style="fill:none;stroke:#717171;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:2,2;stroke-dashoffset:1.5;stroke-opacity:1" />
+  </g>
+  <g
      inkscape:label="#document-open-video"
      id="22_document-open-video"
      transform="translate(0,120)"

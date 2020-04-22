@@ -13,6 +13,8 @@
     <file>icons/krest/16x16/document-save.png</file>
     <file>icons/krest/16x16/edit-clear.png</file>
     <file>icons/krest/16x16/edit-delete.png</file>
+    <file>icons/krest/16x16/file-zoom-in.png</file>
+    <file>icons/krest/16x16/file-zoom-out.png</file>
     <file>icons/krest/16x16/go-down.png</file>
     <file>icons/krest/16x16/go-next.png</file>
     <file>icons/krest/16x16/go-previous.png</file>
@@ -24,6 +26,8 @@
     <file>icons/krest/16x16/media-step-backward.png</file>
     <file>icons/krest/16x16/media-step-forward.png</file>
     <file>icons/krest/16x16/view-refresh.png</file>
+    <file>icons/krest/16x16/zoom-in.png</file>
+    <file>icons/krest/16x16/zoom-out.png</file>
     <file>icons/krest/16x16@2x/application-exit.png</file>
     <file>icons/krest/16x16@2x/configure.png</file>
     <file>icons/krest/16x16@2x/dialog-cancel.png</file>
@@ -36,6 +40,8 @@
     <file>icons/krest/16x16@2x/document-save.png</file>
     <file>icons/krest/16x16@2x/edit-clear.png</file>
     <file>icons/krest/16x16@2x/edit-delete.png</file>
+    <file>icons/krest/16x16@2x/file-zoom-in.png</file>
+    <file>icons/krest/16x16@2x/file-zoom-out.png</file>
     <file>icons/krest/16x16@2x/go-down.png</file>
     <file>icons/krest/16x16@2x/go-next.png</file>
     <file>icons/krest/16x16@2x/go-previous.png</file>
@@ -47,6 +53,8 @@
     <file>icons/krest/16x16@2x/media-step-backward.png</file>
     <file>icons/krest/16x16@2x/media-step-forward.png</file>
     <file>icons/krest/16x16@2x/view-refresh.png</file>
+    <file>icons/krest/16x16@2x/zoom-in.png</file>
+    <file>icons/krest/16x16@2x/zoom-out.png</file>
     <file>icons/krest/22x22/application-exit.png</file>
     <file>icons/krest/22x22/configure.png</file>
     <file>icons/krest/22x22/dialog-cancel.png</file>
@@ -58,6 +66,8 @@
     <file>icons/krest/22x22/document-open.png</file>
     <file>icons/krest/22x22/document-save.png</file>
     <file>icons/krest/22x22/edit-delete.png</file>
+    <file>icons/krest/22x22/file-zoom-in.png</file>
+    <file>icons/krest/22x22/file-zoom-out.png</file>
     <file>icons/krest/22x22/go-down.png</file>
     <file>icons/krest/22x22/go-next.png</file>
     <file>icons/krest/22x22/go-previous.png</file>
@@ -69,6 +79,8 @@
     <file>icons/krest/22x22/media-step-backward.png</file>
     <file>icons/krest/22x22/media-step-forward.png</file>
     <file>icons/krest/22x22/view-refresh.png</file>
+    <file>icons/krest/22x22/zoom-in.png</file>
+    <file>icons/krest/22x22/zoom-out.png</file>
     <file>icons/krest/22x22@2x/application-exit.png</file>
     <file>icons/krest/22x22@2x/configure.png</file>
     <file>icons/krest/22x22@2x/dialog-cancel.png</file>
@@ -80,6 +92,8 @@
     <file>icons/krest/22x22@2x/document-open.png</file>
     <file>icons/krest/22x22@2x/document-save.png</file>
     <file>icons/krest/22x22@2x/edit-delete.png</file>
+    <file>icons/krest/22x22@2x/file-zoom-in.png</file>
+    <file>icons/krest/22x22@2x/file-zoom-out.png</file>
     <file>icons/krest/22x22@2x/go-down.png</file>
     <file>icons/krest/22x22@2x/go-next.png</file>
     <file>icons/krest/22x22@2x/go-previous.png</file>
@@ -91,5 +105,7 @@
     <file>icons/krest/22x22@2x/media-step-backward.png</file>
     <file>icons/krest/22x22@2x/media-step-forward.png</file>
     <file>icons/krest/22x22@2x/view-refresh.png</file>
+    <file>icons/krest/22x22@2x/zoom-in.png</file>
+    <file>icons/krest/22x22@2x/zoom-out.png</file>
   </qresource>
 </RCC>
