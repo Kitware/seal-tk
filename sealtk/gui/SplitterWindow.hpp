@@ -36,8 +36,14 @@ public:
   void setFilenameVisible(bool visible);
   void setFilename(QString const& filename);
 
+signals:
+  void visibilityChanged(bool visible);
+
 protected:
   QTE_DECLARE_PRIVATE(SplitterWindow)
+
+  void showEvent(QShowEvent *event) override;
+  void hideEvent(QHideEvent *event) override;
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(SplitterWindow)

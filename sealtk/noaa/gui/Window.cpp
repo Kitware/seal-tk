@@ -75,6 +75,8 @@ namespace gui
 namespace // anonymous
 {
 
+using WindowRole = sealtk::noaa::gui::Player::Role;
+
 // ============================================================================
 struct WindowData
 {
@@ -149,8 +151,7 @@ public:
   void registerVideoSourceFactory(
     QString const& name, sc::VideoSourceFactory* factory);
 
-  void createWindow(WindowData* data, QString const& title,
-                    sealtk::noaa::gui::Player::Role role);
+  void createWindow(WindowData* data, QString const& title, WindowRole role);
 
   void loadDetections(WindowData* data);
   void saveDetections(WindowData* data);
@@ -238,8 +239,8 @@ Window::Window(QWidget* parent)
           &d->trackModelFilter, &sc::ScalarFilterModel::setLowerBound);
 
   // Set up view panes
-  constexpr auto Master = sealtk::noaa::gui::Player::Role::Master;
-  constexpr auto Slave = sealtk::noaa::gui::Player::Role::Slave;
+  constexpr auto Master = WindowRole::Master;
+  constexpr auto Slave = WindowRole::Slave;
 
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
@@ -258,6 +259,8 @@ Window::Window(QWidget* parent)
 
   connect(d->ui.actionShowIrPane, &QAction::toggled,
           d->irWindow.window, &QWidget::setVisible);
+  connect(d->irWindow.window, &sg::SplitterWindow::visibilityChanged,
+          d->ui.actionShowIrPane, &QAction::setChecked);
   connect(d->ui.actionShowUvPane, &QAction::toggled,
           d->uvWindow.window, &QWidget::setVisible);
 
@@ -491,15 +494,15 @@ void WindowPrivate::registerVideoSourceFactory(
 }
 
 // ----------------------------------------------------------------------------
-void WindowPrivate::createWindow(WindowData* data, QString const& title,
-                                 sealtk::noaa::gui::Player::Role role)
+void WindowPrivate::createWindow(
+  WindowData* data, QString const& title, WindowRole role)
 {
   QTE_Q();
 
   data->window = new sg::SplitterWindow{q};
   data->player = new sealtk::noaa::gui::Player{role, data->window};
   data->window->setCentralWidget(data->player);
-  data->window->setClosable(false);
+  data->window->setClosable(role != WindowRole::Master);
   data->window->setWindowTitle(title);
   data->player->setDefaultColor(qRgb(240, 176, 48));
   data->createDetectionTool = new sg::CreateDetectionPlayerTool{data->player};
@@ -542,7 +545,7 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
     this->scoreFilter, &sg::FilterWidget::filterChanged,
     data->player, &sg::Player::setTrackFilter);
 
-  if (role == sealtk::noaa::gui::Player::Role::Master)
+  if (role == WindowRole::Master)
   {
     data->transform = std::make_shared<sealtk::core::IdentityTransform>();
     data->player->setTransform(data->transform);

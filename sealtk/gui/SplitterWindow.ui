@@ -59,12 +59,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="closeButton">
-       <property name="text">
-        <string>Close</string>
-       </property>
-       <property name="icon">
-        <iconset theme="window-close"/>
+      <widget class="qtCloseButton" name="closeButton">
+       <property name="visibleWhenDisabled">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -76,6 +73,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>qtCloseButton</class>
+   <extends>QToolButton</extends>
+   <header>qtCloseButton.h</header>
+  </customwidget>
   <customwidget>
    <class>qtSqueezedLabel</class>
    <extends>QLabel</extends>

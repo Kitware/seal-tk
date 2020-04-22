@@ -63,6 +63,20 @@ void SplitterWindow::setCentralWidget(QWidget* widget)
 }
 
 // ----------------------------------------------------------------------------
+void SplitterWindow::showEvent(QShowEvent* event)
+{
+  QWidget::showEvent(event);
+  emit this->visibilityChanged(this->isVisible());
+}
+
+// ----------------------------------------------------------------------------
+void SplitterWindow::hideEvent(QHideEvent* event)
+{
+  QWidget::hideEvent(event);
+  emit this->visibilityChanged(this->isVisible());
+}
+
+// ----------------------------------------------------------------------------
 bool SplitterWindow::closable() const
 {
   QTE_D();
@@ -76,8 +90,7 @@ void SplitterWindow::setClosable(bool closable)
   QTE_D();
 
   d->closable = closable;
-
-  d->ui.closeButton->setVisible(closable);
+  d->ui.closeButton->setEnabled(closable);
 }
 
 // ----------------------------------------------------------------------------
