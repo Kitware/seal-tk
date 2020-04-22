@@ -621,6 +621,51 @@ void Player::setPercentiles(double deviance, double tolerance)
 }
 
 // ----------------------------------------------------------------------------
+void Player::setTrackFilter(
+  int role, QVariant const& low, QVariant const& high)
+{
+  QTE_D();
+
+  if (role == core::StartTimeRole || role == core::EndTimeRole)
+  {
+    qCritical() << __func__ << "invoked with non-permitted role" << role;
+    return;
+  }
+
+  auto setBounds = [&](core::ScalarFilterModel* model){
+    if (low.isNull() && high.isNull())
+    {
+      model->clearBound(role);
+    }
+    else if (low.isNull())
+    {
+      model->clearLowerBound(role);
+      model->setUpperBound(role, high);
+    }
+    else if (high.isNull())
+    {
+      model->clearUpperBound(role);
+      model->setLowerBound(role, low);
+    }
+    else
+    {
+      model->setBound(role, low, high);
+    }
+  };
+
+  setBounds(&d->trackModelFilter);
+  for (auto const& s : d->shadowData)
+  {
+    if (auto* const smf = s.second.trackModelFilter.get())
+    {
+      setBounds(smf);
+    }
+  }
+
+  d->updateDetections();
+}
+
+// ----------------------------------------------------------------------------
 QColor Player::defaultColor() const
 {
   QTE_D();

@@ -14,7 +14,7 @@
    <string>SEAL-TK</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="SEALTKBranding.qrc">
+   <iconset>
     <normaloff>:/logo256.png</normaloff>:/logo256.png</iconset>
   </property>
   <widget class="QWidget" name="layout">
@@ -89,11 +89,11 @@
        <property name="alternatingRowColors">
         <bool>true</bool>
        </property>
-       <property name="rootIsDecorated">
-        <bool>false</bool>
-       </property>
        <property name="selectionMode">
         <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
+       <property name="rootIsDecorated">
+        <bool>false</bool>
        </property>
        <property name="sortingEnabled">
         <bool>true</bool>
@@ -106,12 +106,28 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionCreateDetection"/>
+   <addaction name="actionDeleteDetection"/>
+  </widget>
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About...</string>
    </property>
   </action>
   <action name="actionCreateDetection">
+   <property name="icon">
+    <iconset theme="list-add"/>
+   </property>
    <property name="text">
     <string>&amp;Create Detection</string>
    </property>
@@ -124,8 +140,7 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="edit-delete">
-     <normaloff>.</normaloff>.</iconset>
+    <iconset theme="list-remove"/>
    </property>
    <property name="text">
     <string>&amp;Delete Detection</string>
