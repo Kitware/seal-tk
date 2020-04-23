@@ -178,7 +178,9 @@ Window::Window(QWidget* parent)
     d_ptr{new WindowPrivate{this}}
 {
   QTE_D();
+
   d->ui.setupUi(this);
+  d->ui.actionAbout->setIcon(this->windowIcon());
 
   d->trackRepresentation.setSourceModel(&d->trackModel);
   d->ui.tracks->setModel(&d->trackRepresentation);

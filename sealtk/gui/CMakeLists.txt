@@ -14,6 +14,7 @@ sealtk_add_library(sealtk::gui
     SplitterWindow.cpp
 
     resources/Resources.qrc
+    resources/Icons.qrc
 
   HEADERS
     AbstractItemRepresentation.hpp

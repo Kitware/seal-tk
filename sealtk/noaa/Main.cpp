@@ -19,6 +19,8 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
+#include <QProcess>
+#include <QRegularExpression>
 #include <QSettings>
 
 #include <memory>
@@ -29,13 +31,51 @@ int main(int argc, char** argv)
   sealtk::gui::Resources commonResources;
   sealtk::gui::Resources noaaResources;
 
+  // Set application attributes
   QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+  QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 
+  // Create application and set identity information
   QApplication app{argc, argv};
   QApplication::setApplicationName(QStringLiteral("SEAL-TK"));
   QApplication::setApplicationVersion(QStringLiteral(SEALTK_VERSION));
   QApplication::setOrganizationName(QStringLiteral("Kitware"));
 
+  // Set icon theme and fallback theme
+  auto const& originalTheme = QIcon::themeName();
+  QIcon::setThemeName("krest");
+
+  if (!originalTheme.isEmpty())
+  {
+    QIcon::setFallbackThemeName(originalTheme);
+  }
+  else
+  {
+    // QIcon::themeName appears to have a bug that causes it to always return
+    // an empty string; this is a grotesque work-around to get the theme name
+    QProcess p{&app};
+    p.start(
+      QStringLiteral("gsettings"),
+      {
+        QStringLiteral("get"),
+        QStringLiteral("org.gnome.desktop.interface"),
+        QStringLiteral("icon-theme")
+      });
+    if (p.waitForFinished())
+    {
+      auto const& output =
+        QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed();
+      auto const re = QRegularExpression{QStringLiteral("'([-\\w]+)'")};
+      auto const m = re.match(output);
+      if (m.isValid())
+      {
+        QIcon::setFallbackThemeName(m.captured(1));
+      }
+    }
+  }
+
+  // Set up command line parser
   QCommandLineParser parser;
   parser.setApplicationDescription(
     QStringLiteral(
@@ -57,6 +97,7 @@ int main(int argc, char** argv)
     QStringLiteral("file")};
   parser.addOption(applicationThemeOption);
 
+  // Parse command line options
   parser.process(app);
 
   if (parser.isSet(applicationThemeOption))
@@ -80,13 +121,17 @@ int main(int argc, char** argv)
       QStringLiteral("/" SEALTK_NOAA_RELATIVE_SHARE_DIR "/seal-tk/pipelines");
   }
 
+  // Load all KWIVER plugins
   kwiver::vital::plugin_manager::instance().load_all_plugins();
 
+  // Register meta-types
   qRegisterMetaType<std::shared_ptr<QAbstractItemModel>>();
 
+  // Set up the main window
   sealtk::noaa::gui::Window window;
   window.setPipelineDirectory(pipelineDirectory);
   window.show();
 
+  // Hand off to main event loop
   return app.exec();
 }

@@ -77,6 +77,11 @@ Player::Player(Role role, QWidget* parent)
   d->loadDetectionsAction = new QAction{"&Load Detections...", this};
   d->saveDetectionsAction = new QAction{"&Save Detections...", this};
 
+  d->loadDetectionsAction->setIcon(
+    QIcon::fromTheme(QStringLiteral("document-open-detections")));
+  d->saveDetectionsAction->setIcon(
+    QIcon::fromTheme(QStringLiteral("document-save-detections")));
+
   connect(d->loadDetectionsAction, &QAction::triggered,
           this, &Player::loadDetectionsTriggered);
   connect(d->saveDetectionsAction, &QAction::triggered,
@@ -131,6 +136,8 @@ void Player::contextMenuEvent(QContextMenuEvent* event)
 
   auto* submenu = menu->addMenu("Load &Video");
   submenu->addActions(d->videoSourceActions);
+  submenu->setIcon(
+    QIcon::fromTheme(QStringLiteral("document-open-video")));
 
   if (d->loadTransformAction)
   {
