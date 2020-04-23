@@ -205,9 +205,15 @@ void ClassificationSummaryRepresentationPrivate::recompute(
     for (auto const row : kvr::iota(this->sourceModel->rowCount()))
     {
       auto const& index = this->sourceModel->index(row, 0);
-      auto const& data = this->sourceModel->data(index, sc::ClassificationRole);
 
-      for (auto const& c : data.toHash() | kvr::indirect)
+      auto const& vd = this->sourceModel->data(index, sc::VisibilityRole);
+      if (!vd.toBool())
+      {
+        continue;
+      }
+
+      auto const& cd = this->sourceModel->data(index, sc::ClassificationRole);
+      for (auto const& c : cd.toHash() | kvr::indirect)
       {
         if (c.value().toDouble() > 0.0)
         {
