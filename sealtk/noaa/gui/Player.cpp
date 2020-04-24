@@ -78,6 +78,8 @@ Player::Player(Role role, QWidget* parent)
   d->contextMenu->addSection(QStringLiteral("Video"));
 
   d->loadVideoMenu = d->contextMenu->addMenu("Load &Video");
+  d->loadVideoMenu->setIcon(
+    QIcon::fromTheme(QStringLiteral("document-open-video")));
 
   if (role == Role::Slave)
   {
@@ -99,6 +101,11 @@ Player::Player(Role role, QWidget* parent)
   d->loadDetectionsAction = new QAction{"&Load Detections...", this};
   d->saveDetectionsAction = new QAction{"&Save Detections...", this};
   d->mergeDetectionsAction = new QAction{"&Merge Detections", this};
+
+  d->loadDetectionsAction->setIcon(
+    QIcon::fromTheme(QStringLiteral("document-open-detections")));
+  d->saveDetectionsAction->setIcon(
+    QIcon::fromTheme(QStringLiteral("document-save-detections")));
 
   connect(d->loadDetectionsAction, &QAction::triggered,
           this, &Player::loadDetectionsTriggered);

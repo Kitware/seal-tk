@@ -20,22 +20,20 @@
    <item>
     <widget class="QToolButton" name="previousFrameButton">
      <property name="text">
-      <string>...</string>
+      <string>|&lt;</string>
      </property>
      <property name="icon">
-      <iconset theme="media-seek-backward">
-       <normaloff>.</normaloff>.</iconset>
+      <iconset theme="media-step-backward"/>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QToolButton" name="nextFrameButton">
      <property name="text">
-      <string>...</string>
+      <string>&gt;|</string>
      </property>
      <property name="icon">
-      <iconset theme="media-seek-forward">
-       <normaloff>.</normaloff>.</iconset>
+      <iconset theme="media-step-forward"/>
      </property>
     </widget>
    </item>

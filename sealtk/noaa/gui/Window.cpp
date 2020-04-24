@@ -212,7 +212,9 @@ Window::Window(QWidget* parent)
     d_ptr{new WindowPrivate{this}}
 {
   QTE_D();
+
   d->ui.setupUi(this);
+  d->ui.actionAbout->setIcon(this->windowIcon());
 
   addShortcut(d->ui.actionCreateDetection, Qt::Key_C);
   addShortcut(d->ui.actionDeleteDetection, Qt::Key_D);

@@ -49,6 +49,10 @@ bool AbstractProxyModel::isValidData(QVariant const& data, int role)
         return data.canConvert<QString>();
       }
 
+    // String comparisons
+    case core::ClassificationTypeRole:
+      return data.canConvert<QString>();
+
     // Boolean comparisons
     case core::VisibilityRole:
     case core::UserVisibilityRole:
@@ -94,6 +98,10 @@ bool AbstractProxyModel::lessThan(
         default:
           return localeAwareLessThan(left.toString(), right.toString());
       }
+
+    // String comparisons
+    case core::ClassificationTypeRole:
+      return localeAwareLessThan(left.toString(), right.toString());
 
     // Boolean comparisons
     case core::VisibilityRole:
