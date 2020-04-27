@@ -14,6 +14,7 @@
 #include <sealtk/noaa/core/NoaaPipelineWorker.hpp>
 
 #include <sealtk/gui/AbstractItemRepresentation.hpp>
+#include <sealtk/gui/ClassificationSummaryRepresentation.hpp>
 #include <sealtk/gui/CreateDetectionPlayerTool.hpp>
 #include <sealtk/gui/FilterWidget.hpp>
 #include <sealtk/gui/FusionModel.hpp>
@@ -44,7 +45,6 @@
 
 #include <QCollator>
 #include <QDebug>
-#include <QDockWidget>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPointer>
@@ -180,6 +180,8 @@ public:
   TrackTypeDelegate typeDelegate;
   NotesDelegate notesDelegate;
 
+  sg::ClassificationSummaryRepresentation statisticsRepresentation;
+
   sc::VideoController* videoController;
   sg::FilterWidget* scoreFilter;
 
@@ -239,6 +241,10 @@ Window::Window(QWidget* parent)
 
   connect(d->scoreFilter, &sg::FilterWidget::filterMinimumChanged,
           &d->trackModelFilter, &sc::ScalarFilterModel::setLowerBound);
+
+  // Set up statistics panel
+  d->statisticsRepresentation.setSourceModel(&d->trackModelFilter);
+  d->ui.statistics->setModel(&d->statisticsRepresentation);
 
   // Set up view panes
   constexpr auto Master = WindowRole::Master;
@@ -354,6 +360,7 @@ Window::Window(QWidget* parent)
   d->uiState.mapGeometry("Window/geometry", this);
   d->uiState.mapState("Window/splitter", d->ui.centralwidget);
   d->uiState.mapState("Tracks/state", d->ui.tracks->header());
+  d->uiState.mapState("Statistics/state", d->ui.statistics->header());
   d->uiState.mapChecked("View/showIR", d->ui.actionShowIrPane);
   d->uiState.mapChecked("View/showUV", d->ui.actionShowUvPane);
   d->uiState.mapChecked("View/showFileName", d->ui.actionShowImageFilename);
