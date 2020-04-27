@@ -92,6 +92,10 @@ struct ShadowData
 // ============================================================================
 struct PickCandidate
 {
+#if __cplusplus < 201402L // kludge for marginally-supported GCC 4.8
+  PickCandidate() = default;
+  PickCandidate(qint64 id, double distance) : id{id}, distance{distance} {}
+#endif
   qint64 id = -1;
   double distance = std::numeric_limits<double>::infinity();
 };
