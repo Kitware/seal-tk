@@ -44,6 +44,8 @@ protected:
   virtual kwiver::vital::config_block_sptr config(
     QUrl const& uri) const = 0;
 
+  virtual QUrl applyFilters(QUrl const& uri, QStringList const& filters);
+
 private:
   QTE_DECLARE_PRIVATE_RPTR(KwiverFileVideoSourceFactory)
 };
