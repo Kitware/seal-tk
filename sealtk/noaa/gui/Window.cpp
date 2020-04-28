@@ -724,7 +724,13 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
   {
     // Add video source and tracks for current view
     worker.addVideoSource(w->videoSource);
-    worker.addTrackSource(w->trackModel.get());
+
+    auto* const primaryFilter = new sc::ScalarFilterModel{&worker};
+    primaryFilter->setSourceModel(w->trackModel.get());
+    primaryFilter->setLowerBound(sc::ClassificationScoreRole,
+                                 this->scoreFilter->value());
+
+    worker.addTrackSource(primaryFilter);
 
     // Get inverse transform
     if (w->transform)
@@ -738,8 +744,13 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
         {
           if (sw != w && sw->transform)
           {
+            auto* const shadowFilter = new sc::ScalarFilterModel{&worker};
+            shadowFilter->setSourceModel(sw->trackModel.get());
+            shadowFilter->setLowerBound(sc::ClassificationScoreRole,
+                                        this->scoreFilter->value());
+
             auto cxf = sc::ChainedTransform{sw->transform, ixf};
-            worker.addTrackSource(sw->trackModel.get(), cxf);
+            worker.addTrackSource(shadowFilter, cxf);
           }
         }
       }
