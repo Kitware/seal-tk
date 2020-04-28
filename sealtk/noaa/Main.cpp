@@ -42,10 +42,12 @@ int main(int argc, char** argv)
   QApplication::setApplicationVersion(QStringLiteral(SEALTK_VERSION));
   QApplication::setOrganizationName(QStringLiteral("Kitware"));
 
-  // Set icon theme and fallback theme
+  // Set icon theme
   auto const& originalTheme = QIcon::themeName();
   QIcon::setThemeName("krest");
 
+  // Set fallback theme
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
   if (!originalTheme.isEmpty())
   {
     QIcon::setFallbackThemeName(originalTheme);
@@ -74,6 +76,7 @@ int main(int argc, char** argv)
       }
     }
   }
+#endif
 
   // Set up command line parser
   QCommandLineParser parser;
