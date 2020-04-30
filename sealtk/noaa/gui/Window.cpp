@@ -12,6 +12,8 @@
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 #include <sealtk/noaa/core/NoaaPipelineWorker.hpp>
 
+#include <sealtk/noaa/PluginConfig.hpp>
+
 #include <sealtk/gui/AbstractItemRepresentation.hpp>
 #include <sealtk/gui/FusionModel.hpp>
 
@@ -461,7 +463,7 @@ void WindowPrivate::loadDetections(WindowData* data)
     auto uri = QUrl::fromLocalFile(filename);
     auto params = QUrlQuery{};
 
-    params.addQueryItem("input:type", "kw18");
+    params.addQueryItem("input:type", config::trackReader);
     uri.setQuery(params);
 
     data->trackSource =
@@ -509,7 +511,7 @@ void WindowPrivate::saveDetections(WindowData* data)
       auto uri = QUrl::fromLocalFile(filename);
       auto params = QUrlQuery{};
 
-      params.addQueryItem("output:type", "kw18");
+      params.addQueryItem("output:type", config::trackWriter);
       uri.setQuery(params);
 
       QObject::connect(

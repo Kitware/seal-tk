@@ -1,0 +1,26 @@
+/* This file is part of SEAL-TK, and is distributed under the OSI-approved BSD
+ * 3-Clause License. See top-level LICENSE file or
+ * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
+
+#include <QString>
+
+namespace sealtk
+{
+
+namespace noaa
+{
+
+namespace config
+{
+
+auto const trackReader = QStringLiteral("@NOAA_TRACK_READER@");
+auto const trackWriter = QStringLiteral("@NOAA_TRACK_WRITER@");
+
+constexpr auto videoReader = "@NOAA_VIDEO_READER@";
+constexpr auto videoReaderPassthrough = "@NOAA_VIDEO_READER_PASSTHROUGH@";
+
+} // namespace config
+
+} // namespace noaa
+
+} // namespace sealtk
