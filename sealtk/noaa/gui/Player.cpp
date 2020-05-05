@@ -132,7 +132,7 @@ void Player::registerVideoSourceFactory(
 
   auto action = new QAction{name, this};
   connect(action, &QAction::triggered, factory,
-          [factory, handle]{ factory->loadVideoSource(handle); });
+          [factory, handle]{ factory->requestVideoSource(handle); });
 
   d->loadVideoMenu->addAction(action);
 }

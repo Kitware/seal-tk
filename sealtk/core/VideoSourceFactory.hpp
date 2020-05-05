@@ -33,7 +33,8 @@ signals:
   void videoSourceLoaded(void* handle, VideoSource* videoSource);
 
 public slots:
-  virtual void loadVideoSource(void* handle) = 0;
+  virtual void requestVideoSource(void* handle) = 0;
+  virtual void loadVideoSource(void* handle, QUrl const& uri) = 0;
 
 protected:
   QTE_DECLARE_PRIVATE(VideoSourceFactory)

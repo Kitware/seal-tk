@@ -12,6 +12,7 @@ sealtk_add_library(sealtk::gui
     DetectionRepresentation.cpp
     FilterWidget.cpp
     FusionModel.cpp
+    GlobInputDialog.cpp
     Player.cpp
     PlayerControl.cpp
     PlayerTool.cpp
@@ -28,6 +29,7 @@ sealtk_add_library(sealtk::gui
     DetectionRepresentation.hpp
     FilterWidget.hpp
     FusionModel.hpp
+    GlobInputDialog.hpp
     Player.hpp
     PlayerControl.hpp
     PlayerTool.hpp
