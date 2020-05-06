@@ -156,6 +156,7 @@
    <addaction name="actionCreateDetection"/>
    <addaction name="actionDeleteDetection"/>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About...</string>

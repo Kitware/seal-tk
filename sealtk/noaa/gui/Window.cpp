@@ -47,6 +47,7 @@
 #include <QCollator>
 #include <QDebug>
 #include <QFileDialog>
+#include <QLabel>
 #include <QMessageBox>
 #include <QPointer>
 #include <QProgressDialog>
@@ -160,7 +161,7 @@ public:
   void createDetection(WindowData* data, QRectF const& detection);
 
   template <typename Tool>
-  void setActiveTool(Tool* WindowData::* tool);
+  void setActiveTool(Tool* WindowData::* tool, QString const& text);
   void resetActiveTool();
 
   WindowData* dataForView(int viewIndex);
@@ -174,6 +175,8 @@ public:
 
   Ui::Window ui;
   qtUiState uiState;
+
+  QLabel* statusText;
 
   sg::FusionModel trackModel;
   sc::ScalarFilterModel trackModelFilter;
@@ -218,6 +221,9 @@ Window::Window(QWidget* parent)
 
   d->ui.setupUi(this);
   d->ui.actionAbout->setIcon(this->windowIcon());
+
+  d->statusText = new QLabel{this};
+  d->ui.statusBar->addWidget(d->statusText);
 
   addShortcut(d->ui.actionCreateDetection, Qt::Key_C);
   addShortcut(d->ui.actionDeleteDetection, Qt::Key_D);
@@ -328,7 +334,11 @@ Window::Window(QWidget* parent)
 
   // Set up actions to create and delete detections
   connect(d->ui.actionCreateDetection, &QAction::triggered,
-          this, [d]{ d->setActiveTool(&WindowData::createDetectionTool); });
+          this, [d]{
+            static auto const text =
+              QStringLiteral("Creating detection for new track");
+            d->setActiveTool(&WindowData::createDetectionTool, text);
+          });
 
   connect(d->ui.actionDeleteDetection, &QAction::triggered,
           this, [d]{
@@ -855,7 +865,8 @@ void WindowPrivate::updateTrackSelection(
 
 // ----------------------------------------------------------------------------
 template <typename Tool>
-void WindowPrivate::setActiveTool(Tool* WindowData::* tool)
+void WindowPrivate::setActiveTool(
+  Tool* WindowData::* tool, QString const& text)
 {
   if (!this->cancelToolShortcut)
   {
@@ -870,11 +881,14 @@ void WindowPrivate::setActiveTool(Tool* WindowData::* tool)
   {
     w->player->setActiveTool(w->*tool);
   }
+
+  this->statusText->setText(text);
 }
 
 // ----------------------------------------------------------------------------
 void WindowPrivate::resetActiveTool()
 {
+  this->statusText->clear();
   for (auto* const w : this->allWindows)
   {
     w->player->setActiveTool(nullptr);
