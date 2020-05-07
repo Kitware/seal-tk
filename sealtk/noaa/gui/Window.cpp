@@ -29,6 +29,7 @@
 #include <sealtk/core/KwiverTracksSink.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/ScalarFilterModel.hpp>
+#include <sealtk/core/TrackUtils.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
 #include <sealtk/core/VideoSourceFactory.hpp>
@@ -917,15 +918,10 @@ void WindowPrivate::createDetection(WindowData* data, QRectF const& detection)
   auto const frame = (framePtr ? *framePtr : 0);
 
   // Create the detection
-  auto const box =
-    kv::bounding_box_d{detection.left(), detection.top(),
-                       detection.right(), detection.bottom()};
-  auto const& kdot = std::make_shared<kv::detected_object_type>();
-  kdot->set_score("unspecified", 1.0);
-  auto const& detectedObject =
-    std::make_shared<kv::detected_object>(box, 1.0, kdot);
+  auto detectedObject =
+    sc::createDetection(detection, {{"unspecified", 1.0}});
   auto const& trackState =
-    std::make_shared<kv::object_track_state>(frame, time, detectedObject);
+    sc::createTrackState(frame, time, std::move(detectedObject));
 
   // Wrap the detection in a track
   auto const& track = kv::track::create();

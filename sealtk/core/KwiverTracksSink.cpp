@@ -156,9 +156,7 @@ bool KwiverTracksSink::addData(
         {
           // Create track state
           auto detection = d->makeDetection(model, jIndex, transform);
-          auto state =
-            std::make_shared<kv::object_track_state>(
-              0, t, std::move(detection));
+          auto state = createTrackState(0, t, std::move(detection));
 
           // Add state to map
           frame->trackStates.emplace(id, std::move(state));
@@ -259,26 +257,14 @@ kv::detected_object_sptr KwiverTracksSinkPrivate::makeDetection(
 {
   auto const& originalBox = model->data(index, AreaLocationRole).toRectF();
   auto const& type = model->data(index, ClassificationRole).toHash();
+  auto const& notes = model->data(index, NotesRole).toStringList();
 
   auto poly = QPolygonF{};
   poly.append(this->transformPoint(originalBox.topLeft(), transform));
   poly.append(this->transformPoint(originalBox.topRight(), transform));
   poly.append(this->transformPoint(originalBox.bottomLeft(), transform));
   poly.append(this->transformPoint(originalBox.bottomRight(), transform));
-  auto const& adjustedBox = poly.boundingRect();
-
-  auto const kbox =
-    kv::bounding_box_d{{adjustedBox.left(), adjustedBox.top()},
-                       adjustedBox.width(), adjustedBox.height()};
-  auto const& kdot = classificationToDetectedObjectType(type);
-  auto const& detection =
-    std::make_shared<kv::detected_object>(kbox, 1.0, kdot);
-
-  auto const& notes = model->data(index, NotesRole).toStringList();
-  for (auto const& n : notes)
-  {
-    detection->add_note(stdString(n));
-  }
+  auto const& detection = createDetection(poly.boundingRect(), type, notes);
 
   return detection;
 }

@@ -42,17 +42,9 @@ kv::track_sptr createTrack(
 
   for (auto const& i : states | kvr::indirect)
   {
-    auto const& qbox = i.value().location;
-    auto const kbox = kv::bounding_box_d{{qbox.left(), qbox.top()},
-                                         qbox.width(), qbox.height()};
-    auto const& qdot = i.value().classification;
-    auto const& kdot = classificationToDetectedObjectType(qdot);
+    auto d = createDetection(i.value().location, i.value().classification);
 
-    auto d = std::make_shared<kv::detected_object>(kbox, 1.0, kdot);
-    auto s = std::make_shared<kv::object_track_state>(++frame, i.key(),
-                                                      std::move(d));
-
-    track->append(std::move(s));
+    track->append(createTrackState(++frame, i.key(), std::move(d)));
   }
 
   return track;
