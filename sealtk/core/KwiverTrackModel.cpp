@@ -56,6 +56,13 @@ struct Classifier
 };
 
 // ----------------------------------------------------------------------------
+std::shared_ptr<kv::object_track_state> objectTrackState(
+  kv::track_state_sptr const& state)
+{
+  return std::static_pointer_cast<kv::object_track_state>(state);
+}
+
+// ----------------------------------------------------------------------------
 kv::track_sptr cleanTrack(kv::track_sptr const& in)
 {
   // Check that we have a track at all
@@ -242,8 +249,7 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
     {
       auto const& track = d->tracks[static_cast<uint>(pr - 1)];
       auto const& state =
-        std::static_pointer_cast<kv::object_track_state>(
-          *(track.track->begin() + index.row()));
+        objectTrackState(*(track.track->begin() + index.row()));
 
       switch (role)
       {
@@ -295,9 +301,7 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
         case core::StartTimeRole:
           if (!track.track->empty())
           {
-            auto const& s =
-              std::static_pointer_cast<kv::object_track_state>(
-                track.track->front());
+            auto const& s = objectTrackState(track.track->front());
             return QVariant::fromValue(s->time());
           }
           return {};
@@ -305,9 +309,7 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
         case core::EndTimeRole:
           if (!track.track->empty())
           {
-            auto const& s =
-              std::static_pointer_cast<kv::object_track_state>(
-                track.track->back());
+            auto const& s = objectTrackState(track.track->back());
             return QVariant::fromValue(s->time());
           }
           return {};
@@ -318,9 +320,7 @@ QVariant KwiverTrackModel::data(QModelIndex const& index, int role) const
         case NotesRole:
           if (!track.track->empty())
           {
-            auto const& s =
-              std::static_pointer_cast<kv::object_track_state>(
-                track.track->back());
+            auto const& s = objectTrackState(track.track->back());
             switch (role)
             {
               case ClassificationTypeRole:  return bestClassifier(s).type;
@@ -588,6 +588,55 @@ void KwiverTrackModel::addTracks(QVector<kv::track_sptr>&& tracks)
       d->tracks.emplace_back(std::move(track));
     }
 
+    this->endInsertRows();
+  }
+}
+
+// ----------------------------------------------------------------------------
+void KwiverTrackModel::updateTrack(
+  QModelIndex const& parent, kv::track_state_sptr&& state)
+{
+  if (this->checkIndex(parent, IndexIsValid | ParentIsInvalid))
+  {
+    QTE_D_DETACH();
+
+    auto& track = d->tracks[static_cast<uint>(parent.row())];
+    auto const frame = state->frame();
+    auto row = 0;
+
+    for (auto const& s : *track.track)
+    {
+      auto const f = s->frame();
+      if (f == frame)
+      {
+        auto stateIndex = this->index(row, 0, parent);
+
+        // Replace existing state data
+        auto const& os = objectTrackState(s);
+        auto const& ns = objectTrackState(state);
+        os->set_time(ns->time());
+        os->set_detection(ns->detection());
+
+        emit this->dataChanged(stateIndex, stateIndex);
+
+        return;
+      }
+      else if (f > frame)
+      {
+        // Insert new state at current row
+        this->beginInsertRows(parent, row, row);
+        track.track->insert(std::move(state));
+        this->endInsertRows();
+
+        return;
+      }
+      ++row;
+    }
+
+    // Insert new state at end
+    Q_ASSERT(row == static_cast<int>(track.track->size()));
+    this->beginInsertRows(parent, row, row);
+    track.track->append(std::move(state));
     this->endInsertRows();
   }
 }

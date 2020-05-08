@@ -51,6 +51,9 @@ public:
   };
   MergeTracksResult mergeTracks(QSet<qint64> const& ids);
 
+  void updateTrack(QModelIndex const& parent,
+                   kwiver::vital::track_state_sptr&& state);
+
 public slots:
   void clear();
 
@@ -58,6 +61,13 @@ public slots:
   void setTracks(kwiver::vital::object_track_set_sptr const& trackSet);
 
   void mergeTracks(kwiver::vital::object_track_set_sptr const& trackSet);
+
+  void updateTrack(QModelIndex const& parent,
+                   kwiver::vital::track_state_sptr const& state)
+  {
+    auto copy = state;
+    this->updateTrack(parent, std::move(copy));
+  }
 
 protected:
   KwiverTrackModel(
