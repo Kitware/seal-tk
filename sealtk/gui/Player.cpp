@@ -213,6 +213,8 @@ public:
   void pickDetection(QPointF const& pos);
   void cancelPick();
 
+  QSize effectiveImageSize() const;
+
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
 
@@ -523,9 +525,8 @@ void Player::setCenterToTrack(qint64 id, kv::timestamp::time_t time)
 
             if (d->image && d->centerRequest.matches(d->timeStamp))
             {
-              auto const w = d->image->width();
-              auto const h = d->image->height();
-              auto const offset = QPointF{0.5 * w, 0.5 * h};
+              auto const s = d->effectiveImageSize();
+              auto const offset = QPointF{0.5 * s.width(), 0.5 * s.height()};
               this->setCenter(d->centerRequest.location - offset);
               d->centerRequest.reset();
             }
@@ -1142,25 +1143,21 @@ void PlayerPrivate::updateViewHomography()
   QTE_Q();
 
   // Get image and view sizes
-  auto const useHomography = !this->homography.isIdentity();
-  auto const iw = (useHomography
-                   ? static_cast<float>(this->homographyImageSize.width())
-                   : static_cast<float>(image->width()));
-  auto const ih = (useHomography
-                   ? static_cast<float>(this->homographyImageSize.height())
-                   : static_cast<float>(image->height()));
-  auto const vw = static_cast<float>(q->width());
-  auto const vh = static_cast<float>(q->height());
+  auto const is = this->effectiveImageSize();
+  auto const iw = static_cast<double>(is.width());
+  auto const ih = static_cast<double>(is.height());
+  auto const vw = static_cast<double>(q->width());
+  auto const vh = static_cast<double>(q->height());
 
   // Compute values for "fit" image
   auto const left =
-    static_cast<float>(this->center.x() + (0.5 * (iw - (vw / zoom))));
+    static_cast<float>(this->center.x() + (0.5 * (iw - (vw / this->zoom))));
   auto const right =
-    static_cast<float>(this->center.x() + (0.5 * (iw + (vw / zoom))));
+    static_cast<float>(this->center.x() + (0.5 * (iw + (vw / this->zoom))));
   auto const top =
-    static_cast<float>(this->center.y() + (0.5 * (ih - (vh / zoom))));
+    static_cast<float>(this->center.y() + (0.5 * (ih - (vh / this->zoom))));
   auto const bottom =
-    static_cast<float>(this->center.y() + (0.5 * (ih + (vh / zoom))));
+    static_cast<float>(this->center.y() + (0.5 * (ih + (vh / this->zoom))));
 
   // Compute transform
   this->viewHomography.setToIdentity();
@@ -1530,6 +1527,18 @@ void PlayerPrivate::cancelPick()
     this->pickTask.cancel();
     this->pickWatcher.setFuture({});
   }
+}
+
+// ----------------------------------------------------------------------------
+QSize PlayerPrivate::effectiveImageSize() const
+{
+  if (this->homography.isIdentity() && this->image)
+  {
+    return {static_cast<int>(this->image->width()),
+            static_cast<int>(this->image->height())};
+  }
+
+  return this->homographyImageSize;
 }
 
 } // namespace gui
