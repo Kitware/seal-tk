@@ -8,6 +8,21 @@ add_subdirectory(core)
 add_subdirectory(gui)
 add_subdirectory(kwiver)
 
+set(NOAA_TRACK_READER "kw18" CACHE STRING
+    "Name of KWIVER plugin used by the NOAA GUI to read tracks")
+set(NOAA_TRACK_WRITER "kw18" CACHE STRING
+    "Name of KWIVER plugin used by the NOAA GUI to write tracks")
+set(NOAA_VIDEO_READER "noaa_timestamp_passthrough" CACHE STRING
+    "Name of KWIVER plugin used by the NOAA GUI to read video")
+set(NOAA_VIDEO_READER_PASSTHROUGH "vxl" CACHE STRING
+    "Name of pass-through KWIVER plugin used by the NOAA GUI to read video")
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/PluginConfig.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/PluginConfig.hpp
+  @ONLY
+  )
+
 sealtk_add_executable(sealtk::noaa_app
   SOURCES
     Main.cpp

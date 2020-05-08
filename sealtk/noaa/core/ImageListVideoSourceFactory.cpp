@@ -4,6 +4,8 @@
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
 
+#include <sealtk/noaa/PluginConfig.hpp>
+
 namespace sealtk
 {
 
@@ -52,9 +54,13 @@ kwiver::vital::config_block_sptr ImageListVideoSourceFactory::config(
   auto config = kwiver::vital::config_block::empty_config();
   config->set_value("video_reader:type", "image_list");
   config->set_value("video_reader:image_list:image_reader:type",
-                    "noaa_timestamp_passthrough");
-  config->set_value("video_reader:image_list:image_reader:"
-                    "noaa_timestamp_passthrough:image_reader:type", "vxl");
+                    config::videoReader);
+  if (*config::videoReaderPassthrough)
+  {
+    auto key = std::string{"video_reader:image_list:image_reader:"} +
+               config::videoReader + ":image_reader:type";
+    config->set_value(key, config::videoReaderPassthrough);
+  }
 
   return config;
 }
