@@ -59,8 +59,9 @@
      </property>
     </widget>
     <addaction name="menuPipeline"/>
-    <addaction name="actionCreateDetection"/>
-    <addaction name="actionDeleteDetection"/>
+    <addaction name="actionCreateTrack"/>
+    <addaction name="actionDeleteTrack"/>
+    <addaction name="actionAmendTrack"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -153,8 +154,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionCreateDetection"/>
-   <addaction name="actionDeleteDetection"/>
+   <addaction name="actionCreateTrack"/>
+   <addaction name="actionDeleteTrack"/>
+   <addaction name="actionAmendTrack"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionAbout">
@@ -162,18 +164,18 @@
     <string>&amp;About...</string>
    </property>
   </action>
-  <action name="actionCreateDetection">
+  <action name="actionCreateTrack">
    <property name="icon">
     <iconset theme="list-add"/>
    </property>
    <property name="text">
-    <string>&amp;Create Detection</string>
+    <string>&amp;Create Track</string>
    </property>
    <property name="shortcut">
     <string>Ins</string>
    </property>
   </action>
-  <action name="actionDeleteDetection">
+  <action name="actionDeleteTrack">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -181,7 +183,7 @@
     <iconset theme="list-remove"/>
    </property>
    <property name="text">
-    <string>&amp;Delete Detection</string>
+    <string>&amp;Delete Track</string>
    </property>
    <property name="shortcut">
     <string>Del</string>
@@ -218,6 +220,20 @@
    </property>
    <property name="text">
     <string>Image &amp;Filename</string>
+   </property>
+  </action>
+  <action name="actionAmendTrack">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="edit-amend"/>
+   </property>
+   <property name="text">
+    <string>&amp;Amend Track</string>
+   </property>
+   <property name="shortcut">
+    <string>+</string>
    </property>
   </action>
  </widget>
