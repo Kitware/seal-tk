@@ -56,13 +56,6 @@ struct Classifier
 };
 
 // ----------------------------------------------------------------------------
-std::shared_ptr<kv::object_track_state> objectTrackState(
-  kv::track_state_sptr const& state)
-{
-  return std::static_pointer_cast<kv::object_track_state>(state);
-}
-
-// ----------------------------------------------------------------------------
 kv::track_sptr cleanTrack(kv::track_sptr const& in)
 {
   // Check that we have a track at all

@@ -972,13 +972,42 @@ void WindowPrivate::createDetection(WindowData* data, QRectF const& detection)
           kwiverTrackModel->data(index, sc::LogicalIdentityRole);
         if (idData.value<qint64>() == this->trackToEdit)
         {
+          // Get and copy the existing track type
+          auto const& typeData =
+            kwiverTrackModel->data(index, sc::ClassificationRole);
+
+          sc::objectTrackState(trackState)->detection()->set_type(
+            sc::classificationToDetectedObjectType(typeData.toHash()));
+
+          // Amend the track with the new state
           kwiverTrackModel->updateTrack(index, std::move(trackState));
           return;
         }
       }
     }
 
-    // Looks like we are creating a new track
+    // Looks like we are creating a new track for this view; try to find the
+    // existing track (in the fusion model) so we can copy the type
+    for (auto const row : kvr::iota(this->trackModel.rowCount()))
+    {
+      auto const& index = this->trackModel.index(row, 0);
+      auto const& idData =
+        this->trackModel.data(index, sc::LogicalIdentityRole);
+
+      if (idData.value<qint64>() == this->trackToEdit)
+      {
+        // Get and copy the existing track type
+        auto const& typeData =
+          this->trackModel.data(index, sc::ClassificationRole);
+
+        sc::objectTrackState(trackState)->detection()->set_type(
+          sc::classificationToDetectedObjectType(typeData.toHash()));
+
+        break;
+      }
+    }
+
+    // Create the new track
     this->createDetection(data, this->trackToEdit, std::move(trackState));
   }
 }

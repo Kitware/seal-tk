@@ -33,6 +33,13 @@ SEALTK_CORE_EXPORT createDetection(
   QStringList const& notes = {});
 
 // ----------------------------------------------------------------------------
+inline std::shared_ptr<kwiver::vital::object_track_state> objectTrackState(
+  kwiver::vital::track_state_sptr const& state)
+{
+  return std::static_pointer_cast<kwiver::vital::object_track_state>(state);
+}
+
+// ----------------------------------------------------------------------------
 inline kwiver::vital::track_state_sptr
 createTrackState(
   kwiver::vital::frame_id_t frame, kwiver::vital::time_usec_t time,
