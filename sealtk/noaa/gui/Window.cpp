@@ -274,6 +274,8 @@ Window::Window(QWidget* parent)
           d->ui.actionShowIrPane, &QAction::setChecked);
   connect(d->ui.actionShowUvPane, &QAction::toggled,
           d->uvWindow.window, &QWidget::setVisible);
+  connect(d->uvWindow.window, &sg::SplitterWindow::visibilityChanged,
+          d->ui.actionShowUvPane, &QAction::setChecked);
 
   // Connect general actions
   connect(d->ui.actionAbout, &QAction::triggered,
