@@ -501,10 +501,21 @@ void WindowPrivate::registerVideoSourceFactory(
         {
           if (fileFactory->expectsDirectory())
           {
+            static auto const defaultGlobs = QStringList{
+              QStringLiteral("*.bmp"),
+              QStringLiteral("*.jpg"),
+              QStringLiteral("*.jpeg"),
+              QStringLiteral("*.pgm"),
+              QStringLiteral("*.png"),
+              QStringLiteral("*.sgi"),
+              QStringLiteral("*.tif"),
+              QStringLiteral("*.tiff")
+            };
             static auto const key =
               QStringLiteral("FileVideoSource/NameFilter");
 
             sg::GlobInputDialog gid{key, q};
+            gid.addDefaultGlobString(defaultGlobs);
             if (gid.exec() == QDialog::Accepted)
             {
               auto uri = QUrl::fromLocalFile(filename);
