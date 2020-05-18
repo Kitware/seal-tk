@@ -229,6 +229,10 @@ Window::Window(QWidget* parent)
   d->ui.toolBar->addWidget(spacer);
   setStretch(spacer, 4);
 
+  d->ui.menuView->addAction(d->ui.trackDock->toggleViewAction());
+  d->ui.menuView->addAction(d->ui.statisticsDock->toggleViewAction());
+  d->ui.menuView->addAction(d->ui.toolBar->toggleViewAction());
+
   d->scoreFilter = new sg::FilterWidget{this};
   d->scoreFilter->setFilter(sc::ClassificationScoreRole);
   d->scoreFilter->setLabel(QStringLiteral("Score"));
