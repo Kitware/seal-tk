@@ -22,8 +22,6 @@ copyright_notice_cmake_re = "^# " + copyright_notice.replace("\n", "\n# ") \
     + "\n\n"
 copyright_notice_py_re = "^(#!/usr/bin/env python3\n\n)?# " \
     + copyright_notice.replace("\n", "\n# ") + "\n\n"
-copyright_notice_qrc_re = "^<!--" + copyright_notice.replace("\n", "\n    ") \
-    + "-->\n\n"
 copyright_notice_glsl_re = "^/\* " + copyright_notice.replace("\n", "\n \* ") \
     + " \*/\n\n"
 copyright_notice_sh_re = "^(#!/bin/(ba)?sh\n\n)?# " \
@@ -80,9 +78,6 @@ class SourceFile:
         return matches(self.filename, r"\.cmake$") or \
             filename_components(self.filename)[-1] == "CMakeLists.txt"
 
-    def is_qrc(self):
-        return matches(self.filename, r"\.qrc$")
-
     def is_glsl(self):
         return matches(self.filename, r"\.glsl$")
 
@@ -116,8 +111,6 @@ class SourceFile:
             assert matches(self.contents(), copyright_notice_cmake_re)
         elif self.is_python():
             assert matches(self.contents(), copyright_notice_py_re)
-        elif self.is_qrc():
-            assert matches(self.contents(), copyright_notice_qrc_re)
         elif self.is_glsl():
             assert matches(self.contents(), copyright_notice_glsl_re)
         elif self.is_sh():
@@ -137,13 +130,13 @@ class SourceFile:
 
     def test_line_length(self):
         if self.is_cpp_source() or self.is_cpp_header() or self.is_python() \
-                or self.is_cmake() or self.is_qrc() or self.is_glsl() \
+                or self.is_cmake() or self.is_glsl() \
                 or self.is_sh() or self.is_bat():
             assert not matches(self.contents(), r"[^\n]{80,}")
 
     def test_trailing_whitespace(self):
         if self.is_cpp_source() or self.is_cpp_header() or self.is_python() \
-                or self.is_cmake() or self.is_qrc() or self.is_glsl() \
+                or self.is_cmake() or self.is_glsl() \
                 or self.is_sh() or self.is_bat():
             assert not matches(self.contents(), r"[ \t]\n")
             assert matches(self.contents(), r"[^\n]\n\Z")
