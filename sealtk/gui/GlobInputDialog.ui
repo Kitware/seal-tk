@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>283</width>
+    <width>300</width>
     <height>120</height>
    </rect>
   </property>
@@ -23,13 +23,38 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Select or enter shell glob for file names:
-(Multiple globs may be separated with ';')</string>
+      <string>Select or enter filter for file names:
+(Multiple patterns may be separated with ';')</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QComboBox" name="glob">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;p style=&quot;margin-bottom:1em; text-align: justify;&quot;&gt;Enter a list of one or more shell glob patterns in order to limit what files will be selected. Separate multiple patterns with '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;;&lt;/span&gt;'.&lt;/p&gt;
+&lt;p style=&quot;margin-bottom:1em; text-align: justify;&quot;&gt;Shell globs use simple wild card characters to specify patterns that will match different names. For example:&lt;/p&gt;
+&lt;table style=&quot;margin: 1em 2em;&quot;&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches all files&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*.txt&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches files with the file type suffix '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;txt&lt;/span&gt;'&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*foo*&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches files whose name contains  '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;foo&lt;/span&gt;'&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*b?r*&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches files whose name contains a '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;b&lt;/span&gt;' and an '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;r&lt;/span&gt;' with one other character in between&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p style=&quot;text-align: justify;&quot;&gt;Recently used patterns will be remembered and can be selected from the drop-down list.&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="editable">
       <bool>true</bool>
      </property>
@@ -44,7 +69,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
