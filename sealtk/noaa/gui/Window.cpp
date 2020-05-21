@@ -229,6 +229,10 @@ Window::Window(QWidget* parent)
   d->ui.toolBar->addWidget(spacer);
   setStretch(spacer, 4);
 
+  d->ui.menuView->addAction(d->ui.trackDock->toggleViewAction());
+  d->ui.menuView->addAction(d->ui.statisticsDock->toggleViewAction());
+  d->ui.menuView->addAction(d->ui.toolBar->toggleViewAction());
+
   d->scoreFilter = new sg::FilterWidget{this};
   d->scoreFilter->setFilter(sc::ClassificationScoreRole);
   d->scoreFilter->setLabel(QStringLiteral("Score"));
@@ -274,6 +278,8 @@ Window::Window(QWidget* parent)
           d->ui.actionShowIrPane, &QAction::setChecked);
   connect(d->ui.actionShowUvPane, &QAction::toggled,
           d->uvWindow.window, &QWidget::setVisible);
+  connect(d->uvWindow.window, &sg::SplitterWindow::visibilityChanged,
+          d->ui.actionShowUvPane, &QAction::setChecked);
 
   // Connect general actions
   connect(d->ui.actionAbout, &QAction::triggered,
