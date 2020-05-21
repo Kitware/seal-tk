@@ -61,6 +61,17 @@ void CreateDetectionPlayerTool::activate()
 }
 
 // ----------------------------------------------------------------------------
+void CreateDetectionPlayerTool::deactivate()
+{
+  QTE_D();
+
+  d->creating = false;
+  d->dragging = false;
+
+  this->PlayerTool::deactivate();
+}
+
+// ----------------------------------------------------------------------------
 void CreateDetectionPlayerTool::updateImage()
 {
   QTE_D();
