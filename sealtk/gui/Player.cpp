@@ -1027,17 +1027,18 @@ void Player::mouseReleaseEvent(QMouseEvent* event)
     event->setAccepted(wasAccepted);
   }
 
-  if (d->dragging && event->button() & d->dragButtons)
+  if (!d->dragging && event->button() == Qt::LeftButton)
+  {
+    d->pickDetection(event->pos());
+  }
+
+  if (event->button() & d->dragButtons)
   {
     d->dragButtons &= ~(event->button());
     if (!d->dragButtons)
     {
       d->dragging = false;
     }
-  }
-  else if (event->button() == Qt::LeftButton)
-  {
-    d->pickDetection(event->pos());
   }
 }
 
