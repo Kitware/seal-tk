@@ -10,7 +10,9 @@
 #include <qtScopedSettingsGroup.h>
 
 #include <QDebug>
+#include <QPushButton>
 #include <QSettings>
+#include <QToolTip>
 
 namespace kvr = kwiver::vital::range;
 
@@ -50,7 +52,12 @@ GlobInputDialog::GlobInputDialog(
   QTE_D();
 
   d->ui.setupUi(this);
+  d->ui.label->setToolTip(d->ui.glob->toolTip());
   this->setMaximumHeight(this->minimumSizeHint().height());
+
+  auto* const helpButton = d->ui.buttonBox->button(QDialogButtonBox::Help);
+  connect(helpButton, &QAbstractButton::clicked, this,
+          [d]{ QToolTip::showText(QCursor::pos(), d->ui.glob->toolTip()); });
 
   d->settingsKey = settingsKey;
   QTE_WITH_EXPR(qtScopedSettingsGroup{d->settings, d->settingsKey})
