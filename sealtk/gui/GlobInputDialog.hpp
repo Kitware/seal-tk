@@ -35,6 +35,7 @@ public:
 
 public slots:
   void setGlobString(QString const&);
+  void addDefaultGlobString(QStringList const& defaultGlobs);
 
   void accept() override;
 

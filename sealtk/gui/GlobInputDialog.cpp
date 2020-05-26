@@ -77,6 +77,21 @@ GlobInputDialog::~GlobInputDialog()
 }
 
 // ----------------------------------------------------------------------------
+void GlobInputDialog::addDefaultGlobString(QStringList const& defaultGlobs)
+{
+  QTE_D();
+
+  if (!defaultGlobs.isEmpty())
+  {
+    auto const& item = defaultGlobs.join(';');
+    if (d->ui.glob->findText(item) == -1)
+    {
+      d->ui.glob->addItem(item);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
 void GlobInputDialog::accept()
 {
   QTE_D();
