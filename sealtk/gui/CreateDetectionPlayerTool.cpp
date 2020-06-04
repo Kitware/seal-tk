@@ -61,6 +61,17 @@ void CreateDetectionPlayerTool::activate()
 }
 
 // ----------------------------------------------------------------------------
+void CreateDetectionPlayerTool::deactivate()
+{
+  QTE_D();
+
+  d->creating = false;
+  d->dragging = false;
+
+  this->PlayerTool::deactivate();
+}
+
+// ----------------------------------------------------------------------------
 void CreateDetectionPlayerTool::updateImage()
 {
   QTE_D();
@@ -77,7 +88,7 @@ void CreateDetectionPlayerTool::mousePressEvent(QMouseEvent* event)
 {
   QTE_D();
 
-  if (event->button() & Qt::LeftButton && this->player()->hasImage())
+  if (event->button() == Qt::LeftButton && this->player()->hasImage())
   {
     if (!d->creating)
     {
@@ -100,7 +111,7 @@ void CreateDetectionPlayerTool::mouseReleaseEvent(QMouseEvent* event)
 {
   QTE_D();
 
-  if (d->creating && event->button() & Qt::LeftButton)
+  if (d->creating && event->button() == Qt::LeftButton)
   {
     if (d->dragging)
     {
@@ -113,9 +124,6 @@ void CreateDetectionPlayerTool::mouseReleaseEvent(QMouseEvent* event)
     {
       d->dragging = true;
     }
-
-    event->accept();
-    return;
   }
 
   PlayerTool::mouseReleaseEvent(event);
@@ -140,9 +148,6 @@ void CreateDetectionPlayerTool::mouseMoveEvent(QMouseEvent* event)
     d->detection.setBottomRight(
       this->player()->viewToImage(event->localPos()));
     this->player()->update();
-
-    event->accept();
-    return;
   }
 
   PlayerTool::mouseMoveEvent(event);
