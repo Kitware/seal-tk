@@ -31,6 +31,7 @@
 #include <sealtk/core/KwiverTracksSink.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 #include <sealtk/core/ScalarFilterModel.hpp>
+#include <sealtk/core/TrackUtils.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
 #include <sealtk/core/VideoSourceFactory.hpp>
@@ -49,6 +50,7 @@
 #include <QCollator>
 #include <QDebug>
 #include <QFileDialog>
+#include <QLabel>
 #include <QMessageBox>
 #include <QPointer>
 #include <QProgressDialog>
@@ -160,9 +162,11 @@ public:
   void saveDetections(WindowData* data);
   void executePipeline(QString const& pipelineFile);
   void createDetection(WindowData* data, QRectF const& detection);
+  void createDetection(WindowData* data, qint64 trackId,
+                       kv::track_state_sptr&& trackState);
 
   template <typename Tool>
-  void setActiveTool(Tool* WindowData::* tool);
+  void setActiveTool(Tool* WindowData::* tool, QString const& text);
   void resetActiveTool();
 
   WindowData* dataForView(int viewIndex);
@@ -176,6 +180,8 @@ public:
 
   Ui::Window ui;
   qtUiState uiState;
+
+  QLabel* statusText;
 
   sg::FusionModel trackModel;
   sc::ScalarFilterModel trackModelFilter;
@@ -203,6 +209,8 @@ public:
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
 
+  qint64 trackToEdit = -1;
+
 private:
   QTE_DECLARE_PUBLIC(Window)
   QTE_DECLARE_PUBLIC_PTR(Window)
@@ -221,8 +229,12 @@ Window::Window(QWidget* parent)
   d->ui.setupUi(this);
   d->ui.actionAbout->setIcon(this->windowIcon());
 
-  addShortcut(d->ui.actionCreateDetection, Qt::Key_C);
-  addShortcut(d->ui.actionDeleteDetection, Qt::Key_D);
+  d->statusText = new QLabel{this};
+  d->ui.statusBar->addWidget(d->statusText);
+
+  addShortcut(d->ui.actionCreateTrack, Qt::Key_C);
+  addShortcut(d->ui.actionDeleteTrack, Qt::Key_D);
+  addShortcut(d->ui.actionAmendTrack, Qt::Key_A);
 
   // Set up score filter
   auto* const spacer = new QWidget{this};
@@ -328,17 +340,45 @@ Window::Window(QWidget* parent)
   connect(d->ui.tracks->selectionModel(),
           &QItemSelectionModel::selectionChanged,
           this, [d]{
-            d->updateTrackSelection(
-              d->ui.tracks->selectionModel()->selectedIndexes());
-            d->ui.actionDeleteDetection->setEnabled(
-              d->ui.tracks->selectionModel()->hasSelection());
+            auto const& selection =
+              d->ui.tracks->selectionModel()->selectedRows();
+
+            d->updateTrackSelection(selection);
+            d->ui.actionDeleteTrack->setEnabled(!selection.isEmpty());
+            d->ui.actionAmendTrack->setEnabled(selection.size() == 1);
           });
 
   // Set up actions to create and delete detections
-  connect(d->ui.actionCreateDetection, &QAction::triggered,
-          this, [d]{ d->setActiveTool(&WindowData::createDetectionTool); });
+  connect(d->ui.actionCreateTrack, &QAction::triggered,
+          this, [d]{
+            static auto const text =
+              QStringLiteral("Creating detection for new track");
+            d->setActiveTool(&WindowData::createDetectionTool, text);
+          });
 
-  connect(d->ui.actionDeleteDetection, &QAction::triggered,
+  connect(d->ui.actionAmendTrack, &QAction::triggered,
+          this, [d]{
+
+            auto const& selection =
+              d->ui.tracks->selectionModel()->selectedRows();
+            if (selection.size() == 1)
+            {
+              auto const& index = d->modelIndex(selection.first());
+              auto const& idData =
+                d->trackModel.data(index, sc::LogicalIdentityRole);
+              if (idData.canConvert<qint64>())
+              {
+                d->trackToEdit = idData.value<qint64>();
+
+                static auto const text =
+                  QStringLiteral("Adding/replacing detection for track %1");
+                d->setActiveTool(&WindowData::createDetectionTool,
+                                 text.arg(d->trackToEdit));
+              }
+            }
+          });
+
+  connect(d->ui.actionDeleteTrack, &QAction::triggered,
           this, [d]{
             // Get selected items
             auto items = QModelIndexList{};
@@ -874,7 +914,8 @@ void WindowPrivate::updateTrackSelection(
 
 // ----------------------------------------------------------------------------
 template <typename Tool>
-void WindowPrivate::setActiveTool(Tool* WindowData::* tool)
+void WindowPrivate::setActiveTool(
+  Tool* WindowData::* tool, QString const& text)
 {
   if (!this->cancelToolShortcut)
   {
@@ -889,11 +930,15 @@ void WindowPrivate::setActiveTool(Tool* WindowData::* tool)
   {
     w->player->setActiveTool(w->*tool);
   }
+
+  this->statusText->setText(text);
 }
 
 // ----------------------------------------------------------------------------
 void WindowPrivate::resetActiveTool()
 {
+  this->trackToEdit = -1;
+  this->statusText->clear();
   for (auto* const w : this->allWindows)
   {
     w->player->setActiveTool(nullptr);
@@ -905,16 +950,6 @@ void WindowPrivate::resetActiveTool()
 // ----------------------------------------------------------------------------
 void WindowPrivate::createDetection(WindowData* data, QRectF const& detection)
 {
-  // Determine what index to use for the new detection (using the fused model,
-  // not the per-view model!)
-  qint64 maxId = 0;
-  for (auto const row : kvr::iota(this->trackModel.rowCount()))
-  {
-    auto const& index = this->trackModel.index(row, 0);
-    auto const& idData = this->trackModel.data(index, sc::LogicalIdentityRole);
-    maxId = std::max(maxId, idData.value<qint64>());
-  }
-
   // Determine the time stamp for the detection
   auto const& allFrames = data->videoSource->frames();
   auto const time = this->videoController->time();
@@ -922,20 +957,88 @@ void WindowPrivate::createDetection(WindowData* data, QRectF const& detection)
   auto const frame = (framePtr ? *framePtr : 0);
 
   // Create the detection
-  auto const box =
-    kv::bounding_box_d{detection.left(), detection.top(),
-                       detection.right(), detection.bottom()};
-  auto const& kdot = std::make_shared<kv::detected_object_type>();
-  kdot->set_score("unspecified", 1.0);
-  auto const& detectedObject =
-    std::make_shared<kv::detected_object>(box, 1.0, kdot);
-  auto const& trackState =
-    std::make_shared<kv::object_track_state>(frame, time, detectedObject);
+  auto detectedObject =
+    sc::createDetection(detection, {{"unspecified", 1.0}});
+  auto trackState =
+    sc::createTrackState(frame, time, std::move(detectedObject));
 
+  if (this->trackToEdit < 0)
+  {
+    // Determine what index to use for the new detection (using the fused
+    // model, not the per-view model!)
+    qint64 maxId = 0;
+    for (auto const row : kvr::iota(this->trackModel.rowCount()))
+    {
+      auto const& index = this->trackModel.index(row, 0);
+      auto const& idData =
+        this->trackModel.data(index, sc::LogicalIdentityRole);
+      maxId = std::max(maxId, idData.value<qint64>());
+    }
+
+    // Add the detection to the window's track model as a new track
+    this->createDetection(data, maxId + 1, std::move(trackState));
+  }
+  else
+  {
+    // Try to find the track in the track model (it may not exist)
+    if (auto* const kwiverTrackModel =
+          qobject_cast<sc::KwiverTrackModel*>(data->trackModel.get()))
+    {
+      for (auto const row : kvr::iota(kwiverTrackModel->rowCount()))
+      {
+        auto const& index = kwiverTrackModel->index(row, 0);
+        auto const& idData =
+          kwiverTrackModel->data(index, sc::LogicalIdentityRole);
+        if (idData.value<qint64>() == this->trackToEdit)
+        {
+          // Get and copy the existing track type
+          auto const& typeData =
+            kwiverTrackModel->data(index, sc::ClassificationRole);
+
+          sc::objectTrackState(trackState)->detection()->set_type(
+            sc::classificationToDetectedObjectType(typeData.toHash()));
+
+          // Amend the track with the new state
+          kwiverTrackModel->updateTrack(index, std::move(trackState));
+          return;
+        }
+      }
+    }
+
+    // Looks like we are creating a new track for this view; try to find the
+    // existing track (in the fusion model) so we can copy the type
+    for (auto const row : kvr::iota(this->trackModel.rowCount()))
+    {
+      auto const& index = this->trackModel.index(row, 0);
+      auto const& idData =
+        this->trackModel.data(index, sc::LogicalIdentityRole);
+
+      if (idData.value<qint64>() == this->trackToEdit)
+      {
+        // Get and copy the existing track type
+        auto const& typeData =
+          this->trackModel.data(index, sc::ClassificationRole);
+
+        sc::objectTrackState(trackState)->detection()->set_type(
+          sc::classificationToDetectedObjectType(typeData.toHash()));
+
+        break;
+      }
+    }
+
+    // Create the new track
+    this->createDetection(data, this->trackToEdit, std::move(trackState));
+  }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::createDetection(
+  WindowData* data, qint64 trackId, kv::track_state_sptr&& trackState)
+{
   // Wrap the detection in a track
   auto const& track = kv::track::create();
-  track->append(trackState);
-  track->set_id(maxId + 1);
+  track->append(std::move(trackState));
+  track->set_id(trackId);
 
   // Ensure that the view has a track model; create one if necessary
   if (!data->trackModel)

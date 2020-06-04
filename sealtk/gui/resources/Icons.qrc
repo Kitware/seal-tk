@@ -11,6 +11,7 @@
     <file>icons/krest/16x16/document-open-video.png</file>
     <file>icons/krest/16x16/document-open.png</file>
     <file>icons/krest/16x16/document-save.png</file>
+    <file>icons/krest/16x16/edit-amend.png</file>
     <file>icons/krest/16x16/edit-clear.png</file>
     <file>icons/krest/16x16/edit-delete.png</file>
     <file>icons/krest/16x16/file-zoom-in.png</file>
@@ -39,6 +40,7 @@
     <file>icons/krest/16x16@2x/document-open-video.png</file>
     <file>icons/krest/16x16@2x/document-open.png</file>
     <file>icons/krest/16x16@2x/document-save.png</file>
+    <file>icons/krest/16x16@2x/edit-amend.png</file>
     <file>icons/krest/16x16@2x/edit-clear.png</file>
     <file>icons/krest/16x16@2x/edit-delete.png</file>
     <file>icons/krest/16x16@2x/file-zoom-in.png</file>
@@ -67,6 +69,7 @@
     <file>icons/krest/22x22/document-open-video.png</file>
     <file>icons/krest/22x22/document-open.png</file>
     <file>icons/krest/22x22/document-save.png</file>
+    <file>icons/krest/22x22/edit-amend.png</file>
     <file>icons/krest/22x22/edit-delete.png</file>
     <file>icons/krest/22x22/file-zoom-in.png</file>
     <file>icons/krest/22x22/file-zoom-out.png</file>
@@ -94,6 +97,7 @@
     <file>icons/krest/22x22@2x/document-open-video.png</file>
     <file>icons/krest/22x22@2x/document-open.png</file>
     <file>icons/krest/22x22@2x/document-save.png</file>
+    <file>icons/krest/22x22@2x/edit-amend.png</file>
     <file>icons/krest/22x22@2x/edit-delete.png</file>
     <file>icons/krest/22x22@2x/file-zoom-in.png</file>
     <file>icons/krest/22x22@2x/file-zoom-out.png</file>
