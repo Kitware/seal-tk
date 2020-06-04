@@ -169,7 +169,7 @@
     <iconset theme="list-add"/>
    </property>
    <property name="text">
-    <string>&amp;Create Track</string>
+    <string>&amp;Create Track&#9;Ins / C</string>
    </property>
    <property name="shortcut">
     <string>Ins</string>
@@ -183,7 +183,7 @@
     <iconset theme="list-remove"/>
    </property>
    <property name="text">
-    <string>&amp;Delete Track</string>
+    <string>&amp;Delete Track&#9;Del / D</string>
    </property>
    <property name="shortcut">
     <string>Del</string>
@@ -230,7 +230,7 @@
     <iconset theme="edit-amend"/>
    </property>
    <property name="text">
-    <string>&amp;Amend Track</string>
+    <string>&amp;Amend Track&#9;+ / A</string>
    </property>
    <property name="shortcut">
     <string>+</string>
