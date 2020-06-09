@@ -19,8 +19,7 @@ namespace kwiver
 {
 
 class SEALTK_NOAA_KWIVER_EXPORT TimestampPassthrough
-  : public ::kwiver::vital::algorithm_impl<TimestampPassthrough,
-                                           ::kwiver::vital::algo::image_io>
+  : public ::kwiver::vital::algo::image_io
 {
 public:
   TimestampPassthrough();
