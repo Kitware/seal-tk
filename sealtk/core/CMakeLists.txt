@@ -16,6 +16,7 @@ sealtk_add_library(sealtk::core
     AbstractItemModel.cpp
     AbstractProxyModel.cpp
     AutoLevelsTask.cpp
+    ClassificationFilterModel.cpp
     DataModelTypes.cpp
     DateUtils.cpp
     DirectoryListing.cpp
@@ -47,6 +48,7 @@ sealtk_add_library(sealtk::core
     AbstractItemModel.hpp
     AbstractProxyModel.hpp
     AutoLevelsTask.hpp
+    ClassificationFilterModel.hpp
     DataModelTypes.hpp
     DateUtils.hpp
     DirectoryListing.hpp
