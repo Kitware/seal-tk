@@ -671,6 +671,7 @@ void WindowPrivate::loadDetections(WindowData* data)
     auto params = QUrlQuery{};
 
     params.addQueryItem("input:type", config::trackReader);
+    params.addQueryItem("input:viame_csv:frame_id_adjustment", "1");
     uri.setQuery(params);
 
     data->trackSource =
@@ -749,6 +750,7 @@ void WindowPrivate::saveDetections(WindowData* data)
       auto params = QUrlQuery{};
 
       params.addQueryItem("output:type", config::trackWriter);
+      params.addQueryItem("output:viame_csv:frame_id_adjustment", "-1");
       uri.setQuery(params);
 
       QObject::connect(
