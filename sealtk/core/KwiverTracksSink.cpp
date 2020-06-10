@@ -47,6 +47,7 @@ public:
   struct Frame
   {
     kv::path_t name;
+    kv::frame_id_t frameNumber;
     std::unordered_map<qint64, kv::track_state_sptr> trackStates;
   };
 
@@ -82,7 +83,9 @@ bool KwiverTracksSink::setData(
   // Extract frame names from video
   for (auto const& md : video->metaData() | kvr::indirect)
   {
-    d->frames.insert(md.key(), {md.value().imageName(), {}});
+    auto const& mdv = md.value();
+    auto const frameNumber = mdv.timeStamp().get_frame();
+    d->frames.insert(md.key(), {mdv.imageName(), frameNumber, {}});
   }
 
   // Extract tracks (if any) as "supplemental data", exploiting that we know
@@ -155,8 +158,9 @@ bool KwiverTracksSink::addData(
         if (auto* const frame = qtGet(d->frames, t))
         {
           // Create track state
+          auto const f = frame->frameNumber;
           auto detection = d->makeDetection(model, jIndex, transform);
-          auto state = createTrackState(0, t, std::move(detection));
+          auto state = createTrackState(f, t, std::move(detection));
 
           // Add state to map
           frame->trackStates.emplace(id, std::move(state));
@@ -200,13 +204,12 @@ void KwiverTracksSink::writeData(QUrl const& uri) const
 
     auto tracks = std::unordered_map<qint64, kv::track_sptr>{};
     auto trackSet = std::make_shared<kv::object_track_set>();
-    auto currentFrame = kv::frame_id_t{0};
 
     // Iterate over frames
     for (auto const& fi : d->frames | kvr::indirect)
     {
       auto const& frame = fi.value();
-      auto const timeStamp = kv::timestamp{fi.key(), currentFrame};
+      auto const timeStamp = kv::timestamp{fi.key(), frame.frameNumber};
 
       // Update tracks
       for (auto const& si : frame.trackStates)
@@ -221,7 +224,7 @@ void KwiverTracksSink::writeData(QUrl const& uri) const
         }
 
         // Set frame on track state
-        si.second->set_frame(currentFrame);
+        si.second->set_frame(frame.frameNumber);
 
         // Update track
         track->append(si.second);
@@ -230,7 +233,6 @@ void KwiverTracksSink::writeData(QUrl const& uri) const
 
       // Write tracks at current frame
       writer->write_set(trackSet, timeStamp, frame.name);
-      ++currentFrame;
     }
 
     writer->close();
