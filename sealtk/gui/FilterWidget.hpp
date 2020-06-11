@@ -23,6 +23,7 @@ class SEALTK_GUI_EXPORT FilterWidget : public QWidget
 {
   Q_OBJECT
   Q_PROPERTY(double value READ value WRITE setValue NOTIFY valueChanged)
+  Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable)
 
 public:
   explicit FilterWidget(QWidget* parent = nullptr);
@@ -32,6 +33,7 @@ public:
   void setFilter(int role, Mode mode = LowPass);
 
   double value() const;
+  bool isCheckable() const;
 
 signals:
   void valueChanged(double value);
@@ -44,6 +46,7 @@ public slots:
   void setMaximum(double maximum);
   void setRange(double minimum, double maximum);
   void setValue(double value);
+  void setCheckable(bool checkable);
 
   void setLabel(QString const& text);
 
