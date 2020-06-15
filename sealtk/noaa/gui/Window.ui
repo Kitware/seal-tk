@@ -67,6 +67,9 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <addaction name="actionPreviousFrame"/>
+    <addaction name="actionNextFrame"/>
+    <addaction name="separator"/>
     <addaction name="actionShowIrPane"/>
     <addaction name="actionShowUvPane"/>
     <addaction name="separator"/>
@@ -235,6 +238,28 @@
    </property>
    <property name="shortcut">
     <string>+</string>
+   </property>
+  </action>
+  <action name="actionPreviousFrame">
+   <property name="icon">
+    <iconset theme="media-step-backward"/>
+   </property>
+   <property name="text">
+    <string>&amp;Previous Frame</string>
+   </property>
+   <property name="shortcut">
+    <string>Left</string>
+   </property>
+  </action>
+  <action name="actionNextFrame">
+   <property name="icon">
+    <iconset theme="media-step-forward"/>
+   </property>
+   <property name="text">
+    <string>&amp;Next Frame</string>
+   </property>
+   <property name="shortcut">
+    <string>Right</string>
    </property>
   </action>
  </widget>

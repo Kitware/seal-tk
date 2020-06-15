@@ -235,6 +235,8 @@ Window::Window(QWidget* parent)
   addShortcut(d->ui.actionCreateTrack, Qt::Key_C);
   addShortcut(d->ui.actionDeleteTrack, Qt::Key_D);
   addShortcut(d->ui.actionAmendTrack, Qt::Key_A);
+  addShortcut(d->ui.actionPreviousFrame, Qt::Key_BracketLeft);
+  addShortcut(d->ui.actionNextFrame, Qt::Key_BraceRight);
 
   // Set up score filter
   auto* const spacer = new QWidget{this};
@@ -309,8 +311,12 @@ Window::Window(QWidget* parent)
   d->ui.control->setVideoController(d->videoController);
 
   connect(d->ui.control, &sg::PlayerControl::previousFrameTriggered,
-          this, [d]{ d->videoController->previousFrame(0); });
+          d->ui.actionPreviousFrame, &QAction::trigger);
   connect(d->ui.control, &sg::PlayerControl::nextFrameTriggered,
+          d->ui.actionNextFrame, &QAction::trigger);
+  connect(d->ui.actionPreviousFrame, &QAction::triggered,
+          this, [d]{ d->videoController->previousFrame(0); });
+  connect(d->ui.actionNextFrame, &QAction::triggered,
           this, [d]{ d->videoController->nextFrame(0); });
 
   // Handle track selection changes
