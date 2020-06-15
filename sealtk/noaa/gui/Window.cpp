@@ -22,6 +22,7 @@
 #include <sealtk/gui/FusionModel.hpp>
 #include <sealtk/gui/GlobInputDialog.hpp>
 
+#include <sealtk/core/ClassificationFilterModel.hpp>
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
@@ -30,7 +31,6 @@
 #include <sealtk/core/KwiverTrackSource.hpp>
 #include <sealtk/core/KwiverTracksSink.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
-#include <sealtk/core/ScalarFilterModel.hpp>
 #include <sealtk/core/TrackUtils.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
@@ -136,15 +136,6 @@ void addShortcut(QAction* action, QKeySequence const& shortcut)
   action->setShortcuts(shortcuts);
 }
 
-// ----------------------------------------------------------------------------
-void setStretch(QWidget* widget, int factor)
-{
-  auto stretch = QSizePolicy{QSizePolicy::Expanding, QSizePolicy::Expanding};
-  stretch.setHorizontalStretch(factor);
-  stretch.setVerticalStretch(factor);
-  widget->setSizePolicy(stretch);
-}
-
 } // namespace <anonymous>
 
 // ============================================================================
@@ -184,7 +175,7 @@ public:
   QLabel* statusText;
 
   sg::FusionModel trackModel;
-  sc::ScalarFilterModel trackModelFilter;
+  sc::ClassificationFilterModel trackModelFilter;
   TrackRepresentation trackRepresentation;
   TrackTypeDelegate typeDelegate;
   NotesDelegate notesDelegate;
@@ -192,7 +183,6 @@ public:
   sg::ClassificationSummaryRepresentation statisticsRepresentation;
 
   sc::VideoController* videoController;
-  sg::FilterWidget* scoreFilter;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -236,20 +226,10 @@ Window::Window(QWidget* parent)
   addShortcut(d->ui.actionDeleteTrack, Qt::Key_D);
   addShortcut(d->ui.actionAmendTrack, Qt::Key_A);
 
-  // Set up score filter
-  auto* const spacer = new QWidget{this};
-  d->ui.toolBar->addWidget(spacer);
-  setStretch(spacer, 4);
-
   d->ui.menuView->addAction(d->ui.trackDock->toggleViewAction());
   d->ui.menuView->addAction(d->ui.statisticsDock->toggleViewAction());
+  d->ui.menuView->addAction(d->ui.filtersDock->toggleViewAction());
   d->ui.menuView->addAction(d->ui.toolBar->toggleViewAction());
-
-  d->scoreFilter = new sg::FilterWidget{this};
-  d->scoreFilter->setFilter(sc::ClassificationScoreRole);
-  d->scoreFilter->setLabel(QStringLiteral("Score"));
-  d->ui.toolBar->addWidget(d->scoreFilter);
-  setStretch(d->scoreFilter, 1);
 
   // Set up track model and list
   d->trackModelFilter.setSourceModel(&d->trackModel);
@@ -258,8 +238,10 @@ Window::Window(QWidget* parent)
   d->ui.tracks->setItemDelegateForColumn(3, &d->typeDelegate);
   d->ui.tracks->setItemDelegateForColumn(5, &d->notesDelegate);
 
-  connect(d->scoreFilter, &sg::FilterWidget::filterMinimumChanged,
-          &d->trackModelFilter, &sc::ScalarFilterModel::setLowerBound);
+  connect(d->ui.filters, &ClassificationFilterWidget::valueChanged, this,
+          [d](QString const& type, double value){
+            d->trackModelFilter.setLowerBound(type, value);
+          });
 
   // Set up statistics panel
   d->statisticsRepresentation.setSourceModel(&d->trackModelFilter);
@@ -631,8 +613,11 @@ void WindowPrivate::createWindow(
     });
 
   QObject::connect(
-    this->scoreFilter, &sg::FilterWidget::filterChanged,
-    data->player, &sg::Player::setTrackFilter);
+    this->ui.filters, &ClassificationFilterWidget::valueChanged,
+    data->player,
+    [p = data->player](QString const& type, double value){
+      p->setTrackFilter(type, value, {});
+    });
 
   if (role == WindowRole::Master)
   {
@@ -716,13 +701,20 @@ void WindowPrivate::saveDetections(WindowData* data)
     return;
   }
 
+  auto setTypeFilters =
+    [&, filters = this->ui.filters](sc::ClassificationFilterModel* model){
+    for (auto const& type : filters->types())
+    {
+      model->setLowerBound(type, filters->value(type));
+    }
+  };
+
   // Set up writer
   sc::KwiverTracksSink writer;
 
-  auto* const primaryFilter = new sc::ScalarFilterModel{&writer};
+  auto* const primaryFilter = new sc::ClassificationFilterModel{&writer};
   primaryFilter->setSourceModel(data->trackModel.get());
-  primaryFilter->setLowerBound(sc::ClassificationScoreRole,
-                               this->scoreFilter->value());
+  setTypeFilters(primaryFilter);
 
   auto haveData = writer.setData(data->videoSource, primaryFilter);
   if (writer.setTransform(data->transform))
@@ -731,10 +723,9 @@ void WindowPrivate::saveDetections(WindowData* data)
     {
       if (w != data)
       {
-        auto* const shadowFilter = new sc::ScalarFilterModel{&writer};
+        auto* const shadowFilter = new sc::ClassificationFilterModel{&writer};
         shadowFilter->setSourceModel(w->trackModel.get());
-        shadowFilter->setLowerBound(sc::ClassificationScoreRole,
-                                    this->scoreFilter->value());
+        setTypeFilters(shadowFilter);
 
         haveData =
           writer.addData(shadowFilter, w->transform) || haveData;

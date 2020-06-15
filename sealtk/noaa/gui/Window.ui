@@ -160,6 +160,35 @@
    <addaction name="actionAmendTrack"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QDockWidget" name="filtersDock">
+   <property name="windowTitle">
+    <string>Filters</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QScrollArea" name="filtersDockContents">
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="sealtk::noaa::gui::ClassificationFilterWidget" name="filters">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>118</width>
+       <height>206</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About...</string>
@@ -243,6 +272,12 @@
    <class>sealtk::gui::PlayerControl</class>
    <extends>QWidget</extends>
    <header location="global">sealtk/gui/PlayerControl.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>sealtk::noaa::gui::ClassificationFilterWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">sealtk/noaa/gui/ClassificationFilterWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
