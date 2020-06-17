@@ -214,6 +214,7 @@ public:
   void cancelPick();
 
   QSize effectiveImageSize() const;
+  QRectF extents(QVector<float> const& vertexData, int tupleSize = 2) const;
 
   QTE_DECLARE_PUBLIC(Player)
   QTE_DECLARE_PUBLIC_PTR(Player)
@@ -814,6 +815,34 @@ QPointF Player::viewToImage(QPointF const& viewCoord) const
   xf.ortho(this->rect());
 
   return xf * viewCoord;
+}
+
+// ----------------------------------------------------------------------------
+QRectF Player::extents(ExtentsTypes types) const
+{
+  QTE_D();
+
+  auto out = QRectF{};
+
+  if (types & ImageExtents && d->image)
+  {
+    auto const w = static_cast<float>(d->image->width());
+    auto const h = static_cast<float>(d->image->height());
+    auto vertices = QVector<float>{
+      0.0f, 0.0f,
+      w, 0.0f,
+      0.0f, h,
+      w, h,
+    };
+    out = out.united(d->extents(vertices));
+  };
+
+  if (types & EntityExtents)
+  {
+    out = out.united(d->extents(d->detectedObjectVertexData));
+  };
+
+  return out;
 }
 
 // ----------------------------------------------------------------------------
@@ -1540,6 +1569,26 @@ QSize PlayerPrivate::effectiveImageSize() const
   }
 
   return this->homographyImageSize;
+}
+
+// ----------------------------------------------------------------------------
+QRectF PlayerPrivate::extents(
+  QVector<float> const& vertexData, int tupleSize) const
+{
+  auto out = QRectF{};
+
+  for (auto i : kvr::iota(vertexData.count() / tupleSize))
+  {
+    auto const x = vertexData[(i * tupleSize) + 0];
+    auto const y = vertexData[(i * tupleSize) + 1];
+
+    auto const p = QPointF{x, y};
+    auto const xp = this->homography * p;
+
+    out = out.united(QRectF{xp, QSizeF{1, 1}});
+  }
+
+  return out.adjusted(0, 0, -1, -1);
 }
 
 } // namespace gui
