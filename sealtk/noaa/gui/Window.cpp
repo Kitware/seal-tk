@@ -178,6 +178,8 @@ public:
 
   QModelIndex modelIndex(QModelIndex const& representationIndex) const;
 
+  void zoomExtents(sg::ExtentsTypes types) const;
+
   Ui::Window ui;
   qtUiState uiState;
 
@@ -281,10 +283,11 @@ Window::Window(QWidget* parent)
   d->uvWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->uvWindow.player->setPercentiles(0.0, 1.0);
 
-  connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
-          d->irWindow.player, &sg::Player::setHomographyImageSize);
-  connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
-          d->uvWindow.player, &sg::Player::setHomographyImageSize);
+  for (auto* const w : d->allWindows)
+  {
+    connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
+            w->player, &sg::Player::setHomographyImageSize);
+  }
 
   connect(d->ui.actionShowIrPane, &QAction::toggled,
           d->irWindow.window, &QWidget::setVisible);
@@ -305,6 +308,10 @@ Window::Window(QWidget* parent)
               w->window->setFilenameVisible(show);
             }
           });
+  connect(d->ui.actionZoomExtents, &QAction::triggered,
+          this, [d]{ d->zoomExtents(sg::EntityExtents); });
+  connect(d->ui.actionZoomImage, &QAction::triggered,
+          this, [d]{ d->zoomExtents(sg::ImageExtents); });
 
   // Set up video controller
   d->videoController = new sc::VideoController{this};
@@ -1069,6 +1076,51 @@ QModelIndex WindowPrivate::modelIndex(
   auto const& filterIndex =
     this->trackRepresentation.mapToSource(representationIndex);
   return this->trackModelFilter.mapToSource(filterIndex);
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::zoomExtents(sg::ExtentsTypes types) const
+{
+  auto allExtents = QRectF{};
+
+  for (auto* const w : this->allWindows)
+  {
+    auto const& windowExtents = w->player->extents(types);
+    if (windowExtents.isValid())
+    {
+      if (allExtents.isValid())
+      {
+        allExtents = allExtents.united(windowExtents);
+      }
+      else
+      {
+        allExtents = windowExtents;
+      }
+    }
+  }
+
+  if (allExtents.isValid())
+  {
+    auto* const player = this->eoWindow.player;
+
+    auto const worldSize = QSizeF{player->homographyImageSize()};
+    auto const worldRect = QRectF{{0, 0}, worldSize};
+    player->setCenter(allExtents.center() - worldRect.center());
+
+    auto const adjust =
+      qMax(10.0, 0.1 * qMax(allExtents.width(), allExtents.height()));
+    allExtents.adjust(-adjust, -adjust, adjust, adjust);
+
+    auto zoom = qInf();
+    for (auto* const w : this->allWindows)
+    {
+      auto const viewSize = QSizeF{w->player->size()};
+      auto const zw = viewSize.width() / allExtents.width();
+      auto const zh = viewSize.height() / allExtents.height();
+      zoom = qMin(zoom, qMin(zw, zh));
+    }
+    player->setZoom(static_cast<float>(zoom));
+  }
 }
 
 } // namespace gui
