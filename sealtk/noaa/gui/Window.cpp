@@ -22,6 +22,7 @@
 #include <sealtk/gui/FusionModel.hpp>
 #include <sealtk/gui/GlobInputDialog.hpp>
 
+#include <sealtk/core/ChainedTransform.hpp>
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
@@ -814,7 +815,40 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
 
   for (auto* const w : this->allWindows)
   {
+    // Add video source and tracks for current view
     worker.addVideoSource(w->videoSource);
+
+    auto* const primaryFilter = new sc::ScalarFilterModel{&worker};
+    primaryFilter->setSourceModel(w->trackModel.get());
+    primaryFilter->setLowerBound(sc::ClassificationScoreRole,
+                                 this->scoreFilter->value());
+
+    worker.addTrackSource(primaryFilter);
+
+    // Get inverse transform
+    if (w->transform)
+    {
+      try
+      {
+        auto const& ixf = w->transform->inverse();
+
+        // Add tracks from other views
+        for (auto* const sw : this->allWindows)
+        {
+          if (sw != w && sw->transform)
+          {
+            auto* const shadowFilter = new sc::ScalarFilterModel{&worker};
+            shadowFilter->setSourceModel(sw->trackModel.get());
+            shadowFilter->setLowerBound(sc::ClassificationScoreRole,
+                                        this->scoreFilter->value());
+
+            auto cxf = sc::ChainedTransform{sw->transform, ixf};
+            worker.addTrackSource(shadowFilter, cxf);
+          }
+        }
+      }
+      catch (...) {}
+    }
   }
 
   QObject::connect(

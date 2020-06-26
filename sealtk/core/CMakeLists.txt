@@ -16,6 +16,7 @@ sealtk_add_library(sealtk::core
     AbstractItemModel.cpp
     AbstractProxyModel.cpp
     AutoLevelsTask.cpp
+    ChainedTransform.cpp
     DataModelTypes.cpp
     DateUtils.cpp
     DirectoryListing.cpp
@@ -47,6 +48,7 @@ sealtk_add_library(sealtk::core
     AbstractItemModel.hpp
     AbstractProxyModel.hpp
     AutoLevelsTask.hpp
+    ChainedTransform.hpp
     DataModelTypes.hpp
     DateUtils.hpp
     DirectoryListing.hpp
