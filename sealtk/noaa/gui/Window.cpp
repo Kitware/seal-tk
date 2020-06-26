@@ -802,6 +802,14 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
   progressDialog.setAutoReset(false);
   progressDialog.show();
 
+  auto setTypeFilters =
+    [&, filters = this->ui.filters](sc::ClassificationFilterModel* model){
+    for (auto const& type : filters->types())
+    {
+      model->setLowerBound(type, filters->value(type));
+    }
+  };
+
   core::NoaaPipelineWorker worker{q};
 
   for (auto* const w : this->allWindows)
@@ -809,10 +817,9 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
     // Add video source and tracks for current view
     worker.addVideoSource(w->videoSource);
 
-    auto* const primaryFilter = new sc::ScalarFilterModel{&worker};
+    auto* const primaryFilter = new sc::ClassificationFilterModel{&worker};
     primaryFilter->setSourceModel(w->trackModel.get());
-    primaryFilter->setLowerBound(sc::ClassificationScoreRole,
-                                 this->scoreFilter->value());
+    setTypeFilters(primaryFilter);
 
     worker.addTrackSource(primaryFilter);
 
@@ -828,10 +835,10 @@ void WindowPrivate::executePipeline(QString const& pipelineFile)
         {
           if (sw != w && sw->transform)
           {
-            auto* const shadowFilter = new sc::ScalarFilterModel{&worker};
+            auto* const shadowFilter =
+              new sc::ClassificationFilterModel{&worker};
             shadowFilter->setSourceModel(sw->trackModel.get());
-            shadowFilter->setLowerBound(sc::ClassificationScoreRole,
-                                        this->scoreFilter->value());
+            setTypeFilters(shadowFilter);
 
             auto cxf = sc::ChainedTransform{sw->transform, ixf};
             worker.addTrackSource(shadowFilter, cxf);
