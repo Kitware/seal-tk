@@ -4,10 +4,12 @@
 
 #include <sealtk/gui/Player.hpp>
 
+#include <sealtk/gui/ClassificationFilterWidget.hpp>
 #include <sealtk/gui/DetectionRepresentation.hpp>
 #include <sealtk/gui/PlayerTool.hpp>
 
 #include <sealtk/core/AutoLevelsTask.hpp>
+#include <sealtk/core/ClassificationFilterModel.hpp>
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/ImageUtils.hpp>
 #include <sealtk/core/ScalarFilterModel.hpp>
@@ -86,7 +88,8 @@ struct CenterRequest
 struct ShadowData
 {
   kv::transform_2d_sptr transform;
-  std::unique_ptr<core::ScalarFilterModel> trackModelFilter;
+  std::unique_ptr<core::ScalarFilterModel> trackModelTimeFilter;
+  std::unique_ptr<core::ClassificationFilterModel> trackModelTypeFilter;
 };
 
 // ============================================================================
@@ -272,7 +275,8 @@ public:
   CenterRequest centerRequest;
 
   core::VideoDistributor* videoSource = nullptr;
-  core::ScalarFilterModel trackModelFilter;
+  core::ScalarFilterModel trackModelTimeFilter;
+  core::ClassificationFilterModel trackModelTypeFilter;
   QSet<qint64> primaryTracks;
   QSet<qint64> selectedTracks;
 
@@ -303,17 +307,18 @@ Player::Player(QWidget* parent)
       return color;
     });
 
-  d->connectDetectionSource(&d->trackModelFilter);
+  d->trackModelTypeFilter.setSourceModel(&d->trackModelTimeFilter);
+  d->connectDetectionSource(&d->trackModelTypeFilter);
 
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsInserted,
+  connect(&d->trackModelTypeFilter, &QAbstractItemModel::rowsInserted,
           this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsRemoved,
+  connect(&d->trackModelTypeFilter, &QAbstractItemModel::rowsRemoved,
           this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::rowsMoved,
+  connect(&d->trackModelTypeFilter, &QAbstractItemModel::rowsMoved,
           this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::dataChanged,
+  connect(&d->trackModelTypeFilter, &QAbstractItemModel::dataChanged,
           this, [d]{ d->updateDetections(); });
-  connect(&d->trackModelFilter, &QAbstractItemModel::modelReset,
+  connect(&d->trackModelTypeFilter, &QAbstractItemModel::modelReset,
           this, [d]{ d->updateDetections(); });
 
   connect(&d->pickWatcher, &QFutureWatcher<qint64>::finished,
@@ -369,11 +374,11 @@ void Player::setImage(kv::image_container_sptr const& image,
   d->timeStamp = metaData.timeStamp();
 
   auto const t = QVariant::fromValue(d->timeStamp.get_time_usec());
-  d->trackModelFilter.setUpperBound(core::StartTimeRole, t);
-  d->trackModelFilter.setLowerBound(core::EndTimeRole, t);
+  d->trackModelTimeFilter.setUpperBound(core::StartTimeRole, t);
+  d->trackModelTimeFilter.setLowerBound(core::EndTimeRole, t);
   for (auto const& s : d->shadowData)
   {
-    if (auto* const smf = s.second.trackModelFilter.get())
+    if (auto* const smf = s.second.trackModelTimeFilter.get())
     {
       smf->setUpperBound(core::StartTimeRole, t);
       smf->setLowerBound(core::EndTimeRole, t);
@@ -420,7 +425,7 @@ void Player::setTrackModel(QAbstractItemModel* model)
 {
   QTE_D();
 
-  d->trackModelFilter.setSourceModel(model);
+  d->trackModelTimeFilter.setSourceModel(model);
 
   d->updateDetections();
 }
@@ -487,7 +492,7 @@ void Player::setCenterToTrack(qint64 id, kv::timestamp::time_t time)
 {
   QTE_D();
 
-  if (auto* const model = d->trackModelFilter.sourceModel())
+  if (auto* const model = d->trackModelTimeFilter.sourceModel())
   {
     for (auto const parentRow : kvr::iota(model->rowCount()))
     {
@@ -627,41 +632,35 @@ void Player::setPercentiles(double deviance, double tolerance)
 
 // ----------------------------------------------------------------------------
 void Player::setTrackFilter(
-  int role, QVariant const& low, QVariant const& high)
+  QString const& type, QVariant const& low, QVariant const& high)
 {
   QTE_D();
 
-  if (role == core::StartTimeRole || role == core::EndTimeRole)
-  {
-    qCritical() << __func__ << "invoked with non-permitted role" << role;
-    return;
-  }
-
-  auto setBounds = [&](core::ScalarFilterModel* model){
+  auto setBounds = [&](core::ClassificationFilterModel* model){
     if (low.isNull() && high.isNull())
     {
-      model->clearBound(role);
+      model->clearBound(type);
     }
     else if (low.isNull())
     {
-      model->clearLowerBound(role);
-      model->setUpperBound(role, high);
+      model->clearLowerBound(type);
+      model->setUpperBound(type, high);
     }
     else if (high.isNull())
     {
-      model->clearUpperBound(role);
-      model->setLowerBound(role, low);
+      model->clearUpperBound(type);
+      model->setLowerBound(type, low);
     }
     else
     {
-      model->setBound(role, low, high);
+      model->setBound(type, low, high);
     }
   };
 
-  setBounds(&d->trackModelFilter);
+  setBounds(&d->trackModelTypeFilter);
   for (auto const& s : d->shadowData)
   {
-    if (auto* const smf = s.second.trackModelFilter.get())
+    if (auto* const smf = s.second.trackModelTypeFilter.get())
     {
       setBounds(smf);
     }
@@ -1055,21 +1054,30 @@ void Player::setShadowTrackModel(QObject* source, QAbstractItemModel* model)
   QTE_D();
 
   auto& data = d->getShadowData(source);
-  if (!data.trackModelFilter)
+  if (!data.trackModelTimeFilter)
   {
-    data.trackModelFilter.reset(new core::ScalarFilterModel);
-    d->connectDetectionSource(data.trackModelFilter.get());
+    data.trackModelTimeFilter.reset(new core::ScalarFilterModel);
+    data.trackModelTypeFilter.reset(new core::ClassificationFilterModel);
+
+    data.trackModelTypeFilter->setSourceModel(data.trackModelTimeFilter.get());
+    d->connectDetectionSource(data.trackModelTypeFilter.get());
 
     if (d->timeStamp.has_valid_time())
     {
       auto const t = QVariant::fromValue(d->timeStamp.get_time_usec());
-      data.trackModelFilter->setUpperBound(core::StartTimeRole, t);
-      data.trackModelFilter->setLowerBound(core::EndTimeRole, t);
+      data.trackModelTimeFilter->setUpperBound(core::StartTimeRole, t);
+      data.trackModelTimeFilter->setLowerBound(core::EndTimeRole, t);
+    }
+
+    for (auto const& type : d->trackModelTypeFilter.types())
+    {
+      auto const& bound = d->trackModelTypeFilter.bound(type);
+      data.trackModelTypeFilter->setLowerBound(type, bound.first);
+      data.trackModelTypeFilter->setUpperBound(type, bound.second);
     }
   }
 
-  auto* const modelFilter = data.trackModelFilter.get();
-  modelFilter->setSourceModel(model);
+  data.trackModelTimeFilter->setSourceModel(model);
 
   d->updateDetections();
 }
@@ -1178,7 +1186,7 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
 
   // Add detections from local model
   this->primaryTracks =
-    this->addDetectionVertices(this->trackModelFilter, nullptr, {}, {});
+    this->addDetectionVertices(this->trackModelTypeFilter, nullptr, {}, {});
 
   // Add detections from shadow models
   if (q->hasTransform())
@@ -1186,11 +1194,12 @@ void PlayerPrivate::updateDetectedObjectVertexBuffers()
     for (auto const& i : this->shadowData)
     {
       auto const& sd = i.second;
-      if (sd.transform && sd.trackModelFilter &&
-          sd.trackModelFilter->sourceModel())
+      if (sd.transform &&
+          sd.trackModelTypeFilter && sd.trackModelTypeFilter->sourceModel() &&
+          sd.trackModelTimeFilter && sd.trackModelTimeFilter->sourceModel())
       {
         this->addDetectionVertices(
-          *sd.trackModelFilter, sd.transform, this->inverseHomography,
+          *sd.trackModelTypeFilter, sd.transform, this->inverseHomography,
           this->primaryTracks);
       }
     }

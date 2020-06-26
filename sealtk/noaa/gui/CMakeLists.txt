@@ -7,6 +7,7 @@ include(SEALTKUtils)
 sealtk_add_library(sealtk::noaa_gui
   SOURCES
     About.cpp
+    ClassificationFilterWidget.cpp
     NotesDelegate.cpp
     Player.cpp
     Resources.cpp
@@ -16,6 +17,7 @@ sealtk_add_library(sealtk::noaa_gui
 
   HEADERS
     About.hpp
+    ClassificationFilterWidget.hpp
     NotesDelegate.hpp
     Player.hpp
     Resources.hpp

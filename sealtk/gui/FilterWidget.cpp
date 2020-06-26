@@ -19,6 +19,8 @@ namespace gui
 class FilterWidgetPrivate
 {
 public:
+  void emitValue(FilterWidget* q, double value);
+
   Ui::FilterWidget ui;
 
   FilterWidget::Mode mode = FilterWidget::LowPass;
@@ -34,22 +36,27 @@ FilterWidget::FilterWidget(QWidget* parent)
 {
   QTE_D();
   d->ui.setupUi(this);
+  d->ui.checkBox->hide();
 
-  connect(d->ui.slider, &qtDoubleSlider::valueChanged,
-          [this, d](double value){
-            emit this->valueChanged(value);
-            if (d->role >= 0)
+  connect(d->ui.checkBox, &QAbstractButton::toggled, this,
+          [this, d](bool checked){
+            if (checked)
             {
-              if (d->mode == HighPass)
-              {
-                emit this->filterMaximumChanged(d->role, value);
-                emit this->filterChanged(d->role, {}, value);
-              }
-              else
-              {
-                emit this->filterMinimumChanged(d->role, value);
-                emit this->filterChanged(d->role, value, {});
-              }
+              d->emitValue(this, d->ui.slider->value());
+            }
+            else
+            {
+              emit this->valueChanged(this->value());
+              emit this->filterMinimumChanged(d->role, +qInf());
+              emit this->filterMaximumChanged(d->role, -qInf());
+              emit this->filterChanged(d->role, +qInf(), -qInf());
+            }
+          });
+  connect(d->ui.slider, &qtDoubleSlider::valueChanged, this,
+          [this, d](double value){
+            if (d->ui.checkBox->isChecked())
+            {
+              d->emitValue(this, value);
             }
           });
 }
@@ -107,7 +114,22 @@ void FilterWidget::setRange(double minimum, double maximum)
 double FilterWidget::value() const
 {
   QTE_D();
-  return d->ui.slider->value();
+
+  if (!d->ui.checkBox->isChecked())
+  {
+    if (d->mode == FilterWidget::HighPass)
+    {
+      return -qInf();
+    }
+    else
+    {
+      return +qInf();
+    }
+  }
+  else
+  {
+    return d->ui.slider->value();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -118,10 +140,46 @@ void FilterWidget::setValue(double value)
 }
 
 // ----------------------------------------------------------------------------
+bool FilterWidget::isCheckable() const
+{
+  QTE_D();
+  return d->ui.checkBox->isVisible();
+}
+
+// ----------------------------------------------------------------------------
+void FilterWidget::setCheckable(bool checkable)
+{
+  QTE_D();
+
+  d->ui.label->setVisible(!checkable);
+  d->ui.checkBox->setVisible(checkable);
+}
+
+// ----------------------------------------------------------------------------
 void FilterWidget::setLabel(QString const& text)
 {
   QTE_D();
   d->ui.label->setText(text);
+  d->ui.checkBox->setText(text);
+}
+
+// ----------------------------------------------------------------------------
+void FilterWidgetPrivate::emitValue(FilterWidget* q, double value)
+{
+  emit q->valueChanged(value);
+  if (this->role >= 0)
+  {
+    if (this->mode == FilterWidget::HighPass)
+    {
+      emit q->filterMaximumChanged(this->role, value);
+      emit q->filterChanged(this->role, {}, value);
+    }
+    else
+    {
+      emit q->filterMinimumChanged(this->role, value);
+      emit q->filterChanged(this->role, value, {});
+    }
+  }
 }
 
 } // namespace gui

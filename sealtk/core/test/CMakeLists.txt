@@ -127,6 +127,14 @@ sealtk_add_test(ScalarFilterModel
     sealtk::core
   )
 
+sealtk_add_test(ClassificationFilterModel
+  SOURCES
+    ClassificationFilterModel.cpp
+
+  PRIVATE_LINK_LIBRARIES
+    sealtk::core
+  )
+
 sealtk_add_test(TimeMap
   SOURCES
     TimeMap.cpp
