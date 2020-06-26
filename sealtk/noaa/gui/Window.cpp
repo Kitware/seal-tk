@@ -223,9 +223,9 @@ Window::Window(QWidget* parent)
   d->statusText = new QLabel{this};
   d->ui.statusBar->addWidget(d->statusText);
 
-  addShortcut(d->ui.actionCreateTrack, Qt::Key_C);
+  addShortcut(d->ui.actionCreateTrack, Qt::Key_Insert);
   addShortcut(d->ui.actionDeleteTrack, Qt::Key_D);
-  addShortcut(d->ui.actionAmendTrack, Qt::Key_A);
+  addShortcut(d->ui.actionAmendTrack, Qt::Key_Plus);
   addShortcut(d->ui.actionPreviousFrame, Qt::Key_BracketLeft);
   addShortcut(d->ui.actionNextFrame, Qt::Key_BraceRight);
 
@@ -341,7 +341,7 @@ Window::Window(QWidget* parent)
   connect(d->ui.actionCreateTrack, &QAction::triggered,
           this, [d]{
             static auto const text =
-              QStringLiteral("Creating detection for new track");
+              QStringLiteral("Creating new track");
             d->setActiveTool(&WindowData::createDetectionTool, text);
           });
 
@@ -360,7 +360,7 @@ Window::Window(QWidget* parent)
                 d->trackToEdit = idData.value<qint64>();
 
                 static auto const text =
-                  QStringLiteral("Adding/replacing detection for track %1");
+                  QStringLiteral("Adding/editing detection for track %1");
                 d->setActiveTool(&WindowData::createDetectionTool,
                                  text.arg(d->trackToEdit));
               }

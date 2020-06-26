@@ -205,7 +205,7 @@
     <string>&amp;Create Track&#9;Ins / C</string>
    </property>
    <property name="shortcut">
-    <string>Ins</string>
+    <string>c</string>
    </property>
   </action>
   <action name="actionDeleteTrack">
@@ -263,10 +263,10 @@
     <iconset theme="edit-amend"/>
    </property>
    <property name="text">
-    <string>&amp;Amend Track&#9;+ / A</string>
+    <string>&amp;Edit or Add To Track&#9;+ / E</string>
    </property>
    <property name="shortcut">
-    <string>+</string>
+    <string>e</string>
    </property>
   </action>
   <action name="actionPreviousFrame">
