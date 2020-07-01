@@ -20,6 +20,7 @@
 #include <qtStlUtil.h>
 
 #include <QRectF>
+#include <QSet>
 
 namespace kv = kwiver::vital;
 namespace kvr = kwiver::vital::range;

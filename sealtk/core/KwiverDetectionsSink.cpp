@@ -18,6 +18,7 @@
 #include <qtStlUtil.h>
 
 #include <QAbstractItemModel>
+#include <QRectF>
 #include <QUrl>
 #include <QUrlQuery>
 

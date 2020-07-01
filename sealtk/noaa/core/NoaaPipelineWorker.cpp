@@ -15,6 +15,7 @@
 #include <qtStlUtil.h>
 
 #include <QRegularExpression>
+#include <QSet>
 
 namespace ka = kwiver::adapter;
 namespace kv = kwiver::vital;
