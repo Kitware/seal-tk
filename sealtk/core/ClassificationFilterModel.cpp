@@ -264,7 +264,11 @@ QVariant ClassificationFilterModel::data(
           return bestClassifier(cd).score;
 
         default: // must be VisibilityRole
-          return scd.isEmpty() || !cd.isEmpty();
+          if (scd.isEmpty() || !cd.isEmpty())
+          {
+            break; // fall through to return data from parent
+          }
+          return false;
       }
     };
     default:
