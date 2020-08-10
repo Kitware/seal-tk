@@ -8,6 +8,7 @@
 #include <sealtk/noaa/gui/About.hpp>
 #include <sealtk/noaa/gui/NotesDelegate.hpp>
 #include <sealtk/noaa/gui/Player.hpp>
+#include <sealtk/noaa/gui/TrackScoreDelegate.hpp>
 #include <sealtk/noaa/gui/TrackTypeDelegate.hpp>
 
 #include <sealtk/noaa/core/ImageListVideoSourceFactory.hpp>
@@ -119,12 +120,26 @@ public:
     auto const defaultFlags =
       this->sg::AbstractItemRepresentation::flags(index);
 
-    if (index.column() == 3 || index.column() == 5)
+    switch (index.column())
     {
-      return defaultFlags | Qt::ItemIsEditable;
-    }
+      case 3: // Type
+      case 5: // Notes
+        return defaultFlags | Qt::ItemIsEditable;
 
-    return defaultFlags;
+      case 4: // Score
+      {
+        auto const& data =
+          index.model()->data(index, sc::ClassificationRole);
+        if (!data.toHash().isEmpty())
+        {
+          return defaultFlags | Qt::ItemIsEditable;
+        }
+        return defaultFlags;
+      }
+
+      default:
+        return defaultFlags;
+    }
   }
 };
 
@@ -187,6 +202,7 @@ public:
   sc::ScalarFilterModel trackModelFilter;
   TrackRepresentation trackRepresentation;
   TrackTypeDelegate typeDelegate;
+  TrackScoreDelegate scoreDelegate;
   NotesDelegate notesDelegate;
 
   sg::ClassificationSummaryRepresentation statisticsRepresentation;
@@ -258,6 +274,7 @@ Window::Window(QWidget* parent)
   d->trackRepresentation.setSourceModel(&d->trackModelFilter);
   d->ui.tracks->setModel(&d->trackRepresentation);
   d->ui.tracks->setItemDelegateForColumn(3, &d->typeDelegate);
+  d->ui.tracks->setItemDelegateForColumn(4, &d->scoreDelegate);
   d->ui.tracks->setItemDelegateForColumn(5, &d->notesDelegate);
 
   connect(d->scoreFilter, &sg::FilterWidget::filterMinimumChanged,

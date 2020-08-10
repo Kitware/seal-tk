@@ -10,6 +10,7 @@ sealtk_add_library(sealtk::noaa_gui
     NotesDelegate.cpp
     Player.cpp
     Resources.cpp
+    TrackScoreDelegate.cpp
     TrackTypeDelegate.cpp
     Window.cpp
     SEALTKBranding.qrc
@@ -19,6 +20,7 @@ sealtk_add_library(sealtk::noaa_gui
     NotesDelegate.hpp
     Player.hpp
     Resources.hpp
+    TrackScoreDelegate.hpp
     TrackTypeDelegate.hpp
     Window.hpp
 
