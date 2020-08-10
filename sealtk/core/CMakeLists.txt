@@ -20,10 +20,12 @@ sealtk_add_library(sealtk::core
     DateUtils.cpp
     DirectoryListing.cpp
     FileVideoSourceFactory.cpp
+    IdentityTransform.cpp
     ImageUtils.cpp
     KwiverFileVideoSourceFactory.cpp
     KwiverDetectionsSink.cpp
     KwiverTrackModel.cpp
+    KwiverTracksSink.cpp
     KwiverPipelinePortSet.cpp
     KwiverPipelineWorker.cpp
     KwiverTrackSource.cpp
@@ -49,10 +51,12 @@ sealtk_add_library(sealtk::core
     DateUtils.hpp
     DirectoryListing.hpp
     FileVideoSourceFactory.hpp
+    IdentityTransform.hpp
     ImageUtils.hpp
     KwiverFileVideoSourceFactory.hpp
     KwiverDetectionsSink.hpp
     KwiverTrackModel.hpp
+    KwiverTracksSink.hpp
     KwiverPipelinePortSet.hpp
     KwiverPipelineWorker.hpp
     KwiverTrackSource.hpp

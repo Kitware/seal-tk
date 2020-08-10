@@ -18,6 +18,7 @@
 #include <qtStlUtil.h>
 
 #include <QAbstractItemModel>
+#include <QRectF>
 #include <QUrl>
 #include <QUrlQuery>
 
@@ -154,11 +155,9 @@ void KwiverDetectionsSink::writeData(QUrl const& uri) const
       {
         auto const& qbox = d->model->data(i, AreaLocationRole).toRectF();
         auto const& type = d->model->data(i, ClassificationRole).toHash();
-        auto kbox = kv::bounding_box_d{{qbox.left(), qbox.top()},
-                                       qbox.width(), qbox.height()};
-        auto kdot = classificationToDetectedObjectType(type);
+        auto const& notes = d->model->data(i, NotesRole).toStringList();
 
-        ds->add(std::make_shared<kv::detected_object>(kbox, 1.0, kdot));
+        ds->add(createDetection(qbox, type, notes));
       }
 
       writer->write_set(ds, f.name);

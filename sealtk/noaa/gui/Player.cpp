@@ -4,6 +4,7 @@
 
 #include <sealtk/noaa/gui/Player.hpp>
 
+#include <sealtk/core/KwiverTrackModel.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 
 #include <vital/algo/transform_2d_io.h>
@@ -17,6 +18,7 @@
 #include <QMatrix4x4>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPointer>
 #include <QTransform>
 
 #include <memory>
@@ -24,6 +26,8 @@
 
 namespace kv = kwiver::vital;
 namespace kva = kwiver::vital::algo;
+
+namespace sc = sealtk::core;
 
 namespace sealtk
 {
@@ -38,11 +42,17 @@ namespace gui
 class PlayerPrivate
 {
 public:
-  QList<QAction*> videoSourceActions;
+  QMenu* contextMenu = nullptr;
+  QMenu* loadVideoMenu = nullptr;
+
   QAction* loadTransformAction = nullptr;
   QAction* resetTransformAction = nullptr;
   QAction* loadDetectionsAction = nullptr;
   QAction* saveDetectionsAction = nullptr;
+  QAction* mergeDetectionsAction = nullptr;
+
+  QPointer<QAbstractItemModel> trackModel;
+  QSet<qint64> selectedTrackIds;
 
   kv::transform_2d_sptr transform;
   QSizeF imageSize;
@@ -50,6 +60,8 @@ public:
   void loadTransform(Player* q);
   void resetTransform(Player* q);
   void updateTransform(Player* q);
+
+  void mergeSelectedTracks(Player* q);
 };
 
 // ----------------------------------------------------------------------------
@@ -62,6 +74,13 @@ Player::Player(Role role, QWidget* parent)
 {
   QTE_D();
 
+  d->contextMenu = new QMenu{this};
+  d->contextMenu->addSection(QStringLiteral("Video"));
+
+  d->loadVideoMenu = d->contextMenu->addMenu("Load &Video");
+  d->loadVideoMenu->setIcon(
+    QIcon::fromTheme(QStringLiteral("document-open-video")));
+
   if (role == Role::Slave)
   {
     d->loadTransformAction = new QAction{"Load &Transformation...", this};
@@ -72,10 +91,16 @@ Player::Player(Role role, QWidget* parent)
             this, [this, d]{ d->loadTransform(this); });
     connect(d->resetTransformAction, &QAction::triggered,
             this, [this, d]{ d->resetTransform(this); });
+
+    d->contextMenu->addAction(d->loadTransformAction);
+    d->contextMenu->addAction(d->resetTransformAction);
   }
+
+  d->contextMenu->addSection(QStringLiteral("Detections"));
 
   d->loadDetectionsAction = new QAction{"&Load Detections...", this};
   d->saveDetectionsAction = new QAction{"&Save Detections...", this};
+  d->mergeDetectionsAction = new QAction{"&Merge Detections", this};
 
   d->loadDetectionsAction->setIcon(
     QIcon::fromTheme(QStringLiteral("document-open-detections")));
@@ -86,6 +111,12 @@ Player::Player(Role role, QWidget* parent)
           this, &Player::loadDetectionsTriggered);
   connect(d->saveDetectionsAction, &QAction::triggered,
           this, &Player::saveDetectionsTriggered);
+  connect(d->mergeDetectionsAction, &QAction::triggered,
+          this, [this, d] { d->mergeSelectedTracks(this); });
+
+    d->contextMenu->addAction(d->loadDetectionsAction);
+    d->contextMenu->addAction(d->saveDetectionsAction);
+    d->contextMenu->addAction(d->mergeDetectionsAction);
 }
 
 // ----------------------------------------------------------------------------
@@ -101,9 +132,9 @@ void Player::registerVideoSourceFactory(
 
   auto action = new QAction{name, this};
   connect(action, &QAction::triggered, factory,
-          [factory, handle]{ factory->loadVideoSource(handle); });
+          [factory, handle]{ factory->requestVideoSource(handle); });
 
-  d->videoSourceActions.append(action);
+  d->loadVideoMenu->addAction(action);
 }
 
 // ----------------------------------------------------------------------------
@@ -128,31 +159,54 @@ void Player::setImage(kv::image_container_sptr const& image,
 }
 
 // ----------------------------------------------------------------------------
+bool Player::hasTransform() const
+{
+  QTE_D();
+
+  return !!d->transform;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setTransform(kv::transform_2d_sptr const& transform)
+{
+  QTE_D();
+
+  d->transform = transform;
+  d->updateTransform(this);
+
+  emit this->transformChanged(transform);
+}
+
+// ----------------------------------------------------------------------------
+void Player::setTrackModel(QAbstractItemModel* model)
+{
+  QTE_D();
+
+  sealtk::gui::Player::setTrackModel(model);
+
+  d->trackModel = model;
+}
+
+// ----------------------------------------------------------------------------
+void Player::setSelectedTrackIds(QSet<qint64> const& selectedIds)
+{
+  QTE_D();
+
+  sealtk::gui::Player::setSelectedTrackIds(selectedIds);
+
+  d->selectedTrackIds = selectedIds;
+}
+
+// ----------------------------------------------------------------------------
 void Player::contextMenuEvent(QContextMenuEvent* event)
 {
   QTE_D();
 
-  auto* menu = new QMenu;
-
-  auto* submenu = menu->addMenu("Load &Video");
-  submenu->addActions(d->videoSourceActions);
-  submenu->setIcon(
-    QIcon::fromTheme(QStringLiteral("document-open-video")));
-
-  if (d->loadTransformAction)
-  {
-    menu->addAction(d->loadTransformAction);
-  }
-  if (d->resetTransformAction)
-  {
-    menu->addAction(d->resetTransformAction);
-  }
-  menu->addAction(d->loadDetectionsAction);
-  menu->addAction(d->saveDetectionsAction);
-
   d->saveDetectionsAction->setEnabled(this->videoSource());
+  d->mergeDetectionsAction->setEnabled(
+    d->trackModel && d->selectedTrackIds.count() > 1);
 
-  menu->exec(event->globalPos());
+  d->contextMenu->exec(event->globalPos());
 }
 
 // ----------------------------------------------------------------------------
@@ -171,8 +225,7 @@ void PlayerPrivate::loadTransform(Player* q)
         "transform_reader", config, ti);
       if (ti)
       {
-        this->transform = ti->load(stdString(path));
-        this->updateTransform(q);
+        q->setTransform(ti->load(stdString(path)));
       }
       else
       {
@@ -198,6 +251,8 @@ void PlayerPrivate::resetTransform(Player* q)
 {
   this->transform.reset();
   this->updateTransform(q);
+
+  emit q->transformChanged(nullptr);
 }
 
 // ----------------------------------------------------------------------------
@@ -230,13 +285,50 @@ void PlayerPrivate::updateTransform(Player* q)
       }
       return;
     }
+
+    qDebug() << "Failed to set homography from transform";
+    this->transform.reset();
   }
 
-  // Did not successfully set homography; use identity
+  // Failed to set homography or no transform; use identity
   q->setHomography({});
   if (this->resetTransformAction)
   {
     this->resetTransformAction->setEnabled(false);
+  }
+}
+
+// ----------------------------------------------------------------------------
+void PlayerPrivate::mergeSelectedTracks(Player* q)
+{
+  auto* const model =
+    qobject_cast<sc::KwiverTrackModel*>(this->trackModel);
+
+  if (!model)
+  {
+    QMessageBox::warning(
+      q, QStringLiteral("Failed to merge tracks"),
+      QStringLiteral("No model; are detections loaded?"));
+    return;
+  }
+
+  using Result = sc::KwiverTrackModel::MergeTracksResult;
+  switch (model->mergeTracks(this->selectedTrackIds))
+  {
+    case Result::NothingToDo:
+      QMessageBox::warning(
+        q, QStringLiteral("Failed to merge tracks"),
+        QStringLiteral("Select two or more tracks to merge."));
+      break;
+
+    case Result::OverlappingStates:
+      QMessageBox::warning(
+        q, QStringLiteral("Failed to merge tracks"),
+        QStringLiteral("Tracks with overlapping states cannot be merged."));
+      break;
+
+    default:
+      break;
   }
 }
 

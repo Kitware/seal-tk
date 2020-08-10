@@ -7,9 +7,15 @@ include(SEALTKUtils)
 sealtk_add_library(sealtk::gui
   SOURCES
     AbstractItemRepresentation.cpp
+    ClassificationSummaryRepresentation.cpp
+    CreateDetectionPlayerTool.cpp
+    DetectionRepresentation.cpp
+    FilterWidget.cpp
     FusionModel.cpp
+    GlobInputDialog.cpp
     Player.cpp
     PlayerControl.cpp
+    PlayerTool.cpp
     Resources.cpp
     SplitterWindow.cpp
 
@@ -18,9 +24,15 @@ sealtk_add_library(sealtk::gui
 
   HEADERS
     AbstractItemRepresentation.hpp
+    ClassificationSummaryRepresentation.hpp
+    CreateDetectionPlayerTool.hpp
+    DetectionRepresentation.hpp
+    FilterWidget.hpp
     FusionModel.hpp
+    GlobInputDialog.hpp
     Player.hpp
     PlayerControl.hpp
+    PlayerTool.hpp
     Resources.hpp
     SplitterWindow.hpp
 

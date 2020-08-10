@@ -33,17 +33,41 @@ public:
   int rowCount(QModelIndex const& parent = {}) const override;
   QModelIndex parent(QModelIndex const& child) const override;
   QModelIndex index(
-    int row, int column, QModelIndex const& parent) const override;
+    int row, int column, QModelIndex const& parent = {}) const override;
 
   QVariant data(QModelIndex const& index, int role) const override;
   bool setData(
     QModelIndex const& index, QVariant const& value, int role) override;
+
+  enum class MergeTracksResult
+  {
+    /// The operation completed successfully.
+    Success,
+    /// The operation failed because the input track set contains at least one
+    /// pair of track states which overlap (have the same time stamp).
+    OverlappingStates,
+    /// The operation failed; at least two tracks are required
+    NothingToDo
+  };
+  MergeTracksResult mergeTracks(QSet<qint64> const& ids);
+
+  void updateTrack(QModelIndex const& parent,
+                   kwiver::vital::track_state_sptr&& state);
 
 public slots:
   void clear();
 
   void addTracks(kwiver::vital::object_track_set_sptr const& trackSet);
   void setTracks(kwiver::vital::object_track_set_sptr const& trackSet);
+
+  void mergeTracks(kwiver::vital::object_track_set_sptr const& trackSet);
+
+  void updateTrack(QModelIndex const& parent,
+                   kwiver::vital::track_state_sptr const& state)
+  {
+    auto copy = state;
+    this->updateTrack(parent, std::move(copy));
+  }
 
 protected:
   KwiverTrackModel(
@@ -54,6 +78,10 @@ protected:
 
 private:
   QTE_DECLARE_SHARED(KwiverTrackModel);
+
+  void addTracks(QVector<kwiver::vital::track_sptr>&& tracks);
+  void mergeTracks(size_t existingTrackIndex,
+                   kwiver::vital::track const& track);
 };
 
 } // namespace core

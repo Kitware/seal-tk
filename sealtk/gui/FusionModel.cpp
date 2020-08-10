@@ -150,6 +150,64 @@ struct MergeClassifications : GenericFusor<QVariantHash>
   }
 };
 
+// ============================================================================
+struct MergeStringLists : GenericFusor<QStringList>
+{
+  inline static data_t fuse(data_t const& a, data_t const& b)
+  {
+    auto out = a + b;
+    out.removeDuplicates();
+    return out;
+  }
+};
+
+// ============================================================================
+class RowRemover
+{
+public:
+  virtual ~RowRemover() = default;
+
+  virtual void operator()(QMultiHash<QAbstractItemModel*, int>& rows,
+                          QAbstractItemModel* model) const
+  {
+    rows.remove(model);
+  }
+};
+
+// ============================================================================
+class RowRangeRemover : public RowRemover
+{
+public:
+  explicit RowRangeRemover(int first, int last) : first{first}, last{last} {}
+
+  void operator()(QMultiHash<QAbstractItemModel*, int>& rows,
+                  QAbstractItemModel* model) const override
+  {
+    auto const offset = 1 + this->last - this->first;
+
+    auto iter = rows.find(model);
+    while (iter != rows.end() && iter.key() == model)
+    {
+      auto const r = iter.value();
+      if (r >= this->first && r <= this->last)
+      {
+        iter = rows.erase(iter);
+      }
+      else
+      {
+        if (r > this->last)
+        {
+          iter.value() -= offset;
+        }
+        ++iter;
+      }
+    }
+  }
+
+protected:
+  int first, last;
+};
+
 } // namespace <anonymous>
 
 // ============================================================================
@@ -159,7 +217,8 @@ public:
   FusionModelPrivate(FusionModel* q) : q_ptr{q} {}
 
   void addModelData(QAbstractItemModel* model);
-  void removeModelData(QAbstractItemModel* model);
+  void removeModelData(QAbstractItemModel* model,
+                       RowRemover const& remove = {});
 
   void addModelData(QAbstractItemModel* model, int firstRow, int rowAfterLast);
   void shiftModelRows(QAbstractItemModel* model, int firstRow, int rowOffset);
@@ -238,6 +297,9 @@ QVariant FusionModel::data(QModelIndex const& index, int role) const
       case core::ClassificationRole:
         return d->fuseData<MergeClassifications>(r, role);
 
+      case core::NotesRole:
+        return d->fuseData<MergeStringLists>(r, role);
+
       case core::UserVisibilityRole:
         return d->fuseData<BooleanOr>(r, role);
 
@@ -261,6 +323,7 @@ bool FusionModel::setData(
     switch (role)
     {
       case core::ClassificationRole:
+      case core::NotesRole:
       case core::UserVisibilityRole:
         return d->setData(r, value, role);
 
@@ -300,7 +363,18 @@ void FusionModel::addModel(QAbstractItemModel* model)
                 d->addModelData(model, first, last + 1);
               }
             });
-    // TODO handle rows removed, moved
+    connect(model, &QAbstractItemModel::rowsRemoved, this,
+            [model, this](QModelIndex const& parent, int first, int last){
+              if (!parent.isValid())
+              {
+                QTE_D();
+
+                this->beginResetModel();
+                d->removeModelData(model, RowRangeRemover{first, last});
+                this->endResetModel();
+              }
+            });
+    // TODO handle rows moved
   }
 }
 
@@ -408,7 +482,8 @@ void FusionModelPrivate::shiftModelRows(
 }
 
 // ----------------------------------------------------------------------------
-void FusionModelPrivate::removeModelData(QAbstractItemModel* model)
+void FusionModelPrivate::removeModelData(
+  QAbstractItemModel* model, RowRemover const& remove)
 {
   auto i = this->data.begin();
   auto rows = this->data.size();
@@ -417,7 +492,7 @@ void FusionModelPrivate::removeModelData(QAbstractItemModel* model)
   while (row < rows)
   {
     // Remove model rows
-    i->rows.remove(model);
+    remove(i->rows, model);
 
     // Check if item still has any associated source rows
     if (!i->rows.isEmpty())

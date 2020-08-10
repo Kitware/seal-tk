@@ -35,7 +35,7 @@ bool FileVideoSourceFactory::expectsDirectory() const
 }
 
 // ----------------------------------------------------------------------------
-void FileVideoSourceFactory::loadVideoSource(void* handle)
+void FileVideoSourceFactory::requestVideoSource(void* handle)
 {
   emit this->fileRequested(handle);
 }

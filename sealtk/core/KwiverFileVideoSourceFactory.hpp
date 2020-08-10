@@ -36,13 +36,15 @@ public:
   ~KwiverFileVideoSourceFactory() override;
 
 public slots:
-  void loadFile(void* handle, QString const& path) override;
+  void loadVideoSource(void* handle, QUrl const& uri) override;
 
 protected:
   QTE_DECLARE_PRIVATE(KwiverFileVideoSourceFactory)
 
   virtual kwiver::vital::config_block_sptr config(
-    QString const& path) const = 0;
+    QUrl const& uri) const = 0;
+
+  virtual QUrl applyFilters(QUrl const& uri, QStringList const& filters);
 
 private:
   QTE_DECLARE_PRIVATE_RPTR(KwiverFileVideoSourceFactory)

@@ -141,6 +141,13 @@ public:
     this->endInsertRows();
   }
 
+  void removeRow(int i)
+  {
+    this->beginRemoveRows({}, i, i);
+    this->rowData.remove(i);
+    this->endRemoveRows();
+  }
+
 protected:
   using TestModelBase::data;
 
@@ -269,6 +276,25 @@ void TestFusionModel::mutatingModel()
   QCOMPARE(fm.rowCount(), 5);
   testModelData(fm, 1, 50, 50, true);
   testModelData(fm, 2, 10, 80, true);
+  testModelData(fm, 3, 70, 80, false);
+  testModelData(fm, 4, 30, 80, false);
+  testModelData(fm, 5, 20, 70, false);
+
+  // Test state after removing a "common" row
+  dmm.removeRow(0);
+
+  QCOMPARE(fm.rowCount(), 5);
+  testModelData(fm, 1, 50, 50, true);
+  testModelData(fm, 2, 40, 50, true);
+  testModelData(fm, 3, 70, 80, false);
+  testModelData(fm, 4, 30, 80, false);
+  testModelData(fm, 5, 20, 70, false);
+
+  // Test state after removing a "unique" row
+  dmm.removeRow(1);
+
+  QCOMPARE(fm.rowCount(), 4);
+  testModelData(fm, 2, 40, 50, true);
   testModelData(fm, 3, 70, 80, false);
   testModelData(fm, 4, 30, 80, false);
   testModelData(fm, 5, 20, 70, false);

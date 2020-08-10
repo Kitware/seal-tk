@@ -6,6 +6,7 @@
 #include "ui_Window.h"
 
 #include <sealtk/noaa/gui/About.hpp>
+#include <sealtk/noaa/gui/NotesDelegate.hpp>
 #include <sealtk/noaa/gui/Player.hpp>
 #include <sealtk/noaa/gui/TrackTypeDelegate.hpp>
 
@@ -15,14 +16,22 @@
 #include <sealtk/noaa/PluginConfig.hpp>
 
 #include <sealtk/gui/AbstractItemRepresentation.hpp>
+#include <sealtk/gui/ClassificationSummaryRepresentation.hpp>
+#include <sealtk/gui/CreateDetectionPlayerTool.hpp>
+#include <sealtk/gui/FilterWidget.hpp>
 #include <sealtk/gui/FusionModel.hpp>
+#include <sealtk/gui/GlobInputDialog.hpp>
 
 #include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/DirectoryListing.hpp>
 #include <sealtk/core/FileVideoSourceFactory.hpp>
-#include <sealtk/core/KwiverDetectionsSink.hpp>
+#include <sealtk/core/IdentityTransform.hpp>
+#include <sealtk/core/KwiverTrackModel.hpp>
 #include <sealtk/core/KwiverTrackSource.hpp>
+#include <sealtk/core/KwiverTracksSink.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
+#include <sealtk/core/ScalarFilterModel.hpp>
+#include <sealtk/core/TrackUtils.hpp>
 #include <sealtk/core/VideoController.hpp>
 #include <sealtk/core/VideoSource.hpp>
 #include <sealtk/core/VideoSourceFactory.hpp>
@@ -31,23 +40,33 @@
 
 #include <sealtk/gui/SplitterWindow.hpp>
 
+#include <vital/range/iota.h>
+#include <vital/types/object_track_set.h>
+
+#include <qtGet.h>
 #include <qtStlUtil.h>
 #include <qtUiState.h>
 
 #include <QCollator>
 #include <QDebug>
-#include <QDockWidget>
 #include <QFileDialog>
+#include <QLabel>
 #include <QMessageBox>
+#include <QPointer>
 #include <QProgressDialog>
+#include <QShortcut>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QVector>
 
+#include <algorithm>
 #include <memory>
 
 namespace sc = sealtk::core;
 namespace sg = sealtk::gui;
+
+namespace kv = kwiver::vital;
+namespace kvr = kwiver::vital::range;
 
 namespace sealtk
 {
@@ -61,6 +80,8 @@ namespace gui
 namespace // anonymous
 {
 
+using WindowRole = sealtk::noaa::gui::Player::Role;
+
 // ============================================================================
 struct WindowData
 {
@@ -68,8 +89,12 @@ struct WindowData
   sg::SplitterWindow* window = nullptr;
   sealtk::noaa::gui::Player* player = nullptr;
 
+  sg::CreateDetectionPlayerTool* createDetectionTool = nullptr;
+
   std::shared_ptr<sc::AbstractDataSource> trackSource;
   std::shared_ptr<QAbstractItemModel> trackModel;
+
+  kwiver::vital::transform_2d_sptr transform;
 };
 
 // ============================================================================
@@ -81,8 +106,11 @@ public:
     this->setColumnRoles({
       sc::NameRole,
       sc::StartTimeRole,
+      sc::EndTimeRole,
       sc::ClassificationTypeRole,
-      sc::ClassificationScoreRole});
+      sc::ClassificationScoreRole,
+      sc::NotesRole,
+    });
     this->setItemVisibilityMode(sg::OmitHidden);
   }
 
@@ -91,34 +119,31 @@ public:
     auto const defaultFlags =
       this->sg::AbstractItemRepresentation::flags(index);
 
-    if (index.column() == 2)
+    if (index.column() == 3 || index.column() == 5)
     {
       return defaultFlags | Qt::ItemIsEditable;
     }
 
     return defaultFlags;
   }
-
-  QVariant headerData(int section, Qt::Orientation orientation,
-                      int role = Qt::DisplayRole) const override
-  {
-    if (orientation == Qt::Horizontal && role == Qt::DisplayRole &&
-        section >= 0 && section < this->columnCount())
-    {
-      switch (this->roleForColumn(section))
-      {
-        case sc::StartTimeRole:
-        case sc::EndTimeRole:
-          return QStringLiteral("Time");
-        default:
-          break;
-      }
-    }
-
-    return this->AbstractItemRepresentation::headerData(
-      section, orientation, role);
-  }
 };
+
+// ----------------------------------------------------------------------------
+void addShortcut(QAction* action, QKeySequence const& shortcut)
+{
+  auto shortcuts = action->shortcuts();
+  shortcuts.append(shortcut);
+  action->setShortcuts(shortcuts);
+}
+
+// ----------------------------------------------------------------------------
+void setStretch(QWidget* widget, int factor)
+{
+  auto stretch = QSizePolicy{QSizePolicy::Expanding, QSizePolicy::Expanding};
+  stretch.setHorizontalStretch(factor);
+  stretch.setVerticalStretch(factor);
+  widget->setSizePolicy(stretch);
+}
 
 } // namespace <anonymous>
 
@@ -131,27 +156,43 @@ public:
   void registerVideoSourceFactory(
     QString const& name, sc::VideoSourceFactory* factory);
 
-  void createWindow(WindowData* data, QString const& title,
-                    sealtk::noaa::gui::Player::Role role);
+  void createWindow(WindowData* data, QString const& title, WindowRole role);
 
   void loadDetections(WindowData* data);
   void saveDetections(WindowData* data);
   void executePipeline(QString const& pipelineFile);
+  void createDetection(WindowData* data, QRectF const& detection);
+  void createDetection(WindowData* data, qint64 trackId,
+                       kv::track_state_sptr&& trackState);
+
+  template <typename Tool>
+  void setActiveTool(Tool* WindowData::* tool, QString const& text);
+  void resetActiveTool();
 
   WindowData* dataForView(int viewIndex);
   void setTrackModel(
     WindowData* data, std::shared_ptr<QAbstractItemModel> const& model);
 
-  void updateTrackSelection(QItemSelection const& selection);
+  void setSelectedTrack(qint64 id);
+  void updateTrackSelection(QModelIndexList const &selectedIndexes);
+
+  QModelIndex modelIndex(QModelIndex const& representationIndex) const;
 
   Ui::Window ui;
   qtUiState uiState;
 
+  QLabel* statusText;
+
   sg::FusionModel trackModel;
+  sc::ScalarFilterModel trackModelFilter;
   TrackRepresentation trackRepresentation;
   TrackTypeDelegate typeDelegate;
+  NotesDelegate notesDelegate;
 
-  std::unique_ptr<sc::VideoController> videoController;
+  sg::ClassificationSummaryRepresentation statisticsRepresentation;
+
+  sc::VideoController* videoController;
+  sg::FilterWidget* scoreFilter;
 
   WindowData eoWindow;
   WindowData irWindow;
@@ -163,8 +204,12 @@ public:
     &this->uvWindow,
   };
 
+  QPointer<QShortcut> cancelToolShortcut;
+
   float zoom = 1.0f;
   QPointF center{0.0f, 0.0f};
+
+  qint64 trackToEdit = -1;
 
 private:
   QTE_DECLARE_PUBLIC(Window)
@@ -184,12 +229,47 @@ Window::Window(QWidget* parent)
   d->ui.setupUi(this);
   d->ui.actionAbout->setIcon(this->windowIcon());
 
-  d->trackRepresentation.setSourceModel(&d->trackModel);
-  d->ui.tracks->setModel(&d->trackRepresentation);
-  d->ui.tracks->setItemDelegateForColumn(2, &d->typeDelegate);
+  d->statusText = new QLabel{this};
+  d->ui.statusBar->addWidget(d->statusText);
 
-  constexpr auto Master = sealtk::noaa::gui::Player::Role::Master;
-  constexpr auto Slave = sealtk::noaa::gui::Player::Role::Slave;
+  addShortcut(d->ui.actionCreateTrack, Qt::Key_C);
+  addShortcut(d->ui.actionDeleteTrack, Qt::Key_D);
+  addShortcut(d->ui.actionAmendTrack, Qt::Key_A);
+  addShortcut(d->ui.actionPreviousFrame, Qt::Key_BracketLeft);
+  addShortcut(d->ui.actionNextFrame, Qt::Key_BraceRight);
+
+  // Set up score filter
+  auto* const spacer = new QWidget{this};
+  d->ui.toolBar->addWidget(spacer);
+  setStretch(spacer, 4);
+
+  d->ui.menuView->addAction(d->ui.trackDock->toggleViewAction());
+  d->ui.menuView->addAction(d->ui.statisticsDock->toggleViewAction());
+  d->ui.menuView->addAction(d->ui.toolBar->toggleViewAction());
+
+  d->scoreFilter = new sg::FilterWidget{this};
+  d->scoreFilter->setFilter(sc::ClassificationScoreRole);
+  d->scoreFilter->setLabel(QStringLiteral("Score"));
+  d->ui.toolBar->addWidget(d->scoreFilter);
+  setStretch(d->scoreFilter, 1);
+
+  // Set up track model and list
+  d->trackModelFilter.setSourceModel(&d->trackModel);
+  d->trackRepresentation.setSourceModel(&d->trackModelFilter);
+  d->ui.tracks->setModel(&d->trackRepresentation);
+  d->ui.tracks->setItemDelegateForColumn(3, &d->typeDelegate);
+  d->ui.tracks->setItemDelegateForColumn(5, &d->notesDelegate);
+
+  connect(d->scoreFilter, &sg::FilterWidget::filterMinimumChanged,
+          &d->trackModelFilter, &sc::ScalarFilterModel::setLowerBound);
+
+  // Set up statistics panel
+  d->statisticsRepresentation.setSourceModel(&d->trackModelFilter);
+  d->ui.statistics->setModel(&d->statisticsRepresentation);
+
+  // Set up view panes
+  constexpr auto Master = WindowRole::Master;
+  constexpr auto Slave = WindowRole::Slave;
 
   d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
   d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
@@ -198,8 +278,6 @@ Window::Window(QWidget* parent)
   d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
   d->irWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->irWindow.player->setPercentiles(0.0, 1.0);
-
-  d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
   d->uvWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->uvWindow.player->setPercentiles(0.0, 1.0);
 
@@ -210,52 +288,110 @@ Window::Window(QWidget* parent)
 
   connect(d->ui.actionShowIrPane, &QAction::toggled,
           d->irWindow.window, &QWidget::setVisible);
+  connect(d->irWindow.window, &sg::SplitterWindow::visibilityChanged,
+          d->ui.actionShowIrPane, &QAction::setChecked);
   connect(d->ui.actionShowUvPane, &QAction::toggled,
           d->uvWindow.window, &QWidget::setVisible);
+  connect(d->uvWindow.window, &sg::SplitterWindow::visibilityChanged,
+          d->ui.actionShowUvPane, &QAction::setChecked);
 
-  d->videoController = make_unique<sc::VideoController>(this);
-  d->ui.control->setVideoController(d->videoController.get());
-
+  // Connect general actions
   connect(d->ui.actionAbout, &QAction::triggered,
           this, &Window::showAbout);
-  connect(d->ui.control, &sg::PlayerControl::previousFrameTriggered,
-          this, [d]{
-            d->videoController->previousFrame(0);
-          });
-  connect(d->ui.control, &sg::PlayerControl::nextFrameTriggered,
-          this, [d]{
-            d->videoController->nextFrame(0);
-          });
-  connect(d->ui.tracks, &QAbstractItemView::doubleClicked,
-          this, [d](QModelIndex const& index){
-            auto const& t =
-              d->trackModel.data(d->trackRepresentation.mapToSource(index),
-                                 sc::StartTimeRole);
-            if (t.isValid())
+  connect(d->ui.actionShowImageFilename, &QAction::toggled,
+          this, [d](bool show){
+            for (auto* const w : d->allWindows)
             {
-              d->ui.control->setTime(
-                t.value<kwiver::vital::timestamp::time_t>());
+              w->window->setFilenameVisible(show);
+            }
+          });
+
+  // Set up video controller
+  d->videoController = new sc::VideoController{this};
+  d->ui.control->setVideoController(d->videoController);
+
+  connect(d->ui.control, &sg::PlayerControl::previousFrameTriggered,
+          d->ui.actionPreviousFrame, &QAction::trigger);
+  connect(d->ui.control, &sg::PlayerControl::nextFrameTriggered,
+          d->ui.actionNextFrame, &QAction::trigger);
+  connect(d->ui.actionPreviousFrame, &QAction::triggered,
+          this, [d]{ d->videoController->previousFrame(0); });
+  connect(d->ui.actionNextFrame, &QAction::triggered,
+          this, [d]{ d->videoController->nextFrame(0); });
+
+  // Handle track selection changes
+  connect(d->ui.tracks->selectionModel(), &QItemSelectionModel::currentChanged,
+          this, [d](QModelIndex const& repIndex){
+            auto const& modelIndex = d->modelIndex(repIndex);
+            auto const role =
+              (repIndex.column() == 2 ? sc::EndTimeRole : sc::StartTimeRole);
+
+            auto const& idData =
+              d->trackModel.data(modelIndex, sc::LogicalIdentityRole);
+            auto const& timeData =
+              d->trackModel.data(modelIndex, role);
+            if (idData.isValid() && timeData.isValid())
+            {
+              auto const id = idData.value<qint64>();
+              auto const time =
+                timeData.value<kwiver::vital::timestamp::time_t>();
+
+              d->ui.control->setTime(time);
+              for (auto* const w : d->allWindows)
+              {
+                w->player->setCenterToTrack(id, time);
+              }
             }
           });
   connect(d->ui.tracks->selectionModel(),
           &QItemSelectionModel::selectionChanged,
-          this, [d](QItemSelection const& selection){
+          this, [d]{
+            auto const& selection =
+              d->ui.tracks->selectionModel()->selectedRows();
+
             d->updateTrackSelection(selection);
+            d->ui.actionDeleteTrack->setEnabled(!selection.isEmpty());
+            d->ui.actionAmendTrack->setEnabled(selection.size() == 1);
           });
 
-  connect(d->ui.tracks->selectionModel(),
-          &QItemSelectionModel::selectionChanged,
-          this, [d](QItemSelection const& selection){
-            d->ui.actionDeleteDetection->setEnabled(!selection.isEmpty());
+  // Set up actions to create and delete detections
+  connect(d->ui.actionCreateTrack, &QAction::triggered,
+          this, [d]{
+            static auto const text =
+              QStringLiteral("Creating detection for new track");
+            d->setActiveTool(&WindowData::createDetectionTool, text);
           });
-  connect(d->ui.actionDeleteDetection, &QAction::triggered,
+
+  connect(d->ui.actionAmendTrack, &QAction::triggered,
+          this, [d]{
+
+            auto const& selection =
+              d->ui.tracks->selectionModel()->selectedRows();
+            if (selection.size() == 1)
+            {
+              auto const& index = d->modelIndex(selection.first());
+              auto const& idData =
+                d->trackModel.data(index, sc::LogicalIdentityRole);
+              if (idData.canConvert<qint64>())
+              {
+                d->trackToEdit = idData.value<qint64>();
+
+                static auto const text =
+                  QStringLiteral("Adding/replacing detection for track %1");
+                d->setActiveTool(&WindowData::createDetectionTool,
+                                 text.arg(d->trackToEdit));
+              }
+            }
+          });
+
+  connect(d->ui.actionDeleteTrack, &QAction::triggered,
           this, [d]{
             // Get selected items
             auto items = QModelIndexList{};
             auto const& rows = d->ui.tracks->selectionModel()->selectedRows();
             for (auto const& ri : rows)
             {
-              auto const& si = d->trackRepresentation.mapToSource(ri);
+              auto const& si = d->modelIndex(ri);
               items.append(si);
             }
 
@@ -266,19 +402,23 @@ Window::Window(QWidget* parent)
             }
           });
 
+  // Set up video source factories
   d->registerVideoSourceFactory(
     QStringLiteral("Image List File..."),
-    new core::ImageListVideoSourceFactory{false, d->videoController.get()});
+    new core::ImageListVideoSourceFactory{false, d->videoController});
   d->registerVideoSourceFactory(
     QStringLiteral("Image Directory..."),
-    new core::ImageListVideoSourceFactory{true, d->videoController.get()});
+    new core::ImageListVideoSourceFactory{true, d->videoController});
 
+  // Set up UI persistence
   d->uiState.mapState("Window/state", this);
   d->uiState.mapGeometry("Window/geometry", this);
   d->uiState.mapState("Window/splitter", d->ui.centralwidget);
   d->uiState.mapState("Tracks/state", d->ui.tracks->header());
+  d->uiState.mapState("Statistics/state", d->ui.statistics->header());
   d->uiState.mapChecked("View/showIR", d->ui.actionShowIrPane);
   d->uiState.mapChecked("View/showUV", d->ui.actionShowUvPane);
+  d->uiState.mapChecked("View/showFileName", d->ui.actionShowImageFilename);
 
   d->uiState.restore();
 }
@@ -409,26 +549,58 @@ void WindowPrivate::registerVideoSourceFactory(
            ? QFileDialog::getExistingDirectory(q)
            : QFileDialog::getOpenFileName(q));
 
-        if (!filename.isNull())
+        if (!filename.isEmpty())
         {
-          fileFactory->loadFile(handle, filename);
+          if (fileFactory->expectsDirectory())
+          {
+            static auto const defaultGlobs = QStringList{
+              QStringLiteral("*.bmp"),
+              QStringLiteral("*.jpg"),
+              QStringLiteral("*.jpeg"),
+              QStringLiteral("*.pgm"),
+              QStringLiteral("*.png"),
+              QStringLiteral("*.sgi"),
+              QStringLiteral("*.tif"),
+              QStringLiteral("*.tiff")
+            };
+            static auto const key =
+              QStringLiteral("FileVideoSource/NameFilter");
+
+            sg::GlobInputDialog gid{key, q};
+            gid.addDefaultGlobString(defaultGlobs);
+            if (gid.exec() == QDialog::Accepted)
+            {
+              auto uri = QUrl::fromLocalFile(filename);
+              auto params = QUrlQuery{};
+              params.addQueryItem("filter", gid.globString());
+              uri.setQuery(params);
+
+              fileFactory->loadVideoSource(handle, uri);
+            }
+          }
+          else
+          {
+            auto const& uri = QUrl::fromLocalFile(filename);
+            fileFactory->loadVideoSource(handle, uri);
+          }
         }
       });
   }
 }
 
 // ----------------------------------------------------------------------------
-void WindowPrivate::createWindow(WindowData* data, QString const& title,
-                                 sealtk::noaa::gui::Player::Role role)
+void WindowPrivate::createWindow(
+  WindowData* data, QString const& title, WindowRole role)
 {
   QTE_Q();
 
   data->window = new sg::SplitterWindow{q};
   data->player = new sealtk::noaa::gui::Player{role, data->window};
   data->window->setCentralWidget(data->player);
-  data->window->setClosable(false);
+  data->window->setClosable(role != WindowRole::Master);
   data->window->setWindowTitle(title);
   data->player->setDefaultColor(qRgb(240, 176, 48));
+  data->createDetectionTool = new sg::CreateDetectionPlayerTool{data->player};
 
   QObject::connect(q, &Window::zoomChanged,
                    data->player, &sg::Player::setZoom);
@@ -442,12 +614,61 @@ void WindowPrivate::createWindow(WindowData* data, QString const& title,
                    q, &Window::setCenter);
   data->player->setCenter(q->center());
 
+  QObject::connect(data->player, &sg::Player::imageNameChanged,
+                   data->window, &sg::SplitterWindow::setFilename);
+
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::loadDetectionsTriggered,
     q, [data, this]{ this->loadDetections(data); });
   QObject::connect(
     data->player, &sealtk::noaa::gui::Player::saveDetectionsTriggered,
     q, [data, this]{ this->saveDetections(data); });
+
+  QObject::connect(
+    data->player, &sealtk::noaa::gui::Player::trackPicked,
+    q, [this](qint64 id){ this->setSelectedTrack(id); });
+
+  QObject::connect(
+    data->createDetectionTool,
+    &sg::CreateDetectionPlayerTool::detectionCreated,
+    q, [this, data](QRectF const& detection){
+      this->createDetection(data, detection);
+      this->resetActiveTool();
+    });
+
+  QObject::connect(
+    this->scoreFilter, &sg::FilterWidget::filterChanged,
+    data->player, &sg::Player::setTrackFilter);
+
+  if (role == WindowRole::Master)
+  {
+    data->transform = std::make_shared<sealtk::core::IdentityTransform>();
+    data->player->setTransform(data->transform);
+  }
+  else
+  {
+    using kwiver::vital::transform_2d_sptr;
+
+    data->player->setShadowTransform(
+      this->eoWindow.player, this->eoWindow.transform);
+
+    QObject::connect(
+      data->player, &sealtk::noaa::gui::Player::transformChanged,
+      q, [s = data->player, this](transform_2d_sptr const& xf)
+      {
+        for (auto* const w : this->allWindows)
+        {
+          if (w->player == s)
+          {
+            w->transform = xf;
+          }
+          else
+          {
+            w->player->setShadowTransform(s, xf);
+          }
+        }
+      });
+  }
 
   this->ui.centralwidget->addWidget(data->window);
 }
@@ -502,8 +723,32 @@ void WindowPrivate::saveDetections(WindowData* data)
   }
 
   // Set up writer
-  sc::KwiverDetectionsSink writer;
-  if (writer.setData(data->videoSource, data->trackModel.get()))
+  sc::KwiverTracksSink writer;
+
+  auto* const primaryFilter = new sc::ScalarFilterModel{&writer};
+  primaryFilter->setSourceModel(data->trackModel.get());
+  primaryFilter->setLowerBound(sc::ClassificationScoreRole,
+                               this->scoreFilter->value());
+
+  auto haveData = writer.setData(data->videoSource, primaryFilter);
+  if (writer.setTransform(data->transform))
+  {
+    for (auto* const w : this->allWindows)
+    {
+      if (w != data)
+      {
+        auto* const shadowFilter = new sc::ScalarFilterModel{&writer};
+        shadowFilter->setSourceModel(w->trackModel.get());
+        shadowFilter->setLowerBound(sc::ClassificationScoreRole,
+                                    this->scoreFilter->value());
+
+        haveData =
+          writer.addData(shadowFilter, w->transform) || haveData;
+      }
+    }
+  }
+
+  if (haveData)
   {
     auto const& filename = QFileDialog::getSaveFileName(q);
     if (!filename.isNull())
@@ -608,27 +853,61 @@ WindowData* WindowPrivate::dataForView(int viewIndex)
 void WindowPrivate::setTrackModel(
   WindowData* data, std::shared_ptr<QAbstractItemModel> const& model)
 {
-  if (data)
+  if (data->trackModel)
   {
-    if (data->trackModel)
-    {
-      this->trackModel.removeModel(data->trackModel.get());
-    }
+    this->trackModel.removeModel(data->trackModel.get());
+  }
 
-    data->trackModel = model;
-    this->trackModel.addModel(model.get());
-    data->player->setTrackModel(model.get());
+  data->trackModel = model;
+  this->trackModel.addModel(model.get());
+  data->player->setTrackModel(model.get());
+
+  for (auto* const w : this->allWindows)
+  {
+    if (w != data)
+    {
+      w->player->setShadowTrackModel(data->player, model.get());
+    }
   }
 }
 
 // ----------------------------------------------------------------------------
-void WindowPrivate::updateTrackSelection(QItemSelection const& selection)
+void WindowPrivate::setSelectedTrack(qint64 id)
+{
+  QItemSelection selection;
+
+  for (auto const row : kvr::iota(this->trackModelFilter.rowCount()))
+  {
+    auto const& index = this->trackModelFilter.index(row, 0);
+    auto const& data =
+      this->trackModelFilter.data(index, sc::LogicalIdentityRole);
+    if (data.value<qint64>() == id)
+    {
+      auto const r = this->trackRepresentation.mapFromSource(index).row();
+      auto const c = this->trackRepresentation.columnCount();
+      auto const& left = this->trackRepresentation.index(r, 0);
+      auto const& right = this->trackRepresentation.index(r, c - 1);
+      selection.merge({left, right}, QItemSelectionModel::Select);
+    }
+  }
+
+  if (!selection.isEmpty())
+  {
+    this->ui.tracks->selectionModel()->select(
+      selection, QItemSelectionModel::ClearAndSelect);
+    this->ui.tracks->scrollTo(selection.indexes().first());
+  }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::updateTrackSelection(
+  QModelIndexList const &selectedIndexes)
 {
   auto selectedTracks = QSet<qint64>{};
 
-  for (auto const& ri : selection.indexes())
+  for (auto const& ri : selectedIndexes)
   {
-    auto const& mi = this->trackRepresentation.mapToSource(ri);
+    auto const& mi = this->modelIndex(ri);
     auto const& data = this->trackModel.data(mi, sc::LogicalIdentityRole);
     selectedTracks.insert(data.value<qint64>());
   }
@@ -637,6 +916,159 @@ void WindowPrivate::updateTrackSelection(QItemSelection const& selection)
   {
     w->player->setSelectedTrackIds(selectedTracks);
   }
+}
+
+// ----------------------------------------------------------------------------
+template <typename Tool>
+void WindowPrivate::setActiveTool(
+  Tool* WindowData::* tool, QString const& text)
+{
+  if (!this->cancelToolShortcut)
+  {
+    QTE_Q();
+
+    this->cancelToolShortcut = new QShortcut{Qt::Key_Escape, q};
+    QObject::connect(this->cancelToolShortcut.data(), &QShortcut::activated,
+                     q, [this]{ this->resetActiveTool(); });
+  }
+
+  for (auto* const w : this->allWindows)
+  {
+    w->player->setActiveTool(w->*tool);
+  }
+
+  this->statusText->setText(text);
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::resetActiveTool()
+{
+  this->trackToEdit = -1;
+  this->statusText->clear();
+  for (auto* const w : this->allWindows)
+  {
+    w->player->setActiveTool(nullptr);
+    w->player->update();
+  }
+  delete this->cancelToolShortcut.data();
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::createDetection(WindowData* data, QRectF const& detection)
+{
+  // Determine the time stamp for the detection
+  auto const& allFrames = data->videoSource->frames();
+  auto const time = this->videoController->time();
+  auto const framePtr = qtGet(allFrames, time);
+  auto const frame = (framePtr ? *framePtr : 0);
+
+  // Create the detection
+  auto detectedObject =
+    sc::createDetection(detection, {{"unspecified", 1.0}});
+  auto trackState =
+    sc::createTrackState(frame, time, std::move(detectedObject));
+
+  if (this->trackToEdit < 0)
+  {
+    // Determine what index to use for the new detection (using the fused
+    // model, not the per-view model!)
+    qint64 maxId = 0;
+    for (auto const row : kvr::iota(this->trackModel.rowCount()))
+    {
+      auto const& index = this->trackModel.index(row, 0);
+      auto const& idData =
+        this->trackModel.data(index, sc::LogicalIdentityRole);
+      maxId = std::max(maxId, idData.value<qint64>());
+    }
+
+    // Add the detection to the window's track model as a new track
+    this->createDetection(data, maxId + 1, std::move(trackState));
+  }
+  else
+  {
+    // Try to find the track in the track model (it may not exist)
+    if (auto* const kwiverTrackModel =
+          qobject_cast<sc::KwiverTrackModel*>(data->trackModel.get()))
+    {
+      for (auto const row : kvr::iota(kwiverTrackModel->rowCount()))
+      {
+        auto const& index = kwiverTrackModel->index(row, 0);
+        auto const& idData =
+          kwiverTrackModel->data(index, sc::LogicalIdentityRole);
+        if (idData.value<qint64>() == this->trackToEdit)
+        {
+          // Get and copy the existing track type
+          auto const& typeData =
+            kwiverTrackModel->data(index, sc::ClassificationRole);
+
+          sc::objectTrackState(trackState)->detection()->set_type(
+            sc::classificationToDetectedObjectType(typeData.toHash()));
+
+          // Amend the track with the new state
+          kwiverTrackModel->updateTrack(index, std::move(trackState));
+          return;
+        }
+      }
+    }
+
+    // Looks like we are creating a new track for this view; try to find the
+    // existing track (in the fusion model) so we can copy the type
+    for (auto const row : kvr::iota(this->trackModel.rowCount()))
+    {
+      auto const& index = this->trackModel.index(row, 0);
+      auto const& idData =
+        this->trackModel.data(index, sc::LogicalIdentityRole);
+
+      if (idData.value<qint64>() == this->trackToEdit)
+      {
+        // Get and copy the existing track type
+        auto const& typeData =
+          this->trackModel.data(index, sc::ClassificationRole);
+
+        sc::objectTrackState(trackState)->detection()->set_type(
+          sc::classificationToDetectedObjectType(typeData.toHash()));
+
+        break;
+      }
+    }
+
+    // Create the new track
+    this->createDetection(data, this->trackToEdit, std::move(trackState));
+  }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::createDetection(
+  WindowData* data, qint64 trackId, kv::track_state_sptr&& trackState)
+{
+  // Wrap the detection in a track
+  auto const& track = kv::track::create();
+  track->append(std::move(trackState));
+  track->set_id(trackId);
+
+  // Ensure that the view has a track model; create one if necessary
+  if (!data->trackModel)
+  {
+    this->setTrackModel(data, std::make_shared<sc::KwiverTrackModel>());
+  }
+
+  // Add the detection to the model
+  if (auto* const kwiverTrackModel =
+        qobject_cast<sc::KwiverTrackModel*>(data->trackModel.get()))
+  {
+    auto const& newTracks = std::make_shared<kv::object_track_set>();
+    newTracks->insert(track);
+    kwiverTrackModel->addTracks(newTracks);
+  }
+}
+
+// ----------------------------------------------------------------------------
+QModelIndex WindowPrivate::modelIndex(
+  QModelIndex const& representationIndex) const
+{
+  auto const& filterIndex =
+    this->trackRepresentation.mapToSource(representationIndex);
+  return this->trackModelFilter.mapToSource(filterIndex);
 }
 
 } // namespace gui

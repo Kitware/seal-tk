@@ -5,17 +5,12 @@
 #include <sealtk/test/TestCore.hpp>
 
 #include <sealtk/core/test/TestCommon.hpp>
+#include <sealtk/core/test/TestTrackModel.hpp>
 #include <sealtk/core/test/TestTracks.hpp>
+#include <sealtk/core/test/TestVideoSource.hpp>
 
-#include <sealtk/core/AbstractItemModel.hpp>
-#include <sealtk/core/DataModelTypes.hpp>
 #include <sealtk/core/KwiverDetectionsSink.hpp>
-#include <sealtk/core/VideoMetaData.hpp>
-#include <sealtk/core/VideoProvider.hpp>
 #include <sealtk/core/VideoRequest.hpp>
-#include <sealtk/core/VideoSource.hpp>
-
-#include <vital/range/indirect.h>
 
 #include <QRegularExpression>
 #include <QTemporaryFile>
@@ -24,7 +19,6 @@
 #include <QtTest>
 
 namespace kv = kwiver::vital;
-namespace kvr = kwiver::vital::range;
 
 namespace sealtk
 {
@@ -61,132 +55,6 @@ void compareFiles(QIODevice& actual, QString const& expected,
   QVERIFY(ef.atEnd());
 }
 
-// ============================================================================
-class TestSource : public core::VideoSource
-{
-public:
-  TestSource(TimeMap<VideoMetaData> const& data)
-    : TestSource{new Provider, data} {}
-
-  bool isReady() const override { return true; }
-  TimeMap<VideoMetaData> metaData() const override { return this->data; }
-  TimeMap<kv::timestamp::frame_t> frames() const override
-  {
-    TimeMap<kv::timestamp::frame_t> result;
-    for (auto const& i : this->data | kvr::indirect)
-    {
-      auto const& ts = i.value().timeStamp();
-      if (ts.has_valid_frame())
-      {
-        result.insert(i.key(), ts.get_frame());
-      }
-    }
-
-    return result;
-  }
-
-private:
-  class Provider : public core::VideoProvider
-  {
-  public:
-    void initialize() override {}
-
-    kv::timestamp processRequest(
-      core::VideoRequest&&, kv::timestamp const&) override
-    { return {}; }
-  };
-
-  TestSource(Provider* provider, TimeMap<VideoMetaData> const& data)
-    : VideoSource{provider}, provider{provider}, data{data} {}
-
-  std::unique_ptr<Provider> provider;
-  TimeMap<VideoMetaData> const data;
-};
-
-// ============================================================================
-class TestModel : public core::AbstractItemModel
-{
-public:
-  TestModel(QVector<TimeMap<TrackState>> data) : rowData{data} {}
-
-  int rowCount(QModelIndex const& parent = {}) const override;
-
-  QVariant data(QModelIndex const& index, int role) const override;
-  QModelIndex parent(QModelIndex const& index) const override;
-  QModelIndex index(int row, int column,
-                    QModelIndex const& parent) const override;
-
-private:
-  QVector<TimeMap<TrackState>> const rowData;
-};
-
-// ----------------------------------------------------------------------------
-int TestModel::rowCount(QModelIndex const& parent) const
-{
-  if (parent.isValid())
-  {
-    auto const pr = parent.row();
-    if (pr >= 0 && pr < this->rowData.count())
-    {
-      return this->rowData[pr].count();
-    }
-    return 0;
-  }
-  else
-  {
-    return this->rowData.count();
-  }
-}
-
-// ----------------------------------------------------------------------------
-QModelIndex TestModel::index(
-  int row, int column, QModelIndex const& parent) const
-{
-  auto const pr =
-    static_cast<unsigned>(parent.isValid() ? parent.row() + 1 : 0);
-
-  return this->createIndex(row, column, pr);
-}
-
-// ----------------------------------------------------------------------------
-QModelIndex TestModel::parent(QModelIndex const& index) const
-{
-  auto const parentRow = static_cast<int>(index.internalId()) - 1;
-  return (parentRow >= 0 ? this->createIndex(parentRow, 0) : QModelIndex{});
-}
-
-// ----------------------------------------------------------------------------
-QVariant TestModel::data(QModelIndex const& index, int role) const
-{
-  if (this->checkIndex(index, IndexIsValid))
-  {
-    auto const& p = index.parent();
-    if (p.isValid())
-    {
-      auto const pr = p.row();
-      auto const& track = this->rowData[pr];
-
-      switch (role)
-      {
-        case StartTimeRole:
-        case EndTimeRole:
-          return QVariant::fromValue(track.keys()[index.row()]);
-
-        case AreaLocationRole:
-          return track.values()[index.row()].location;
-
-        case ClassificationRole:
-          return track.values()[index.row()].classification;
-
-        default:
-          break;
-      }
-    }
-  }
-
-  return AbstractItemModel::data(index, role);
-}
-
 } // namespace <anonymous>
 
 // ============================================================================
@@ -203,8 +71,8 @@ private slots:
   void csv();
 
 private:
-  std::unique_ptr<TestSource> source;
-  std::unique_ptr<TestModel> model;
+  std::unique_ptr<SimpleVideoSource> source;
+  std::unique_ptr<SimpleTrackModel> model;
 };
 
 // ----------------------------------------------------------------------------
@@ -218,7 +86,7 @@ void TestKwiverDetectionsSink::init()
 {
   using vmd = core::VideoMetaData;
 
-  this->source.reset(new TestSource{{
+  this->source.reset(new SimpleVideoSource{{
     {100, vmd{kv::timestamp{100, 1}, "frame0001.png"}},
     {300, vmd{kv::timestamp{300, 3}, "frame0003.png"}},
     {400, vmd{kv::timestamp{400, 4}, "frame0004.png"}},
@@ -231,7 +99,7 @@ void TestKwiverDetectionsSink::init()
     {2200, vmd{kv::timestamp{2200, 22}, "frame0022.png"}},
   }});
 
-  this->model.reset(new TestModel{{
+  this->model.reset(new SimpleTrackModel{{
     data::track1,
     data::track2,
     data::track3,

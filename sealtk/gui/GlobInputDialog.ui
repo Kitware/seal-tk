@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GlobInputDialog</class>
+ <widget class="QDialog" name="GlobInputDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>120</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>File Name Filter</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Select or enter filter for file names:
+(Multiple patterns may be separated with ';')</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="glob">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;p style=&quot;margin-bottom:1em; text-align: justify;&quot;&gt;Enter a list of one or more shell glob patterns in order to limit what files will be selected. Separate multiple patterns with '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;;&lt;/span&gt;'.&lt;/p&gt;
+&lt;p style=&quot;margin-bottom:1em; text-align: justify;&quot;&gt;Shell globs use simple wild card characters to specify patterns that will match different names. For example:&lt;/p&gt;
+&lt;table style=&quot;margin: 1em 2em;&quot;&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches all files&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*.txt&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches files with the file type suffix '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;txt&lt;/span&gt;'&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*foo*&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches files whose name contains  '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;foo&lt;/span&gt;'&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;font-family:'Monospace';&quot;&gt;*b?r*&lt;/td&gt;
+&lt;td style=&quot;padding-left: 1em;&quot;&gt;Matches files whose name contains a '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;b&lt;/span&gt;' and an '&lt;span style=&quot; font-family:'Monospace';&quot;&gt;r&lt;/span&gt;' with one other character in between&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p style=&quot;text-align: justify;&quot;&gt;Recently used patterns will be remembered and can be selected from the drop-down list.&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+     <property name="currentText">
+      <string>*</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>GlobInputDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>GlobInputDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

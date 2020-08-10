@@ -87,8 +87,11 @@ void TrackTypeDelegate::setModelData(
   auto* const box = qobject_cast<QComboBox*>(editor);
   auto const& newType = box->currentText();
 
-  auto newClassification = QVariantHash{{newType, 1.0}};
-  model->setData(index, newClassification, core::ClassificationRole);
+  if (!newType.isEmpty())
+  {
+    auto newClassification = QVariantHash{{newType, 1.0}};
+    model->setData(index, newClassification, core::ClassificationRole);
+  }
 }
 
 } // namespace gui
