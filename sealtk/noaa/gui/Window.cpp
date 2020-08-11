@@ -179,6 +179,7 @@ public:
   QModelIndex modelIndex(QModelIndex const& representationIndex) const;
 
   void zoomExtents(sg::ExtentsTypes types) const;
+  void synchronizeViews() const;
 
   Ui::Window ui;
   qtUiState uiState;
@@ -207,9 +208,6 @@ public:
   };
 
   QPointer<QShortcut> cancelToolShortcut;
-
-  float zoom = 1.0f;
-  QPointF center{0.0f, 0.0f};
 
   qint64 trackToEdit = -1;
 
@@ -312,6 +310,13 @@ Window::Window(QWidget* parent)
           this, [d]{ d->zoomExtents(sg::EntityExtents); });
   connect(d->ui.actionZoomImage, &QAction::triggered,
           this, [d]{ d->zoomExtents(sg::ImageExtents); });
+  connect(d->ui.actionViewLink, &QAction::toggled,
+          this, [d](bool link){
+            if (link)
+            {
+              d->synchronizeViews();
+            }
+          });
 
   // Set up video controller
   d->videoController = new sc::VideoController{this};
@@ -472,43 +477,6 @@ void Window::setPipelineDirectory(QString const& directory)
 }
 
 // ----------------------------------------------------------------------------
-float Window::zoom() const
-{
-  QTE_D();
-  return d->zoom;
-}
-
-// ----------------------------------------------------------------------------
-QPointF Window::center() const
-{
-  QTE_D();
-  return d->center;
-}
-
-// ----------------------------------------------------------------------------
-void Window::setZoom(float zoom)
-{
-  QTE_D();
-  if (!qFuzzyCompare(zoom, d->zoom))
-  {
-    d->zoom = zoom;
-    emit this->zoomChanged(zoom);
-  }
-}
-
-// ----------------------------------------------------------------------------
-void Window::setCenter(QPointF center)
-{
-  QTE_D();
-  if (!(qFuzzyCompare(center.x(), d->center.x()) &&
-        qFuzzyCompare(center.y(), d->center.y())))
-  {
-    d->center = center;
-    emit this->centerChanged(center);
-  }
-}
-
-// ----------------------------------------------------------------------------
 void Window::showAbout()
 {
   About about{this};
@@ -609,17 +577,35 @@ void WindowPrivate::createWindow(
   data->player->setDefaultColor(qRgb(240, 176, 48));
   data->createDetectionTool = new sg::CreateDetectionPlayerTool{data->player};
 
-  QObject::connect(q, &Window::zoomChanged,
-                   data->player, &sg::Player::setZoom);
-  QObject::connect(data->player, &sg::Player::zoomChanged,
-                   q, &Window::setZoom);
-  data->player->setZoom(q->zoom());
+  QObject::connect(
+    data->player, &sg::Player::zoomChanged, q,
+    [this, player = data->player](float zoom){
+      if (this->ui.actionViewLink->isChecked() && player->hasTransform())
+      {
+        for (auto const& w : this->allWindows)
+        {
+          if (w->player && w->player != player && w->player->hasTransform())
+          {
+            w->player->setZoom(zoom);
+          }
+        }
+      }
+    });
 
-  QObject::connect(q, &Window::centerChanged,
-                   data->player, &sg::Player::setCenter);
-  QObject::connect(data->player, &sg::Player::centerChanged,
-                   q, &Window::setCenter);
-  data->player->setCenter(q->center());
+  QObject::connect(
+    data->player, &sg::Player::centerChanged, q,
+    [this, player = data->player](QPointF center){
+      if (this->ui.actionViewLink->isChecked() && player->hasTransform())
+      {
+        for (auto const& w : this->allWindows)
+        {
+          if (w->player && w->player != player && w->player->hasTransform())
+          {
+            w->player->setCenter(center);
+          }
+        }
+      }
+    });
 
   QObject::connect(data->player, &sg::Player::imageNameChanged,
                    data->window, &sg::SplitterWindow::setFilename);
@@ -663,6 +649,10 @@ void WindowPrivate::createWindow(
       data->player, &sealtk::noaa::gui::Player::transformChanged,
       q, [s = data->player, this](transform_2d_sptr const& xf)
       {
+        if (this->ui.actionViewLink->isChecked())
+        {
+          this->synchronizeViews();
+        }
         for (auto* const w : this->allWindows)
         {
           if (w->player == s)
@@ -1120,6 +1110,23 @@ void WindowPrivate::zoomExtents(sg::ExtentsTypes types) const
       zoom = qMin(zoom, qMin(zw, zh));
     }
     player->setZoom(static_cast<float>(zoom));
+  }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::synchronizeViews() const
+{
+  auto const center = this->eoWindow.player->center();
+  auto const zoom = this->eoWindow.player->zoom();
+
+  for (auto* const w : this->allWindows)
+  {
+    if (w->player && w->player != this->eoWindow.player &&
+        w->player->hasTransform())
+    {
+      w->player->setCenter(center);
+      w->player->setZoom(zoom);
+    }
   }
 }
 

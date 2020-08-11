@@ -72,6 +72,7 @@
     <addaction name="separator"/>
     <addaction name="actionZoomExtents"/>
     <addaction name="actionZoomImage"/>
+    <addaction name="actionViewLink"/>
     <addaction name="separator"/>
     <addaction name="actionShowIrPane"/>
     <addaction name="actionShowUvPane"/>
@@ -167,6 +168,7 @@
    <addaction name="separator"/>
    <addaction name="actionZoomExtents"/>
    <addaction name="actionZoomImage"/>
+   <addaction name="actionViewLink"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionAbout">
@@ -288,6 +290,20 @@
    </property>
    <property name="shortcut">
     <string>R</string>
+   </property>
+  </action>
+  <action name="actionViewLink">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="zoom-link"/>
+   </property>
+   <property name="text">
+    <string>&amp;Link Views</string>
    </property>
   </action>
  </widget>
