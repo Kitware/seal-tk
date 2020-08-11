@@ -81,14 +81,19 @@ public:
 
   float zoom() const;
   QPointF center() const;
-  core::VideoDistributor* videoSource() const;
+
+  bool hasImage() const;
+  QSize effectiveImageSize() const;
+
   ContrastMode contrastMode() const;
+
+  core::VideoDistributor* videoSource() const;
+
+  virtual bool hasTransform() const;
   QSize homographyImageSize() const;
   QMatrix4x4 homography() const;
   QMatrix4x4 viewHomography() const;
   PlayerTool* activeTool() const;
-  bool hasImage() const;
-  virtual bool hasTransform() const;
 
   QPointF viewToImage(QPointF const& viewCoord) const;
   virtual QRectF extents(ExtentsTypes) const;

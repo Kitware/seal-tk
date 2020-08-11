@@ -213,7 +213,6 @@ public:
   void pickDetection(QPointF const& pos);
   void cancelPick();
 
-  QSize effectiveImageSize() const;
   QRectF extents(QVector<float> const& vertexData, int tupleSize = 2) const;
 
   QTE_DECLARE_PUBLIC(Player)
@@ -526,7 +525,7 @@ void Player::setCenterToTrack(qint64 id, kv::timestamp::time_t time)
 
             if (d->image && d->centerRequest.matches(d->timeStamp))
             {
-              auto const s = d->effectiveImageSize();
+              auto const s = this->effectiveImageSize();
               auto const offset = QPointF{0.5 * s.width(), 0.5 * s.height()};
               this->setCenter(d->centerRequest.location - offset);
               d->centerRequest.reset();
@@ -753,6 +752,20 @@ void Player::setActiveTool(PlayerTool* tool)
 
     emit this->activeToolChanged(d->activeTool);
   }
+}
+
+// ----------------------------------------------------------------------------
+QSize Player::effectiveImageSize() const
+{
+  QTE_D();
+
+  if (!this->hasTransform() && d->image)
+  {
+    return {static_cast<int>(d->image->width()),
+            static_cast<int>(d->image->height())};
+  }
+
+  return d->homographyImageSize;
 }
 
 // ----------------------------------------------------------------------------
@@ -1173,7 +1186,7 @@ void PlayerPrivate::updateViewHomography()
   QTE_Q();
 
   // Get image and view sizes
-  auto const is = this->effectiveImageSize();
+  auto const is = q->effectiveImageSize();
   auto const iw = static_cast<double>(is.width());
   auto const ih = static_cast<double>(is.height());
   auto const vw = static_cast<double>(q->width());
@@ -1557,18 +1570,6 @@ void PlayerPrivate::cancelPick()
     this->pickTask.cancel();
     this->pickWatcher.setFuture({});
   }
-}
-
-// ----------------------------------------------------------------------------
-QSize PlayerPrivate::effectiveImageSize() const
-{
-  if (this->homography.isIdentity() && this->image)
-  {
-    return {static_cast<int>(this->image->width()),
-            static_cast<int>(this->image->height())};
-  }
-
-  return this->homographyImageSize;
 }
 
 // ----------------------------------------------------------------------------
