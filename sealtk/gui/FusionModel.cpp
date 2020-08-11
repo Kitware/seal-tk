@@ -461,7 +461,7 @@ void FusionModelPrivate::addModelData(
 
   if (!modifiedRows.isEmpty())
   {
-    q->emitDataChanged({}, modifiedRows.toList());
+    q->emitDataChanged({}, modifiedRows.values());
   }
 }
 
