@@ -20,6 +20,7 @@
 #include <qtStlUtil.h>
 
 #include <QRectF>
+#include <QSet>
 
 namespace kv = kwiver::vital;
 namespace kvr = kwiver::vital::range;
@@ -444,7 +445,7 @@ KwiverTrackModel::MergeTracksResult KwiverTrackModel::mergeTracks(
   auto rows = [&]{
     QTE_D_CONST();
 
-    auto sortedIds = ids.toList();
+    auto sortedIds = ids.values();
     std::sort(sortedIds.begin(), sortedIds.end());
 
     QList<size_t const*> rows;

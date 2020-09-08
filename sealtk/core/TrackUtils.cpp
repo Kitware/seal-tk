@@ -8,6 +8,7 @@
 
 #include <qtStlUtil.h>
 
+#include <QRectF>
 #include <QVariantHash>
 
 namespace kv = kwiver::vital;
