@@ -28,7 +28,10 @@
     <file>icons/krest/16x16/media-step-backward.png</file>
     <file>icons/krest/16x16/media-step-forward.png</file>
     <file>icons/krest/16x16/view-refresh.png</file>
+    <file>icons/krest/16x16/zoom-fit.png</file>
+    <file>icons/krest/16x16/zoom-image.png</file>
     <file>icons/krest/16x16/zoom-in.png</file>
+    <file>icons/krest/16x16/zoom-link.png</file>
     <file>icons/krest/16x16/zoom-out.png</file>
     <file>icons/krest/16x16@2x/application-exit.png</file>
     <file>icons/krest/16x16@2x/configure.png</file>
@@ -57,7 +60,10 @@
     <file>icons/krest/16x16@2x/media-step-backward.png</file>
     <file>icons/krest/16x16@2x/media-step-forward.png</file>
     <file>icons/krest/16x16@2x/view-refresh.png</file>
+    <file>icons/krest/16x16@2x/zoom-fit.png</file>
+    <file>icons/krest/16x16@2x/zoom-image.png</file>
     <file>icons/krest/16x16@2x/zoom-in.png</file>
+    <file>icons/krest/16x16@2x/zoom-link.png</file>
     <file>icons/krest/16x16@2x/zoom-out.png</file>
     <file>icons/krest/22x22/application-exit.png</file>
     <file>icons/krest/22x22/configure.png</file>
@@ -85,7 +91,10 @@
     <file>icons/krest/22x22/media-step-backward.png</file>
     <file>icons/krest/22x22/media-step-forward.png</file>
     <file>icons/krest/22x22/view-refresh.png</file>
+    <file>icons/krest/22x22/zoom-fit.png</file>
+    <file>icons/krest/22x22/zoom-image.png</file>
     <file>icons/krest/22x22/zoom-in.png</file>
+    <file>icons/krest/22x22/zoom-link.png</file>
     <file>icons/krest/22x22/zoom-out.png</file>
     <file>icons/krest/22x22@2x/application-exit.png</file>
     <file>icons/krest/22x22@2x/configure.png</file>
@@ -113,7 +122,10 @@
     <file>icons/krest/22x22@2x/media-step-backward.png</file>
     <file>icons/krest/22x22@2x/media-step-forward.png</file>
     <file>icons/krest/22x22@2x/view-refresh.png</file>
+    <file>icons/krest/22x22@2x/zoom-fit.png</file>
+    <file>icons/krest/22x22@2x/zoom-image.png</file>
     <file>icons/krest/22x22@2x/zoom-in.png</file>
+    <file>icons/krest/22x22@2x/zoom-link.png</file>
     <file>icons/krest/22x22@2x/zoom-out.png</file>
   </qresource>
 </RCC>

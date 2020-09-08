@@ -28,27 +28,14 @@ class SEALTK_NOAA_GUI_EXPORT Window : public QMainWindow
 {
   Q_OBJECT
 
-  Q_PROPERTY(float zoom READ zoom WRITE setZoom NOTIFY zoomChanged)
-  Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged)
-
 public:
   explicit Window(QWidget* parent = nullptr);
   ~Window() override;
-
-  float zoom() const;
-  QPointF center() const;
-
-signals:
-  void zoomChanged(float zoom) const;
-  void centerChanged(QPointF center) const;
 
 public slots:
   void setPipelineDirectory(QString const& directory);
 
   void showAbout();
-
-  void setZoom(float zoom);
-  void setCenter(QPointF center);
 
 protected:
   QTE_DECLARE_PRIVATE(Window)

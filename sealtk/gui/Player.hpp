@@ -37,7 +37,17 @@ enum class ContrastMode
   Percentile,
 };
 
+enum ExtentsType
+{
+  ImageExtents = 1<<0,
+  EntityExtents = 1<<1,
+};
+
 QTE_ENUM_NS(ContrastMode)
+QTE_ENUM_NS(ExtentsType)
+
+Q_DECLARE_FLAGS(ExtentsTypes, ExtentsType)
+QTE_FLAG_NS(ExtentsTypes)
 
 QTE_END_META_NAMESPACE()
 
@@ -71,16 +81,22 @@ public:
 
   float zoom() const;
   QPointF center() const;
-  core::VideoDistributor* videoSource() const;
+
+  bool hasImage() const;
+  QSize effectiveImageSize() const;
+
   ContrastMode contrastMode() const;
+
+  core::VideoDistributor* videoSource() const;
+
+  virtual bool hasTransform() const;
   QSize homographyImageSize() const;
   QMatrix4x4 homography() const;
   QMatrix4x4 viewHomography() const;
   PlayerTool* activeTool() const;
-  bool hasImage() const;
-  virtual bool hasTransform() const;
 
   QPointF viewToImage(QPointF const& viewCoord) const;
+  virtual QRectF extents(ExtentsTypes) const;
 
   QColor defaultColor() const;
   QColor selectionColor() const;
@@ -149,5 +165,7 @@ private:
 } // namespace gui
 
 } // namespace sealtk
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(sealtk::gui::ExtentsTypes)
 
 #endif
