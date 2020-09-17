@@ -42,15 +42,25 @@ QWidget* TrackTypeDelegate::createEditor(
   QWidget* parent, QStyleOptionViewItem const& option,
   QModelIndex const& index) const
 {
-  QComboBox* box = new QComboBox{parent};
+  auto* const box = new QComboBox{parent};
   box->setEditable(true);
   box->setFocusPolicy(Qt::StrongFocus);
   box->setFrame(false);
 
+  // Get collection of type names
+  auto types = QStringList{};
   for (auto const& type : kv::detected_object_type::all_class_names())
   {
-    box->addItem(qtString(type));
+    types.append(qtString(type));
   }
+
+  // Sort names according to locale
+  auto compare =
+    qOverload<QString const&, QString const&>(&QString::localeAwareCompare);
+  std::sort(types.begin(), types.end(), compare);
+
+  // Populate combo box
+  box->addItems(types);
 
   return box;
 }
