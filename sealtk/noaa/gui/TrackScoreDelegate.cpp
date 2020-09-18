@@ -30,6 +30,22 @@ TrackScoreDelegate::~TrackScoreDelegate()
 {
 }
 
+//-----------------------------------------------------------------------------
+QWidget* TrackScoreDelegate::createEditor(
+  QWidget* parent, QStyleOptionViewItem const& item,
+  QModelIndex const& index) const
+{
+  auto* const editor =
+    static_cast<QDoubleSpinBox*>(
+      qtDoubleSpinBoxDelegate::createEditor(parent, item, index));
+
+  editor->setFrame(false);
+  editor->setSingleStep(0.01);
+  editor->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+  return editor;
+}
+
 // ----------------------------------------------------------------------------
 void TrackScoreDelegate::setEditorData(
   QWidget* editor, QModelIndex const& index) const

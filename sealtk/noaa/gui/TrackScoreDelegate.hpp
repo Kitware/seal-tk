@@ -27,6 +27,9 @@ public:
   explicit TrackScoreDelegate(QObject* parent = nullptr);
   ~TrackScoreDelegate() override;
 
+  QWidget* createEditor(
+    QWidget* parent, QStyleOptionViewItem const& item,
+    QModelIndex const& index) const override;
   void setEditorData(
     QWidget* editor, QModelIndex const& index) const override;
   void setModelData(
