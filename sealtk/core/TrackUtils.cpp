@@ -21,7 +21,7 @@ namespace core
 {
 
 // ----------------------------------------------------------------------------
-kv::detected_object_type_sptr classificationToDetectedObjectType(
+kv::class_map_sptr classificationToDetectedObjectType(
   QVariantHash const& in)
 {
   if (in.isEmpty())
@@ -29,7 +29,7 @@ kv::detected_object_type_sptr classificationToDetectedObjectType(
     return nullptr;
   }
 
-  auto out = std::make_shared<kv::detected_object_type>();
+  auto out = std::make_shared<kv::class_map>();
   for (auto const& c : in | kvr::indirect)
   {
     out->set_score(stdString(c.key()), c.value().toDouble());

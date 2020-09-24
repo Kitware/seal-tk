@@ -8,7 +8,7 @@
 #include <sealtk/core/Export.h>
 
 #include <vital/types/detected_object.h>
-#include <vital/types/detected_object_type.h>
+#include <vital/types/class_map.h>
 #include <vital/types/object_track_set.h>
 
 #include <QStringList>
@@ -22,7 +22,7 @@ namespace sealtk
 namespace core
 {
 
-kwiver::vital::detected_object_type_sptr
+kwiver::vital::class_map_sptr
 SEALTK_CORE_EXPORT classificationToDetectedObjectType(
   QVariantHash const& classification);
 

@@ -6,7 +6,7 @@
 
 #include <sealtk/core/DataModelTypes.hpp>
 
-#include <vital/types/detected_object_type.h>
+#include <vital/types/class_map.h>
 
 #include <vital/range/iota.h>
 
@@ -47,7 +47,7 @@ QWidget* TrackTypeDelegate::createEditor(
   box->setFocusPolicy(Qt::StrongFocus);
   box->setFrame(false);
 
-  for (auto const& type : kv::detected_object_type::all_class_names())
+  for (auto const& type : kv::class_map::all_class_names())
   {
     box->addItem(qtString(type));
   }

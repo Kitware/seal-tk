@@ -4,7 +4,7 @@
 
 #include <sealtk/noaa/gui/ClassificationFilterWidget.hpp>
 
-#include <vital/types/detected_object_type.h>
+#include <vital/types/class_map.h>
 
 #include <qtStlUtil.h>
 
@@ -35,7 +35,7 @@ ClassificationFilterWidget::ClassificationFilterWidget(QWidget* parent)
 {
   QTE_D();
 
-  kv::detected_object_type::class_name_added.connect(
+  kv::class_map::class_name_added.connect(
     d,
     [this](std::string const& stdTypeName){
       auto qtTypeName = qtString(stdTypeName);
@@ -43,7 +43,7 @@ ClassificationFilterWidget::ClassificationFilterWidget(QWidget* parent)
         this, [qtTypeName, this]{ this->addType(qtTypeName); });
     });
 
-  for (auto const& typeName : kv::detected_object_type::all_class_names())
+  for (auto const& typeName : kv::class_map::all_class_names())
   {
     this->addType(qtString(typeName));
   }
