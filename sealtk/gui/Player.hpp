@@ -51,6 +51,11 @@ QTE_FLAG_NS(ExtentsTypes)
 
 QTE_END_META_NAMESPACE()
 
+#if defined(_MSC_VER) && _MSC_VER < 1920
+// Work around name lookup bug in MSVC < 19.20
+using player_enums::ContrastMode;
+#endif
+
 class PlayerTool;
 
 class PlayerPrivate;
