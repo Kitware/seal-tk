@@ -271,9 +271,9 @@ Window::Window(QWidget* parent)
   constexpr auto Master = WindowRole::Master;
   constexpr auto Slave = WindowRole::Slave;
 
-  d->createWindow(&d->eoWindow, QStringLiteral("EO Imagery"), Master);
-  d->createWindow(&d->irWindow, QStringLiteral("IR Imagery"), Slave);
-  d->createWindow(&d->uvWindow, QStringLiteral("UV Imagery"), Slave);
+  d->createWindow(&d->eoWindow, QStringLiteral("Camera 1 / EO"), Master);
+  d->createWindow(&d->irWindow, QStringLiteral("Camera 2 / IR"), Slave);
+  d->createWindow(&d->uvWindow, QStringLiteral("Camera 3 / UV"), Slave);
 
   d->eoWindow.player->setContrastMode(sg::ContrastMode::Manual);
   d->irWindow.player->setContrastMode(sg::ContrastMode::Percentile);
