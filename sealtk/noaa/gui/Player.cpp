@@ -47,6 +47,7 @@ public:
 
   QAction* loadTransformAction = nullptr;
   QAction* resetTransformAction = nullptr;
+  QAction* toggleAutoLevelsAction = nullptr;
   QAction* loadDetectionsAction = nullptr;
   QAction* saveDetectionsAction = nullptr;
   QAction* mergeDetectionsAction = nullptr;
@@ -96,6 +97,29 @@ Player::Player(Role role, QWidget* parent)
     d->contextMenu->addAction(d->resetTransformAction);
   }
 
+  d->toggleAutoLevelsAction = new QAction{"&Automatic Levels", this};
+  d->toggleAutoLevelsAction->setCheckable(true);
+  d->toggleAutoLevelsAction->setChecked(
+    this->contrastMode() == sealtk::gui::ContrastMode::Percentile);
+
+  connect(
+    d->toggleAutoLevelsAction, &QAction::toggled, this,
+    [this](bool checked){
+      auto const mode = (checked
+                         ? sealtk::gui::ContrastMode::Percentile
+                         : sealtk::gui::ContrastMode::Manual);
+      this->setContrastMode(mode);
+    });
+  connect(
+    this, &Player::contrastModeChanged, this,
+    [d](sealtk::gui::ContrastMode mode)
+    {
+      d->toggleAutoLevelsAction->setChecked(
+        mode == sealtk::gui::ContrastMode::Percentile);
+    });
+
+  d->contextMenu->addAction(d->toggleAutoLevelsAction);
+
   d->contextMenu->addSection(QStringLiteral("Detections"));
 
   d->loadDetectionsAction = new QAction{"&Load Detections...", this};
@@ -114,9 +138,9 @@ Player::Player(Role role, QWidget* parent)
   connect(d->mergeDetectionsAction, &QAction::triggered,
           this, [this, d] { d->mergeSelectedTracks(this); });
 
-    d->contextMenu->addAction(d->loadDetectionsAction);
-    d->contextMenu->addAction(d->saveDetectionsAction);
-    d->contextMenu->addAction(d->mergeDetectionsAction);
+  d->contextMenu->addAction(d->loadDetectionsAction);
+  d->contextMenu->addAction(d->saveDetectionsAction);
+  d->contextMenu->addAction(d->mergeDetectionsAction);
 }
 
 // ----------------------------------------------------------------------------
