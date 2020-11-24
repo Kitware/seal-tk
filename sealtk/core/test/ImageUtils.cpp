@@ -50,10 +50,13 @@ constexpr auto FBO_SIZE = static_cast<int>(IMAGE_SIZE);
 
 static auto const VERTEX_SHADER_CODE = QStringLiteral(
   R"(
-  #version 130
+  #ifdef GL_ES
+  #undef highp
+  precision highp float;
+  #endif
 
-  in vec3 vert;
-  out vec2 tc;
+  attribute vec3 vert;
+  varying vec2 tc;
 
   void main()
   {
@@ -65,31 +68,17 @@ static auto const VERTEX_SHADER_CODE = QStringLiteral(
 
 static auto const PIXEL_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(
   R"(
-  #version 130
+  #ifdef GL_ES
+  #undef highp
+  precision highp float;
+  #endif
 
-  uniform sampler2DArray tex;
-  in vec2 tc;
-  out vec4 color;
-
-  void main()
-  {
-    color = texture(tex, vec3(tc, 0));
-  })");
-
-static auto const PLANE_PACKED_FRAGMENT_SHADER_CODE = QStringLiteral(
-  R"(
-  #version 130
-
-  uniform sampler2DArray tex;
-  in vec2 tc;
-  out vec4 color;
+  uniform sampler2D tex;
+  varying vec2 tc;
 
   void main()
   {
-    color.r = texture(tex, vec3(tc, 0)).r;
-    color.g = texture(tex, vec3(tc, 1)).g;
-    color.b = texture(tex, vec3(tc, 2)).b;
-    color.a = 1.0;
+    gl_FragColor = texture2D(tex, tc);
   })");
 
 // ----------------------------------------------------------------------------
@@ -171,7 +160,6 @@ private:
   QScopedPointer<QOpenGLFramebufferObject> m_fbo;
 
   QScopedPointer<QOpenGLShaderProgram> m_pixelPackedShader;
-  QScopedPointer<QOpenGLShaderProgram> m_planePackedShader;
   QOpenGLBuffer m_vertices{QOpenGLBuffer::VertexBuffer};
 };
 
@@ -192,14 +180,6 @@ void TestImageUtils::initTestCase()
   QVERIFY(m_pixelPackedShader->addShaderFromSourceCode(
             QOpenGLShader::Fragment, PIXEL_PACKED_FRAGMENT_SHADER_CODE));
   QVERIFY(m_pixelPackedShader->link());
-
-  m_planePackedShader.reset(new QOpenGLShaderProgram);
-  QVERIFY(m_planePackedShader->create());
-  QVERIFY(m_planePackedShader->addShaderFromSourceCode(
-            QOpenGLShader::Vertex, VERTEX_SHADER_CODE));
-  QVERIFY(m_planePackedShader->addShaderFromSourceCode(
-            QOpenGLShader::Fragment, PLANE_PACKED_FRAGMENT_SHADER_CODE));
-  QVERIFY(m_planePackedShader->link());
 
   float vertexData[] = {
     0.0f, 0.0f, 0.0f,
@@ -222,7 +202,6 @@ void TestImageUtils::cleanupTestCase()
   QVERIFY(m_context.makeCurrent(&m_surface));
   m_fbo.reset();
   m_pixelPackedShader.reset();
-  m_planePackedShader.reset();
   m_context.doneCurrent();
   m_surface.destroy();
 }
@@ -246,12 +225,11 @@ void TestImageUtils::imageToTexture()
   QVERIFY(m_fbo->bind());
 
   // Create and fill texture
-  QOpenGLTexture texture{QOpenGLTexture::Target2DArray};
+  QOpenGLTexture texture{QOpenGLTexture::Target2D};
   ::sealtk::core::imageToTexture(texture, imageContainer);
 
   // Select shader
-  auto const& shader =
-    (texture.layers() > 1 ? m_planePackedShader : m_pixelPackedShader);
+  auto const& shader = m_pixelPackedShader;
 
   // Render to FBO
   m_context.functions()->glViewport(0, 0, FBO_SIZE, FBO_SIZE);

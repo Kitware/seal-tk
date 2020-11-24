@@ -2,13 +2,14 @@
  * 3-Clause License. See top-level LICENSE file or
  * https://github.com/Kitware/seal-tk/blob/master/LICENSE for details. */
 
-#version 130
+#ifdef GL_ES
+#undef highp
+precision highp float;
+#endif
 
 uniform vec4 color;
 
-out vec4 fragColor;
-
 void main()
 {
-  fragColor = color;
+  gl_FragColor = color;
 }

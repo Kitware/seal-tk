@@ -8,6 +8,7 @@
 
 #include <vital/range/iota.h>
 
+#include <QDebug>
 #include <QImage>
 #include <QOpenGLPixelTransferOptions>
 #include <QOpenGLTexture>
@@ -158,19 +159,8 @@ void loadPlanePackedTexture(
   size_t width, size_t height, size_t channels, TextureFormat const& format,
   QOpenGLPixelTransferOptions const* pixelTransferOptions)
 {
-  texture.setFormat(format.textureFormat);
-  texture.setSize(static_cast<int>(width), static_cast<int>(height));
-  texture.setLayers(static_cast<int>(channels));
-  texture.setMipLevels(texture.maximumMipLevels());
-
-  texture.allocateStorage(format.pixelFormat, format.pixelType);
-  for (auto const c : kwiver::vital::range::iota(channels))
-  {
-    texture.setData(
-      0, static_cast<int>(c), format.pixelFormat, format.pixelType,
-      data, pixelTransferOptions);
-    data += channelStride;
-  }
+  qCritical() << "Unsupported attempt to load a plane-packed image";
+  return;
 }
 
 // ----------------------------------------------------------------------------
@@ -181,7 +171,6 @@ void loadPixelPackedTexture(
 {
   texture.setFormat(format.textureFormat);
   texture.setSize(static_cast<int>(width), static_cast<int>(height));
-  texture.setLayers(1);
   texture.setMipLevels(texture.maximumMipLevels());
 
   texture.allocateStorage(format.pixelFormat, format.pixelType);
@@ -314,7 +303,7 @@ void SEALTK_CORE_EXPORT imageToTexture(
       pto.setAlignment(alignment);
       pto.setRowLength(static_cast<int>(ys / xs));
 
-      if (isPlanePacked)
+      if (isPlanePacked && ck > 1)
       {
         loadPlanePackedTexture(texture, first, cs, xk, yk, ck, tf, &pto);
         return;
