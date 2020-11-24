@@ -239,7 +239,7 @@ public:
   DetectionRepresentation detectionRepresentation;
   // TODO also move image rendering to a representation?
 
-  QOpenGLTexture imageTexture{QOpenGLTexture::Target2DArray};
+  QOpenGLTexture imageTexture{QOpenGLTexture::Target2D};
   QOpenGLBuffer imageVertexBuffer{QOpenGLBuffer::VertexBuffer};
   QOpenGLBuffer detectedObjectVertexBuffer{QOpenGLBuffer::VertexBuffer};
   QOpenGLShaderProgram imageShaderProgram;
