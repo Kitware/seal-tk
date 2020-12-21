@@ -207,6 +207,7 @@ void VideoSourcePrivate::dispatchFrameRequests()
     {
       auto dummyFrame = VideoFrame{nullptr, VideoMetaData{}};
       request.second.sendReply(std::move(dummyFrame));
+      this->lastFrameProvided[request.first] = {};
     }
   }
   this->requests.clear();
