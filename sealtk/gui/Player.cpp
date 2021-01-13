@@ -586,6 +586,7 @@ void Player::setContrastMode(ContrastMode newMode)
   if (d->contrastMode != newMode)
   {
     d->contrastMode = newMode;
+    emit this->contrastModeChanged(newMode);
     this->update();
   }
 }

@@ -51,6 +51,11 @@ QTE_FLAG_NS(ExtentsTypes)
 
 QTE_END_META_NAMESPACE()
 
+#if defined(_MSC_VER) && _MSC_VER < 1920
+// Work around name lookup bug in MSVC < 19.20
+using player_enums::ContrastMode;
+#endif
+
 class PlayerTool;
 
 class PlayerPrivate;
@@ -64,7 +69,10 @@ class SEALTK_GUI_EXPORT Player : public QOpenGLWidget
   Q_PROPERTY(QSize homographyImageSize
              READ homographyImageSize
              WRITE setHomographyImageSize)
-  Q_PROPERTY(ContrastMode contrastMode READ contrastMode WRITE setContrastMode)
+  Q_PROPERTY(ContrastMode contrastMode
+             READ contrastMode
+             WRITE setContrastMode
+             NOTIFY contrastModeChanged)
   Q_PROPERTY(QMatrix4x4 homography READ homography WRITE setHomography)
   Q_PROPERTY(QMatrix4x4 viewHomography READ viewHomography)
 
@@ -108,6 +116,8 @@ signals:
   void imageSizeChanged(QSize imageSize) const;
   void imageNameChanged(QString const& imageName) const;
   void activeToolChanged(PlayerTool* tool) const;
+
+  void contrastModeChanged(ContrastMode mode) const;
 
   void defaultColorChanged(QColor const& color) const;
   void selectionColorChanged(QColor const& color) const;
