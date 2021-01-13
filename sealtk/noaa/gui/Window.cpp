@@ -178,6 +178,9 @@ public:
 
   QModelIndex modelIndex(QModelIndex const& representationIndex) const;
 
+  void zoomExtents(sg::ExtentsTypes types) const;
+  void synchronizeViews() const;
+
   Ui::Window ui;
   qtUiState uiState;
 
@@ -205,9 +208,6 @@ public:
   };
 
   QPointer<QShortcut> cancelToolShortcut;
-
-  float zoom = 1.0f;
-  QPointF center{0.0f, 0.0f};
 
   qint64 trackToEdit = -1;
 
@@ -281,10 +281,11 @@ Window::Window(QWidget* parent)
   d->uvWindow.player->setContrastMode(sg::ContrastMode::Percentile);
   d->uvWindow.player->setPercentiles(0.0, 1.0);
 
-  connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
-          d->irWindow.player, &sg::Player::setHomographyImageSize);
-  connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
-          d->uvWindow.player, &sg::Player::setHomographyImageSize);
+  for (auto* const w : d->allWindows)
+  {
+    connect(d->eoWindow.player, &sg::Player::imageSizeChanged,
+            w->player, &sg::Player::setHomographyImageSize);
+  }
 
   connect(d->ui.actionShowIrPane, &QAction::toggled,
           d->irWindow.window, &QWidget::setVisible);
@@ -303,6 +304,17 @@ Window::Window(QWidget* parent)
             for (auto* const w : d->allWindows)
             {
               w->window->setFilenameVisible(show);
+            }
+          });
+  connect(d->ui.actionZoomExtents, &QAction::triggered,
+          this, [d]{ d->zoomExtents(sg::EntityExtents); });
+  connect(d->ui.actionZoomImage, &QAction::triggered,
+          this, [d]{ d->zoomExtents(sg::ImageExtents); });
+  connect(d->ui.actionLinkViews, &QAction::toggled,
+          this, [d](bool link){
+            if (link)
+            {
+              d->synchronizeViews();
             }
           });
 
@@ -465,43 +477,6 @@ void Window::setPipelineDirectory(QString const& directory)
 }
 
 // ----------------------------------------------------------------------------
-float Window::zoom() const
-{
-  QTE_D();
-  return d->zoom;
-}
-
-// ----------------------------------------------------------------------------
-QPointF Window::center() const
-{
-  QTE_D();
-  return d->center;
-}
-
-// ----------------------------------------------------------------------------
-void Window::setZoom(float zoom)
-{
-  QTE_D();
-  if (!qFuzzyCompare(zoom, d->zoom))
-  {
-    d->zoom = zoom;
-    emit this->zoomChanged(zoom);
-  }
-}
-
-// ----------------------------------------------------------------------------
-void Window::setCenter(QPointF center)
-{
-  QTE_D();
-  if (!(qFuzzyCompare(center.x(), d->center.x()) &&
-        qFuzzyCompare(center.y(), d->center.y())))
-  {
-    d->center = center;
-    emit this->centerChanged(center);
-  }
-}
-
-// ----------------------------------------------------------------------------
 void Window::showAbout()
 {
   About about{this};
@@ -602,17 +577,35 @@ void WindowPrivate::createWindow(
   data->player->setDefaultColor(qRgb(240, 176, 48));
   data->createDetectionTool = new sg::CreateDetectionPlayerTool{data->player};
 
-  QObject::connect(q, &Window::zoomChanged,
-                   data->player, &sg::Player::setZoom);
-  QObject::connect(data->player, &sg::Player::zoomChanged,
-                   q, &Window::setZoom);
-  data->player->setZoom(q->zoom());
+  QObject::connect(
+    data->player, &sg::Player::zoomChanged, q,
+    [this, player = data->player](float zoom){
+      if (this->ui.actionLinkViews->isChecked() && player->hasTransform())
+      {
+        for (auto const& w : this->allWindows)
+        {
+          if (w->player && w->player != player && w->player->hasTransform())
+          {
+            w->player->setZoom(zoom);
+          }
+        }
+      }
+    });
 
-  QObject::connect(q, &Window::centerChanged,
-                   data->player, &sg::Player::setCenter);
-  QObject::connect(data->player, &sg::Player::centerChanged,
-                   q, &Window::setCenter);
-  data->player->setCenter(q->center());
+  QObject::connect(
+    data->player, &sg::Player::centerChanged, q,
+    [this, player = data->player](QPointF center){
+      if (this->ui.actionLinkViews->isChecked() && player->hasTransform())
+      {
+        for (auto const& w : this->allWindows)
+        {
+          if (w->player && w->player != player && w->player->hasTransform())
+          {
+            w->player->setCenter(center);
+          }
+        }
+      }
+    });
 
   QObject::connect(data->player, &sg::Player::imageNameChanged,
                    data->window, &sg::SplitterWindow::setFilename);
@@ -656,6 +649,10 @@ void WindowPrivate::createWindow(
       data->player, &sealtk::noaa::gui::Player::transformChanged,
       q, [s = data->player, this](transform_2d_sptr const& xf)
       {
+        if (this->ui.actionLinkViews->isChecked())
+        {
+          this->synchronizeViews();
+        }
         for (auto* const w : this->allWindows)
         {
           if (w->player == s)
@@ -1069,6 +1066,111 @@ QModelIndex WindowPrivate::modelIndex(
   auto const& filterIndex =
     this->trackRepresentation.mapToSource(representationIndex);
   return this->trackModelFilter.mapToSource(filterIndex);
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::zoomExtents(sg::ExtentsTypes types) const
+{
+  auto const link = this->ui.actionLinkViews->isChecked();
+
+  // Zoom linked views
+  if (link)
+  {
+    // Get extents for linked views
+    auto worldExtents = QRectF{};
+    for (auto* const w : this->allWindows)
+    {
+      if (w->player->hasTransform())
+      {
+        auto const& windowExtents = w->player->extents(types);
+        if (windowExtents.isValid())
+        {
+          if (worldExtents.isValid())
+          {
+            worldExtents = worldExtents.united(windowExtents);
+          }
+          else
+          {
+            worldExtents = windowExtents;
+          }
+        }
+      }
+    }
+
+    // Apply zoom to linked views
+    if (worldExtents.isValid())
+    {
+      auto* const player = this->eoWindow.player;
+
+      auto const worldSize = QSizeF{player->homographyImageSize()};
+      auto const worldRect = QRectF{{0, 0}, worldSize};
+      player->setCenter(worldExtents.center() - worldRect.center());
+
+      if (types != sg::ImageExtents)
+      {
+        auto const adjust =
+          qMax(10.0, 0.1 * qMax(worldExtents.width(), worldExtents.height()));
+        worldExtents.adjust(-adjust, -adjust, adjust, adjust);
+      }
+
+      auto zoom = qInf();
+      for (auto* const w : this->allWindows)
+      {
+        if (w->player->hasTransform())
+        {
+          auto const viewSize = QSizeF{w->player->size()};
+          auto const zw = viewSize.width() / worldExtents.width();
+          auto const zh = viewSize.height() / worldExtents.height();
+          zoom = qMin(zoom, qMin(zw, zh));
+        }
+      }
+      player->setZoom(static_cast<float>(zoom));
+    }
+  }
+
+  // Zoom non-linked views
+  for (auto* const w : this->allWindows)
+  {
+    if (!link || !w->player->hasTransform())
+    {
+      auto windowExtents = w->player->extents(types);
+      if (windowExtents.isValid())
+      {
+        auto const windowSize = QSizeF{w->player->effectiveImageSize()};
+        auto const windowRect = QRectF{{0, 0}, windowSize};
+        w->player->setCenter(windowExtents.center() - windowRect.center());
+
+        if (types != sg::ImageExtents)
+        {
+          auto const adjust =
+            qMax(10.0, 0.1 * qMax(windowExtents.width(),
+                                  windowExtents.height()));
+          windowExtents.adjust(-adjust, -adjust, adjust, adjust);
+        }
+
+        auto const viewSize = QSizeF{w->player->size()};
+        auto const zw = viewSize.width() / windowExtents.width();
+        auto const zh = viewSize.height() / windowExtents.height();
+        w->player->setZoom(static_cast<float>(qMin(zw, zh)));
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+void WindowPrivate::synchronizeViews() const
+{
+  auto const center = this->eoWindow.player->center();
+  auto const zoom = this->eoWindow.player->zoom();
+
+  for (auto* const w : this->allWindows)
+  {
+    if (w->player != this->eoWindow.player && w->player->hasTransform())
+    {
+      w->player->setCenter(center);
+      w->player->setZoom(zoom);
+    }
+  }
 }
 
 } // namespace gui
