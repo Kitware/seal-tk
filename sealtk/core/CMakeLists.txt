@@ -84,9 +84,6 @@ sealtk_add_library(sealtk::core
     Qt5::Core
     Threads::Threads
 
-  PUBLIC_INCLUDE_DIRECTORIES
-    "${EIGEN3_INCLUDE_DIR}"
-
   EXPORT_HEADER Export.h
   TARGET_NAME_VAR name
   )
