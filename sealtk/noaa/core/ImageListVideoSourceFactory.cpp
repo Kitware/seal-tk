@@ -53,6 +53,7 @@ kwiver::vital::config_block_sptr ImageListVideoSourceFactory::config(
 {
   auto config = kwiver::vital::config_block::empty_config();
   config->set_value("video_reader:type", "image_list");
+  config->set_value("video_reader:image_list:sort_by_time", "true");
   config->set_value("video_reader:image_list:image_reader:type",
                     config::videoReader);
   if (*config::videoReaderPassthrough)
