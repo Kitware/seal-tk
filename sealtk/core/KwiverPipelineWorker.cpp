@@ -136,7 +136,7 @@ void PortSet::ensureInputs(ka::adapter_data_set_t const& dataSet) const
   this->ensureInput(dataSet, this->imagePort, kv::image_container_sptr{});
   this->ensureInput(dataSet, this->namePort, kv::path_t{});
   this->ensureInput(dataSet, this->timePort, kv::timestamp{});
-  this->ensureInput(dataSet, this->detectionsPort, nullptr);
+  this->ensureInput(dataSet, this->detectionsPort, kv::detected_object_set_sptr{});
 }
 
 // ============================================================================
