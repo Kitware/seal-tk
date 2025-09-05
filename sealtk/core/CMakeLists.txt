@@ -82,6 +82,8 @@ sealtk_add_library(sealtk::core
 
   PUBLIC_LINK_LIBRARIES
     sealtk::util
+    kwiver::sprokit_pipeline
+    kwiver::kwiver_adapter
     kwiver::kwiver_algo_qt
     kwiver::vital
     qtExtensions
