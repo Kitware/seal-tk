@@ -7,6 +7,7 @@
 #include <sealtk/core/KwiverTrackModel.hpp>
 #include <sealtk/core/KwiverVideoSource.hpp>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/transform_2d_io.h>
 #include <vital/exceptions/base.h>
 
@@ -221,7 +222,7 @@ void PlayerPrivate::loadTransform(Player* q)
     try
     {
       kva::transform_2d_io_sptr ti;
-      kva::transform_2d_io::set_nested_algo_configuration(
+      kv::set_nested_algo_configuration<kva::transform_2d_io>(
         "transform_reader", config, ti);
       if (ti)
       {

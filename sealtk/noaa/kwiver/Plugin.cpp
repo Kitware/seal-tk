@@ -8,7 +8,7 @@
 
 #include <sealtk/core/Version.h>
 
-#include <vital/algo/algorithm_factory.h>
+#include <vital/plugin_management/plugin_loader.h>
 
 #define MODULE_NAME "sealtk"
 #define MODULE_VERSION SEALTK_VERSION
@@ -33,14 +33,17 @@ void register_factories(::kwiver::vital::plugin_loader& vpm)
     return;
   }
 
-  auto fact = vpm.ADD_ALGORITHM("noaa_timestamp_passthrough",
-                                TimestampPassthrough);
+  auto fact =
+    vpm.add_factory<::kwiver::vital::algo::image_io, TimestampPassthrough>(
+      TimestampPassthrough::plugin_name());
   (*fact)
     .add_attribute(kvpf::PLUGIN_DESCRIPTION,
-                   "Timestamp parser for NOAA images")
+                   TimestampPassthrough::plugin_description())
     .add_attribute(kvpf::PLUGIN_MODULE_NAME, MODULE_NAME)
     .add_attribute(kvpf::PLUGIN_VERSION, MODULE_VERSION)
     .add_attribute(kvpf::PLUGIN_ORGANIZATION, MODULE_ORGANIZATION);
+
+  vpm.mark_module_as_loaded(MODULE_NAME);
 }
 
 } // namespace kwiver

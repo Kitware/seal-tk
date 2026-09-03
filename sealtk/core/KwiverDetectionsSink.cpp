@@ -10,6 +10,7 @@
 #include <sealtk/core/VideoMetaData.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/detected_object_set_output.h>
 
 #include <vital/range/indirect.h>
@@ -133,7 +134,7 @@ void KwiverDetectionsSink::writeData(QUrl const& uri) const
   {
     // Create algorithm to write detections
     kva::detected_object_set_output_sptr writer;
-    kva::detected_object_set_output::set_nested_algo_configuration(
+    kv::set_nested_algo_configuration<kva::detected_object_set_output>(
       "output", config, writer);
 
     if (!writer)

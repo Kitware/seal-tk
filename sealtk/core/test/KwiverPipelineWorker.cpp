@@ -14,6 +14,7 @@
 
 #include <sprokit/processes/adapters/adapter_data_set.h>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
 
@@ -134,7 +135,7 @@ void TestKwiverPipelineWorker::initTestCase()
       SEALTK_TEST_DATA_PATH("KwiverPipelineWorker/list%1.txt").arg(n);
 
     kv::algo::video_input_sptr videoReader;
-    kv::algo::video_input::set_nested_algo_configuration(
+    kv::set_nested_algo_configuration<kv::algo::video_input>(
       "video_reader", config, videoReader);
     videoReader->open(stdString(input));
 

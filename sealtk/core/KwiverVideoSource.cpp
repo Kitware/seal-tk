@@ -124,12 +124,16 @@ void KwiverVideoSourcePrivate::initialize()
   {
     QTE_Q();
 
-    kv::timestamp ts;
-
     for (auto const i : kvr::iota(videoInput->num_frames()))
     {
       auto const frame = static_cast<kv::timestamp::frame_t>(i) + 1;
-      if (videoInput->seek_frame(ts, frame) && ts.has_valid_time())
+      if (!videoInput->seek_frame(frame))
+      {
+        continue;
+      }
+
+      auto const ts = videoInput->frame_timestamp();
+      if (ts.has_valid_time())
       {
         Q_ASSERT(ts.has_valid_frame());
         Q_ASSERT(ts.get_frame() == frame);
@@ -166,9 +170,9 @@ kv::timestamp KwiverVideoSourcePrivate::processRequest(
       return {};
     }
 
-    kv::timestamp ts;
-    if (this->videoInput->seek_frame(ts, iter.value()))
+    if (this->videoInput->seek_frame(iter.value()))
     {
+      auto const ts = this->videoInput->frame_timestamp();
       Q_ASSERT(ts.has_valid_time());
       Q_ASSERT(ts.has_valid_frame());
       Q_ASSERT(ts.get_time_usec() == iter.key());

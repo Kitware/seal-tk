@@ -11,6 +11,7 @@
 #include <sealtk/core/VideoMetaData.hpp>
 #include <sealtk/core/VideoSource.hpp>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/write_object_track_set.h>
 
 #include <vital/range/indirect.h>
@@ -189,7 +190,7 @@ void KwiverTracksSink::writeData(QUrl const& uri) const
   {
     // Create algorithm to write detections
     kva::write_object_track_set_sptr writer;
-    kva::write_object_track_set::set_nested_algo_configuration(
+    kv::set_nested_algo_configuration<kva::write_object_track_set>(
       "output", config, writer);
 
     if (!writer)

@@ -7,7 +7,8 @@
 #include <sealtk/core/AutoLevelsTask.hpp>
 
 #include <vital/algo/image_io.h>
-#include <vital/plugin_loader/plugin_manager.h>
+#include <vital/algo/algorithm.txx>
+#include <vital/plugin_management/plugin_manager.h>
 #include <vital/range/iota.h>
 
 #include <qtStlUtil.h>
@@ -59,7 +60,7 @@ private:
 void TestAutoLevelsTask::initTestCase()
 {
   kv::plugin_manager::instance().load_all_plugins();
-  if (auto io = kv::algo::image_io::create("vxl"))
+  if (auto io = kv::create_algorithm<kv::algo::image_io>("vxl"))
   {
     m_image = io->load(
       stdString(SEALTK_TEST_DATA_PATH("AutoLevelsTask/test.tif")));

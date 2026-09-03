@@ -8,6 +8,7 @@
 
 #include <sealtk/util/unique.hpp>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/video_input.h>
 
 #include <qtStlUtil.h>
@@ -78,7 +79,7 @@ void KwiverFileVideoSourceFactory::loadVideoSource(
   }
 
   kwiver::vital::algo::video_input_sptr vi;
-  kwiver::vital::algo::video_input::set_nested_algo_configuration(
+  kwiver::vital::set_nested_algo_configuration<kwiver::vital::algo::video_input>(
     "video_reader", this->config(realUri), vi);
   if (vi)
   {

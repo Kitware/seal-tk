@@ -8,8 +8,7 @@
 
 #include <sealtk/core/DateUtils.hpp>
 
-#include <vital/algo/algorithm_factory.h>
-#include <vital/plugin_loader/plugin_manager.h>
+#include <vital/algo/algorithm.txx>
 
 #include <sstream>
 
@@ -25,37 +24,16 @@ namespace kwiver
 {
 
 // ----------------------------------------------------------------------------
-TimestampPassthrough::TimestampPassthrough()
+void TimestampPassthrough::initialize()
 {
   this->set_capability(kv::algo::image_io::HAS_TIME, true);
-}
-
-// ----------------------------------------------------------------------------
-kv::config_block_sptr TimestampPassthrough::get_configuration() const
-{
-  auto config = kv::algo::image_io::get_configuration();
-
-  kv::algo::image_io::get_nested_algo_configuration(
-    "image_reader", config, this->imageReader);
-
-  return config;
-}
-
-// ----------------------------------------------------------------------------
-void TimestampPassthrough::set_configuration(kv::config_block_sptr config)
-{
-  auto newConfig = this->get_configuration();
-  newConfig->merge_config(config);
-
-  kv::algo::image_io::set_nested_algo_configuration(
-    "image_reader", newConfig, this->imageReader);
 }
 
 // ----------------------------------------------------------------------------
 bool TimestampPassthrough::check_configuration(
   kv::config_block_sptr config) const
 {
-  return kv::algo::image_io::check_nested_algo_configuration(
+  return kv::check_nested_algo_configuration<kv::algo::image_io>(
     "image_reader", config);
 }
 
@@ -63,9 +41,9 @@ bool TimestampPassthrough::check_configuration(
 kv::image_container_sptr TimestampPassthrough::load_(
   std::string const& filename) const
 {
-  if (this->imageReader)
+  if (this->get_image_reader())
   {
-    auto im = this->imageReader->load(filename);
+    auto im = this->get_image_reader()->load(filename);
     im->set_metadata(this->fixupMetadata(filename, im->get_metadata()));
     return im;
   }
@@ -77,9 +55,9 @@ kv::image_container_sptr TimestampPassthrough::load_(
 void TimestampPassthrough::save_(
   std::string const& filename, kv::image_container_sptr data) const
 {
-  if (this->imageReader)
+  if (this->get_image_reader())
   {
-    this->imageReader->save(filename, data);
+    this->get_image_reader()->save(filename, data);
   }
 }
 
@@ -87,10 +65,10 @@ void TimestampPassthrough::save_(
 kv::metadata_sptr TimestampPassthrough::load_metadata_(
   std::string const& filename) const
 {
-  if (this->imageReader)
+  if (this->get_image_reader())
   {
     return this->fixupMetadata(filename,
-                               this->imageReader->load_metadata(filename));
+                               this->get_image_reader()->load_metadata(filename));
   }
 
   return this->fixupMetadata(filename, nullptr);

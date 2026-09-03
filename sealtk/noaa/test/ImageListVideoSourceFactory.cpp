@@ -13,7 +13,7 @@
 
 #include <arrows/qt/image_container.h>
 
-#include <vital/plugin_loader/plugin_manager.h>
+#include <vital/plugin_management/plugin_manager.h>
 
 #include <vital/range/iota.h>
 

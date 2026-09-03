@@ -14,6 +14,7 @@
 
 #include <arrows/qt/image_container.h>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
 
@@ -73,7 +74,7 @@ void TestKwiverVideoSource::initTestCase()
 void TestKwiverVideoSource::init()
 {
   kv::algo::video_input_sptr videoReader;
-  kv::algo::video_input::set_nested_algo_configuration(
+  kv::set_nested_algo_configuration<kv::algo::video_input>(
     "video_reader", this->config, videoReader);
   videoReader->open(
     stdString(SEALTK_TEST_DATA_PATH("KwiverVideoSource/list.txt")));

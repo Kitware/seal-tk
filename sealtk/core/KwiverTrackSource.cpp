@@ -6,6 +6,7 @@
 
 #include <sealtk/core/KwiverTrackModel.hpp>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/read_object_track_set.h>
 
 #include <qtStlUtil.h>
@@ -97,7 +98,7 @@ void KwiverTrackSourcePrivate::run()
 
     // Create algorithm to read tracks
     kva::read_object_track_set_sptr input;
-    kva::read_object_track_set::set_nested_algo_configuration(
+    kv::set_nested_algo_configuration<kva::read_object_track_set>(
       "input", config, input);
 
     if (!input)

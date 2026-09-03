@@ -14,6 +14,7 @@
 
 #include <sealtk/util/unique.hpp>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/video_input.h>
 #include <vital/config/config_block.h>
 
@@ -92,7 +93,7 @@ private:
 void TestVideoController::createVideoSource(QString const& path)
 {
   kv::algo::video_input_sptr vi;
-  kv::algo::video_input::set_nested_algo_configuration(
+  kv::set_nested_algo_configuration<kv::algo::video_input>(
     "video_reader", this->config, vi);
 
   QVERIFY(vi);

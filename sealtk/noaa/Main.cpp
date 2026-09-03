@@ -12,7 +12,7 @@
 #include <sealtk/core/AbstractDataSource.hpp>
 #include <sealtk/core/Version.h>
 
-#include <vital/plugin_loader/plugin_manager.h>
+#include <vital/plugin_management/plugin_manager.h>
 
 #include <qtColorScheme.h>
 

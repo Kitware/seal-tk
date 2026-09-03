@@ -7,7 +7,9 @@
 
 #include <sealtk/noaa/kwiver/Export.h>
 
+#include <vital/algo/algorithm.txx>
 #include <vital/algo/image_io.h>
+#include <vital/plugin_management/pluggable_macro_magic.h>
 
 namespace sealtk
 {
@@ -18,23 +20,29 @@ namespace noaa
 namespace kwiver
 {
 
+// The pluggable macros below emit unqualified kwiver::vital::..., which would
+// otherwise resolve against this namespace rather than KWIVER's.
+namespace vital = ::kwiver::vital;
+
 class SEALTK_NOAA_KWIVER_EXPORT TimestampPassthrough
   : public ::kwiver::vital::algo::image_io
 {
 public:
-  TimestampPassthrough();
+  PLUGGABLE_IMPL_NAMED(
+    TimestampPassthrough, "noaa_timestamp_passthrough",
+    "Timestamp parser for NOAA images",
+    PARAM(
+      image_reader, ::kwiver::vital::algo::image_io_sptr,
+      "Nested reader used to load the image data itself." )
+  )
 
   ~TimestampPassthrough() override = default;
-
-  ::kwiver::vital::config_block_sptr get_configuration() const override;
-
-  void set_configuration(::kwiver::vital::config_block_sptr config) override;
 
   bool check_configuration(
     ::kwiver::vital::config_block_sptr config) const override;
 
 private:
-  ::kwiver::vital::algo::image_io_sptr imageReader;
+  void initialize() override;
 
   ::kwiver::vital::image_container_sptr load_(
     std::string const& filename) const override;
